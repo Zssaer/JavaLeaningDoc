@@ -38,6 +38,432 @@ return Result.success(captchaMap);
 
 ------
 
+# Mybatis XML映射文件详解
+
+
+
+## 基本SQL XML语句
+
+### Select语句 -查询
+
+```Xml
+<select
+  id="selectPerson"
+  parameterType="int"
+  resultType="hashmap"
+  resultMap="personResultMap"
+  flushCache="false"
+  useCache="true"
+  timeout="10"
+  fetchSize="256"
+  statementType="PREPARED"
+  resultSetType="FORWARD_ONLY">
+    ...
+ </select>
+```
+
+|     属性     | 描述                                                         |
+| :----------: | :----------------------------------------------------------- |
+|      id      | 在命名空间中唯一的标识符，可以被用来引用这条语句。           |
+| parameterMap | 将会传入这条语句的参数的类全限定名或别名。这个属性是可选的。 |
+|  resultType  | 期望从这条语句中返回结果的类全限定名或别名。 注意，如果返回的是集合，那应该设置为集合包含的类型，而不是集合本身的类型。 |
+|  resultMap   | 对外部 resultMap 的命名引用。**esultType 和 resultMap 之间只能同时使用一个。** |
+|  flushCache  | 将其设置为 true 后，只要语句被调用，都会导致本地缓存和二级缓存被清空。 |
+|   useCache   | 将其设置为 true 后，将会导致本条语句的结果被二级缓存缓存起来。 |
+|   timeout    | 抛出异常之前，驱动程序等待数据库返回请求结果的秒数。         |
+
+
+
+### Insert、Update、Delete 语句
+
+|       属性       | 描述                                                         |
+| :--------------: | ------------------------------------------------------------ |
+|        id        | 在命名空间中唯一的标识符，可以被用来引用这条语句。           |
+| `parameterType`  | 将会传入这条语句的参数的类全限定名或别名。这个属性是可选的。 |
+|   `flushCache`   | 将其设置为 true 后，只要语句被调用，都会导致本地缓存和二级缓存被清空，默认值：（对 insert、update 和 delete 语句）true。 |
+| useGeneratedKeys | 支持自动生成主键的字段，需要再填写keyProperty 设置（仅适用于 insert 和 update） |
+|   keyProperty    | 指定能够唯一识别对象的属性（仅适用于 insert 和 update）      |
+
+
+
+### Foreach语句
+
+```xml
+<foreach item="item" collection="list" separator=",">
+    (#{item.username}, #{item.password}, #{item.email}, #{item.bio})
+</foreach>
+```
+
+- **item：**集合中元素迭代时的别名，该参数为必选。
+
+- **index**：在list和数组中,index是元素的序号，在map中，index是元素的key，该参数可选
+
+- **open**：foreach代码的开始符号，一般是(和close=")"合用。常用在in(),values()时。该参数可选
+
+- **separator**：元素之间的分隔符，例如在in()的时候，separator=","会自动在元素中间用“,“隔开，避免手动输入逗号导致sql错误，如in(1,2,)这样。该参数可选。
+
+- **collection:** 要做foreach的对象，作为入参时，List对象默认用"list"代替作为键，数组对象有"array"代替作为键，Map对象没有默认的键。当然在作为入参时可以使用@Param("keyName")来设置键，设置keyName后，list,array将会失效。
+
+### Sql语句
+
+```xml
+<sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql>
+```
+
+这个 SQL 片段可以在其它语句中使用。
+
+```xml
+<select id="selectUsers" resultType="map">
+  select
+    <include refid="userColumns"><property name="alias" value="t1"/></include>,
+    <include refid="userColumns"><property name="alias" value="t2"/></include>
+  from some_table t1
+    cross join some_table t2
+</select>
+```
+
+
+
+### #{xxx}/${xxx} -字符串替换 语句
+
+ 使用 #{} 参数语法，会在 SQL 语句中直接插入一个转义的字符串。更安全，更迅速，通常也是首选做法。
+
+使用 ${} 参数语法,直接会在 SQL 语句中直接插入一个不转义的字符串。但用这种方式接受用户的输入，并用作语句参数是不安全的，会导致潜在的 SQL 注入攻击。
+
+
+
+```xml
+#{property,javaType=int,jdbcType=NUMERIC}
+```
+
+​	 和MyBatis 的其它部分一样，几乎总是可以根据参数对象的类型确定 javaType，除非该对象是一个 `HashMap`。这个时候，你需要显式指定 `javaType` 来确保正确的类型处理器（`TypeHandler`）被使用。
+
+**JDBC 要求，如果一个列允许使用 null 值，并且会使用值为 null 的参数，就必须要指定 JDBC 类型（jdbcType）。**
+
+对于数值类型，还可以设置 `numericScale` 指定小数点后保留的位数。
+
+
+
+当 SQL 语句中的元数据（如表名或列名）是动态生成的时候，字符串替换将会非常有用。 举个例子，如果你想 `select` 一个表任意一列的数据时，不需要这样写：
+
+```java
+@Select("select * from user where id = #{id}")
+User findById(@Param("id") long id);
+
+@Select("select * from user where name = #{name}")
+User findByName(@Param("name") String name);
+
+@Select("select * from user where email = #{email}")
+User findByEmail(@Param("email") String email);
+
+// 其它的 "findByXxx" 方法
+...
+```
+
+而是可以只写这样一个方法：
+
+```java
+@Select("select * from user where ${column} = #{value}")
+User findByColumn(@Param("column") String column, @Param("value") String value);
+```
+
+其中 `${column}` 会被直接替换，而 `#{value}` 会使用 `?` 预处理。
+
+
+
+### ResultMap -结果映射
+
+ResultMap 元素是 MyBatis 中最重要最强大的元素。在为一些比如连接的复杂语句编写映射代码的时候，一份 ResultMap 能够代替实现同等功能的数千行代码。其设计思想是，对简单的语句做到零配置，对于复杂一点的语句，只需要描述语句之间的关系就行了。
+
+```xml
+<!-- 非常复杂的结果映射 -->
+<resultMap id="detailedBlogResultMap" type="Blog">
+  <constructor>
+    <idArg column="blog_id" javaType="int"/>
+  </constructor>
+  <result property="title" column="blog_title"/>
+  <association property="author" javaType="Author">
+    <id property="id" column="author_id"/>
+    <result property="username" column="author_username"/>
+    <result property="password" column="author_password"/>
+    <result property="email" column="author_email"/>
+    <result property="bio" column="author_bio"/>
+    <result property="favouriteSection" column="author_favourite_section"/>
+  </association>
+  <collection property="posts" ofType="Post">
+    <id property="id" column="post_id"/>
+    <result property="subject" column="post_subject"/>
+    <association property="author" javaType="Author"/>
+    <collection property="comments" ofType="Comment">
+      <id property="id" column="comment_id"/>
+    </collection>
+    <collection property="tags" ofType="Tag" >
+      <id property="id" column="tag_id"/>
+    </collection>
+    <discriminator javaType="int" column="draft">
+      <case value="1" resultType="DraftPost"/>
+    </discriminator>
+  </collection>
+</resultMap>
+```
+
+`constructor` - 用于在实例化类时，注入结果到构造方法中
+
+- `idArg` - ID 参数；标记出作为 ID 的结果可以帮助提高整体性能
+
+- `arg` - 将被注入到构造方法的一个普通结果
+
+`id` – 一个 ID 结果；标记出作为 ID 的结果可以帮助提高整体性能
+
+`result` – 注入到字段或 JavaBean 属性的普通结果
+
+`association`– 一个复杂类型的关联；许多结果将包装成这种类型
+
+- 嵌套结果映射 – 关联可以是 `resultMap` 元素，或是对其它结果映射的引用
+
+`collection` – 一个复杂类型的集合
+
+- 嵌套结果映射 – 集合可以是 `resultMap` 元素，或是对其它结果映射的引用
+
+`discriminator` – 使用结果值来决定使用哪个 resultMap
+
+- `case` – 基于某些值的结果映射
+
+- 嵌套结果映射 – `case` 也是一个结果映射，因此具有相同的结构和元素；或者引用其它的结果映射
+
+#### id & result
+
+```xml
+<id property="id" column="post_id"/>
+<result property="subject" column="post_subject"/>
+```
+
+这些元素是结果映射的基础。*id* 和 *result* 元素都将一个列的值映射到一个简单数据类型（String, int, double, Date 等）的属性或字段。
+
+| 属性       | 描述                                                         |
+| :--------- | :----------------------------------------------------------- |
+| `property` | 映射到列结果的字段或属性。如果 JavaBean 有这个名字的属性（property），会先使用该属性。否则 MyBatis 将会寻找给定名称的字段（field）。 |
+| `column`   | 数据库中的列名，或者是查询、修改、删除时的列的别名。         |
+| `javaType` | 一个 Java 类的全限定名，或一个类型别名（关于内置的类型别名，可以参考上面的表格）。 如果你映射到一个 JavaBean，MyBatis 通常可以推断类型。 |
+| `jdbcType` | JDBC 类型，所支持的 JDBC 类型参见这个表格之后的“支持的 JDBC 类型”。 只需要在可能执行插入、更新和删除的且允许空值的列上指定 JDBC 类型。 |
+
+
+
+#### Association -关联
+
+关联（association）元素处理“有一个”类型的关系。 比如，在我们的示例中，一个博客有一个用户。关联结果映射和其它类型的映射工作方式差不多。 你需要指定目标属性名以及属性的`javaType`（很多时候 MyBatis 可以自己推断出来），在必要的情况下你还可以设置 JDBC 类型。
+
+关联的不同之处是，你需要告诉 MyBatis 如何加载关联。MyBatis 有两种不同的方式加载关联：
+
+1. 嵌套 Select 查询：通过执行另外一个 SQL 映射语句来加载期望的复杂类型。
+
+2. 嵌套结果映射：使用嵌套的结果映射来处理连接结果的重复子集。
+
+   
+
+- 关联的嵌套 Select 查询
+
+| 属性     | 描述                                                 |
+| :------- | :--------------------------------------------------- |
+| `column` | 数据库中的列名，或者是查询、修改、删除时的列的别名。 |
+| `select` | 用于加载复杂类型属性的映射语句的 ID。                |
+
+```xml
+<resultMap id="blogResult" type="Blog">
+  <association property="author" column="author_id" javaType="Author" select="selectAuthor"/>
+</resultMap>
+
+<select id="selectAuthor" resultType="Author">
+  SELECT * FROM AUTHOR WHERE ID = #{id}
+</select>
+
+<select id="selectBlog" resultMap="blogResult">
+  SELECT * FROM BLOG WHERE ID = #{id}
+</select>
+```
+
+两个 select 查询语句：一个用来加载博客（Blog），另外一个用来加载作者（Author），而且博客的结果映射描述了应该使用 `selectAuthor` 语句加载它的 author 属性。
+
+方式虽然很简单，但这个方法会导致成百上千的 SQL 语句被执行。影响SQL性能。
+
+
+
+- 关联的嵌套结果映射
+
+```xml
+<resultMap id="blogResult" type="Blog">
+  <id property="id" column="blog_id" />
+  <result property="title" column="blog_title"/>
+  <association property="author" column="blog_author_id" javaType="Author" resultMap="authorResult"/>
+</resultMap>
+
+<resultMap id="authorResult" type="Author">
+  <id property="id" column="author_id"/>
+  <result property="username" column="author_username"/>
+  <result property="password" column="author_password"/>
+  <result property="email" column="author_email"/>
+  <result property="bio" column="author_bio"/>
+</resultMap>
+```
+
+上面的示例使用了外部的结果映射元素来映射关联。这使得 Author 的结果映射可以被重用。博客（Blog）作者（author）的关联元素委托名为 “authorResult” 的结果映射来加载作者对象的实例。
+
+**id 元素在嵌套结果映射中扮演着非常重要的角色。你应该总是指定一个或多个可以唯一标识结果的属性。**
+
+
+
+也可以所有的结果映射放在一个具有描述性的结果映射元素中。 直接将结果映射作为子元素嵌套在内。
+
+```xml
+<resultMap id="blogResult" type="Blog">
+  <id property="id" column="blog_id" />
+  <result property="title" column="blog_title"/>
+  <association property="author" javaType="Author">
+    <id property="id" column="author_id"/>
+    <result property="username" column="author_username"/>
+    <result property="password" column="author_password"/>
+    <result property="email" column="author_email"/>
+    <result property="bio" column="author_bio"/>
+  </association>
+</resultMap>
+```
+
+
+
+#### Collection -集合
+
+```xml
+<collection property="posts" ofType="domain.blog.Post">
+  <id property="id" column="post_id"/>
+  <result property="subject" column="post_subject"/>
+  <result property="body" column="post_body"/>
+</collection>
+```
+
+一个博客（Blog）只有一个作者（Author)。但一个博客有很多文章（Post)。
+
+```java
+private List<Post> posts;
+```
+
+映射嵌套结果集合到一个 List 中，可以使用集合元素。 和关联元素一样，可以使用嵌套 Select 查询，或基于连接的嵌套结果映射集合。
+
+- 集合的嵌套 Select 查询
+
+```xml
+<resultMap id="blogResult" type="Blog">
+  <collection property="posts" javaType="ArrayList" column="id" ofType="Post" select="selectPostsForBlog"/>
+</resultMap>
+
+<select id="selectBlog" resultMap="blogResult">
+  SELECT * FROM BLOG WHERE ID = #{id}
+</select>
+
+<select id="selectPostsForBlog" resultType="Post">
+  SELECT * FROM POST WHERE BLOG_ID = #{id}
+</select>
+```
+
+在一般情况下，MyBatis 可以推断 javaType 属性，因此并不需要填写。
+
+- 集合的嵌套结果映射
+
+```xml
+<resultMap id="blogResult" type="Blog">
+  <id property="id" column="blog_id" />
+  <result property="title" column="blog_title"/>
+  <collection property="posts" ofType="Post" resultMap="blogPostResult" columnPrefix="post_"/>
+</resultMap>
+
+<resultMap id="blogPostResult" type="Post">
+  <id property="id" column="id"/>
+  <result property="subject" column="subject"/>
+  <result property="body" column="body"/>
+</resultMap>
+```
+
+其中columnPrefix属性其含义是将XXX自动添加到它下面的column中。
+
+
+
+#### Discriminator -鉴定器
+
+一个数据库查询可能会返回多个不同的结果集（但总体上还是有一定的联系的）。 鉴别器（discriminator）元素就是被设计来应对这种情况的，另外也能处理其它情况，例如类的继承层次结构。 鉴别器的概念很好理解——它很像 Java 语言中的 switch 语句。
+
+```xml
+<resultMap id="vehicleResult" type="Vehicle">
+    ...
+    <discriminator javaType="int" column="vehicle_type">
+        <case value="1" resultMap="carResult"/>
+        <case value="2" resultMap="truckResult"/>
+        <case value="3" resultMap="vanResult"/>
+        <case value="4" resultMap="suvResult"/>
+      </discriminator>
+</resultMap>
+
+<resultMap id="carResult" type="Car">
+  <result property="doorCount" column="door_count" />
+</resultMap>
+```
+
+
+
+## 动态 SQL
+
+MyBatis 3 替换了之前的大部分元素，大大精简了元素种类，现在要学习的元素种类比原来的一半还要少。
+
+### if语句
+
+```
+<if test="title != null">
+   XXX
+</if>
+```
+
+如果传入了 “title” 参数，那么就会额外输出XXX内容。
+
+
+
+### choose、when、otherwise语句
+
+```xml
+<choose>
+    <when test="title != null">
+      XXX
+    </when>
+    <when test="author != null and author.name != null">
+      XXX
+    </when>
+    <otherwise>
+      XXX
+    </otherwise>
+  </choose>
+```
+
+MyBatis 提供了 choose 元素，它有点像 Java 中的 switch 语句。
+
+
+
+### trim、where、set语句
+
+```xml
+<where>
+    <if test="state != null">
+         XXX
+    </if>
+    <if test="title != null">
+        XXX
+    </if>
+    <if test="author != null and author.name != null">
+        XXX
+    </if>
+  </where>
+```
+
+
+
+
+
 
 
 # TK.mybatis框架使用
@@ -1592,3 +2018,76 @@ public class User implements Serializable {
 
 <img src="picture\image-20201029161530271.png" style="zoom: 67%;" />
 
+
+
+
+
+# Shiro安全框架
+
+Apache Shiro是一个强大且易用的Java安全框架,执行身份验证、授权、密码和会话管理。使用Shiro的易于理解的API,您可以快速、轻松地获得任何应用程序,从最小的移动应用程序到最大的网络和企业应用程序。
+
+### 主要功能
+
+shiro主要有三大功能模块：
+
+1. Subject：主体，一般指用户。
+
+2. SecurityManager：安全管理器，管理所有Subject，可以配合内部安全组件。(类似于SpringMVC中的DispatcherServlet)
+
+3. Realms：用于进行权限信息的验证，一般需要自己实现。
+
+### 细分功能
+
+1. Authentication：身份认证/登录(账号密码验证)。
+2. Authorization：授权，即角色或者权限验证。
+3. Session Manager：会话管理，用户登录后的session相关管理。
+4. Cryptography：加密，密码加密等。
+5. Web Support：Web支持，集成Web环境。
+6. Caching：缓存，用户信息、角色、权限等缓存到如redis等缓存中。
+7. Run As：允许一个用户假装为另一个用户（如果他们允许）的身份进行访问。
+8. Remember Me：记住我，登录后，下次再来的话不用登录了。
+
+
+
+### Maven依赖
+
+```xml
+    <!--shiro-core-->
+    <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-core</artifactId>
+      <version>1.6.0</version>
+    </dependency>
+```
+
+### 快速入门
+
+```java
+    // 获取当前用户对象 Subject
+    Subject currentUser = SecurityUtils.getSubject();
+
+    // 通过当前用户获取Session
+    Session session = currentUser.getSession();
+	
+    //判断用户是否被认证
+	currentUser.isAuthenticated()
+    
+    //通过Token进行登录操作
+    currentUser.login(token)
+        
+    //根据输入账户名和密码获取Token    
+    UsernamePasswordToken token = new UsernamePasswordToken("lonestarr", "vespa");
+	
+	//判断用户的身份
+	currentUser.hasRole("schwartz")
+        
+    //判断用户拥有的权限
+    currentUser.isPermitted("lightsaber:wield")
+        
+    //注销当前用户    
+    currentUser.logout();    
+```
+
+
+
+## SpringBoot继承Shiro
