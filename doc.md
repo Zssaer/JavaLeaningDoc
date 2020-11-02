@@ -1,4 +1,4 @@
-# 获取验证码 easy-captcha
+# x获取验证码 easy-captcha
 
 ```xml
 <!-- 验证码easy-captcha -->
@@ -20,7 +20,7 @@ ChineseCaptcha captcha = new ChineseCaptcha(130, 48);
 // 几位数运算，默认为两位
 captcha.setLen(2);
 // 获取运算的公式：3+2=?
-captcha.getArithmeticString();
+captcha.getArithmetixcString();
 // 获取运算的结果：5
 String value = captcha.text();
 ```
@@ -2060,7 +2060,7 @@ shiro主要有三大功能模块：
     </dependency>
 ```
 
-### 快速入门
+## 快速入门
 
 ```java
     // 获取当前用户对象 Subject
@@ -2091,3 +2091,200 @@ shiro主要有三大功能模块：
 
 
 ## SpringBoot继承Shiro
+
+### Maven依赖
+
+```xml
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-spring-boot-starter</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+```
+
+### 创建Realm类
+
+```java
+public class CustomRealm extends AuthorizingRealm {
+
+    @Autowired
+    private LoginService loginService;
+
+    /**
+     * @MethodName doGetAuthorizationInfo
+     * @Description 权限配置类
+     * @Param [principalCollection]
+     * @Return AuthorizationInfo
+     * @Author WangShiLin
+     */
+    @Override
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+    	//获取登录用户名
+        String name = (String) principalCollection.getPrimaryPrincipal();
+        //查询用户名称
+        User user = loginService.getUserByName(name);
+        //添加角色和权限
+        SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
+        for (Role role : user.getRoles()) {
+            //添加角色
+            simpleAuthorizationInfo.addRole(role.getRoleName());
+            //添加权限
+            for (Permissions permissions : role.getPermissions()) {
+                simpleAuthorizationInfo.addStringPermission(permissions.getPermissionsName());
+            }
+        }
+        return simpleAuthorizationInfo;
+    }
+    
+    /**
+     * @MethodName doGetAuthenticationInfo
+     * @Description 认证配置类
+     * @Param [authenticationToken]
+     * @Return AuthenticationInfo
+     * @Author WangShiLin
+     */
+    @Override
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
+     	if (StringUtils.isEmpty(authenticationToken.getPrincipal())) {
+            return null;
+        }
+        //获取用户信息
+        String name = authenticationToken.getPrincipal().toString();
+        User user = loginService.getUserByName(name);
+        if (user == null) {
+            //这里返回后会报出对应异常
+            return null;
+        } else {
+            //这里验证authenticationToken和simpleAuthenticationInfo的信息
+            SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(name, user.getPassword().toString(), getName());
+            return simpleAuthenticationInfo;
+        }
+     }
+```
+
+创建Realm类继承AuthorizingRealm，重写doGetAuthorizationInfo（授权配置）、doGetAuthenticationInfo（认证配置）方法。
+
+其中AuthenticationToken 用于收集用户提交的身份（如用户名）及凭据（如密码）。
+
+### 创建ShiroConfig配置类
+
+```java
+@Configuration
+public class ShiroConfig {
+	//将自己的验证方式加入容器
+    @Bean
+    public CustomRealm myShiroRealm() {
+        return new CustomRealm();
+    }
+
+    //权限管理，配置主要是Realm的管理认证
+    @Bean
+    public DefaultWebSecurityManager  securityManager() {
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        securityManager.setRealm(myShiroRealm());
+        return securityManager;
+    }
+
+    //Filter工厂，设置对应的过滤条件和跳转条件
+    @Bean
+    public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityManager) {
+        ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
+        shiroFilterFactoryBean.setSecurityManager(securityManager);
+        Map<String, String> map = new HashMap<>();
+        //登出
+        map.put("/logout", "logout");
+        //对所有用户认证
+        map.put("/**", "authc");
+        //登录
+        shiroFilterFactoryBean.setLoginUrl("/login");
+        //首页
+        shiroFilterFactoryBean.setSuccessUrl("/index");
+        //错误页面，认证不通过跳转
+        shiroFilterFactoryBean.setUnauthorizedUrl("/error");
+        shiroFilterFactoryBean.setFilterChainDefinitionMap(map);
+        return shiroFilterFactoryBean;
+    }
+
+    //注入权限管理
+    @Bean
+    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(SecurityManager securityManager) {
+        AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
+        authorizationAttributeSourceAdvisor.setSecurityManager(securityManager);
+        return authorizationAttributeSourceAdvisor;
+    }
+}
+```
+
+其中shiro内置过滤器：
+
+```
+	anno：无需认证即可访问
+	authc：必须认证才可以访问
+	user ：不许拥有记住我功能才能访问
+	perms：拥有对某个资源访问权限才能使用
+	role：拥有某个角色权限才能访问
+```
+
+
+
+### Controller类
+
+```java
+@RestController
+@Slf4j
+public class LoginController {
+
+    @GetMapping("/login")
+    public String login(User user) {
+        if (StringUtils.isEmpty(user.getUserName()) || StringUtils.isEmpty(user.getPassword())) {
+            return "请输入用户名和密码！";
+        }
+        //用户认证信息
+        Subject subject = SecurityUtils.getSubject();
+        UsernamePasswordToken usernamePasswordToken = new UsernamePasswordToken(
+                user.getUserName(),
+                user.getPassword()
+        );
+        try {
+            //进行验证，这里可以捕获异常，然后返回对应信息
+            subject.login(usernamePasswordToken);
+//            subject.checkRole("admin");
+//            subject.checkPermissions("query", "add");
+        } catch (UnknownAccountException e) {
+            log.error("用户名不存在！", e);
+            return "用户名不存在！";
+        } catch (AuthenticationException e) {
+            log.error("账号或密码错误！", e);
+            return "账号或密码错误！";
+        } catch (AuthorizationException e) {
+            log.error("没有权限！", e);
+            return "没有权限";
+        }
+        return "login success";
+    }
+    
+	...
+}
+```
+
+1.用 SecurityUtils.getSubject()获取Subject类。
+
+2.将用户输入进去的账户密码信息封装入UsernamePasswordToken类。
+
+3.使用Subject类的login方法判断登录结果，并捕捉相关错误异常。
+
+​	UnknownAccountException: 用户名不存在
+
+​	AuthenticationException: 账户或者密码错误
+
+​	AuthorizationException: 没有权限
+
+​	AccountException : 账号异常
+
+​		ConcurrentAccessException:      并发访问异常（多个用户同时登录时抛出）
+ 		UnknownAccountException:        未知的账号
+ 		ExcessiveAttemptsException:     认证次数超过限制
+​		 DisabledAccountException:       禁用的账号
+​		 LockedAccountException:     账号被锁定
+​		 UnsupportedTokenException:      使用了不支持的Token
+
