@@ -1,4 +1,16 @@
-# x获取验证码 easy-captcha
+# 我的学习日志
+
+## **目录**
+
+[TOC]
+
+
+
+
+
+## 获取验证码 easy-captcha
+
+### Maven依赖
 
 ```xml
 <!-- 验证码easy-captcha -->
@@ -8,6 +20,8 @@
    <version>${easy.captcha.version}</version>
 </dependency>
 ```
+
+### 使用方法
 
 ```java
 // 算数类型验证码
@@ -38,13 +52,13 @@ return Result.success(captchaMap);
 
 ------
 
-# Mybatis XML映射文件详解
+## Mybatis XML映射文件详解
 
 
 
-## 基本SQL XML语句
+### 基本SQL XML语句
 
-### Select语句 -查询
+#### Select语句 -查询
 
 ```Xml
 <select
@@ -74,7 +88,7 @@ return Result.success(captchaMap);
 
 
 
-### Insert、Update、Delete 语句
+#### Insert、Update、Delete 语句
 
 |       属性       | 描述                                                         |
 | :--------------: | ------------------------------------------------------------ |
@@ -86,7 +100,7 @@ return Result.success(captchaMap);
 
 
 
-### Foreach语句
+#### Foreach语句
 
 ```xml
 <foreach item="item" collection="list" separator=",">
@@ -104,7 +118,7 @@ return Result.success(captchaMap);
 
 - **collection:** 要做foreach的对象，作为入参时，List对象默认用"list"代替作为键，数组对象有"array"代替作为键，Map对象没有默认的键。当然在作为入参时可以使用@Param("keyName")来设置键，设置keyName后，list,array将会失效。
 
-### Sql语句
+#### Sql语句
 
 ```xml
 <sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql>
@@ -124,7 +138,7 @@ return Result.success(captchaMap);
 
 
 
-### #{xxx}/${xxx} -字符串替换 语句
+#### #{xxx}/${xxx} -字符串替换 语句
 
  使用 #{} 参数语法，会在 SQL 语句中直接插入一个转义的字符串。更安全，更迅速，通常也是首选做法。
 
@@ -171,7 +185,7 @@ User findByColumn(@Param("column") String column, @Param("value") String value);
 
 
 
-### ResultMap -结果映射
+#### ResultMap -结果映射
 
 ResultMap 元素是 MyBatis 中最重要最强大的元素。在为一些比如连接的复杂语句编写映射代码的时候，一份 ResultMap 能够代替实现同等功能的数千行代码。其设计思想是，对简单的语句做到零配置，对于复杂一点的语句，只需要描述语句之间的关系就行了。
 
@@ -231,7 +245,9 @@ ResultMap 元素是 MyBatis 中最重要最强大的元素。在为一些比如�
 
 - 嵌套结果映射 – `case` 也是一个结果映射，因此具有相同的结构和元素；或者引用其它的结果映射
 
-#### id & result
+    
+
+##### id & result
 
 ```xml
 <id property="id" column="post_id"/>
@@ -249,7 +265,7 @@ ResultMap 元素是 MyBatis 中最重要最强大的元素。在为一些比如�
 
 
 
-#### Association -关联
+##### Association -关联
 
 关联（association）元素处理“有一个”类型的关系。 比如，在我们的示例中，一个博客有一个用户。关联结果映射和其它类型的映射工作方式差不多。 你需要指定目标属性名以及属性的`javaType`（很多时候 MyBatis 可以自己推断出来），在必要的情况下你还可以设置 JDBC 类型。
 
@@ -259,7 +275,6 @@ ResultMap 元素是 MyBatis 中最重要最强大的元素。在为一些比如�
 
 2. 嵌套结果映射：使用嵌套的结果映射来处理连接结果的重复子集。
 
-   
 
 - 关联的嵌套 Select 查询
 
@@ -330,7 +345,7 @@ ResultMap 元素是 MyBatis 中最重要最强大的元素。在为一些比如�
 
 
 
-#### Collection -集合
+##### Collection -集合
 
 ```xml
 <collection property="posts" ofType="domain.blog.Post">
@@ -386,7 +401,7 @@ private List<Post> posts;
 
 
 
-#### Discriminator -鉴定器
+##### Discriminator -鉴定器
 
 一个数据库查询可能会返回多个不同的结果集（但总体上还是有一定的联系的）。 鉴别器（discriminator）元素就是被设计来应对这种情况的，另外也能处理其它情况，例如类的继承层次结构。 鉴别器的概念很好理解——它很像 Java 语言中的 switch 语句。
 
@@ -408,11 +423,11 @@ private List<Post> posts;
 
 
 
-## 动态 SQL
+### 动态 SQL
 
 MyBatis 3 替换了之前的大部分元素，大大精简了元素种类，现在要学习的元素种类比原来的一半还要少。
 
-### if语句
+#### if语句
 
 ```
 <if test="title != null">
@@ -424,7 +439,7 @@ MyBatis 3 替换了之前的大部分元素，大大精简了元素种类，现�
 
 
 
-### choose、when、otherwise语句
+#### choose、when、otherwise语句
 
 ```xml
 <choose>
@@ -444,7 +459,7 @@ MyBatis 提供了 choose 元素，它有点像 Java 中的 switch 语句。
 
 
 
-### trim、where、set语句
+#### trim、where、set语句
 
 ```xml
 <where>
@@ -466,7 +481,7 @@ MyBatis 提供了 choose 元素，它有点像 Java 中的 switch 语句。
 
 
 
-# TK.mybatis框架使用
+## TK.mybatis框架使用
 
 ```xml
 <dependency>
@@ -596,13 +611,13 @@ public int updateByConditionSelective(T record, Object condition);
 
 ------
 
-# JWT（JSON Web Token)跨域身份验证
+## JWT（JSON Web Token)跨域身份验证
 
 *结构： heard.payload.singnature*
 
 ​		    *标头.有效负载.签名*
 
-## 结构解析
+### 结构解析
 
 1.标头（heard）：**包含令牌的类型以及使用的签名算法。**
 
@@ -610,9 +625,9 @@ public int updateByConditionSelective(T record, Object condition);
 
 3.签名（singnature）：**签名用于验证消息是否在整个过程中被更改。**对于使用私钥签名的令牌，它还可以验证 JWT 的发送方是否是它所说的那个发送方。
 
-## 使用JWT
+### 使用JWT
 
-#### 0.Maven依赖
+#### 1.Maven依赖
 
 ```xml
 <dependency>
@@ -622,7 +637,7 @@ public int updateByConditionSelective(T record, Object condition);
 </dependency>
 ```
 
-#### 1.利用数据，生成对应Token
+#### 2.利用数据，生成对应Token
 
 ```java
 Calendar instance = Calendar.getInstance();
@@ -636,7 +651,7 @@ String token = JWT.create()
         .sign(Algorithm.HMAC256("@QWER@"));//设置singnature 其中使用HMAC256算法
 ```
 
-#### 2.使用对应Token，获取数据
+#### 3.使用对应Token，获取数据
 
 ```java
 JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256("@QWER@")).build();  //获取对应Jwt算法解析器
@@ -653,9 +668,9 @@ System.out.println(decodedJWT.getClaim("userName").asString());
 
 ------
 
-# SpringBoot+Mybatis整合
+## SpringBoot+Mybatis整合
 
-## Maven依赖
+### Maven依赖
 
 ```xml
 		<!--mysql数据库驱动-->
@@ -673,7 +688,7 @@ System.out.println(decodedJWT.getClaim("userName").asString());
         </dependency>
 ```
 
-## 操作方法
+### 操作方法
 
 #### 1.编写实体类
 
@@ -825,11 +840,11 @@ mybatis:
 
 ------
 
-# Mybatis逆向工程
+## Mybatis逆向工程
 
-## 操作方法
+### 操作方法
 
-### 一.Maven依赖
+#### 一.Maven依赖
 
 ```xml
 <dependency>
@@ -839,7 +854,7 @@ mybatis:
 </dependency>
 ```
 
-### 二.配置generatorConfig.xml文件
+#### 二.配置generatorConfig.xml文件
 
 ```xml
 <?xml version='1.0' encoding='UTF-8'?>
@@ -909,7 +924,7 @@ mybatis:
 </generatorConfiguration>
 ```
 
-### 三.编写生成器
+#### 三.编写生成器
 
 ```java
 public class Generator {
@@ -943,9 +958,9 @@ public class Generator {
 
 ------
 
-# PageHelper 分页
+## PageHelper 分页
 
-## Maven依赖
+### Maven依赖
 
 ```xml
 <dependency>
@@ -955,9 +970,9 @@ public class Generator {
 </dependency>
 ```
 
-## 操作方法
+### 操作方法
 
-### 1.配置文件
+#### 1.配置文件
 
 ```yaml
 pagehelper:  
@@ -968,7 +983,7 @@ pagehelper:
   ...
 ```
 
-### 2.编写对应需要分页controller层方法
+#### 2.编写对应需要分页controller层方法
 
 ```java
     /**
@@ -1012,17 +1027,17 @@ pagehelper:
 
 ------
 
-# Redis基础学习
+## Redis基础学习
 
-## 服务器
+### 服务器
 
-### 打开服务器
+#### 打开服务器
 
 ```
 redis-server.exe
 ```
 
-### 访问服务器
+#### 访问服务器
 
 ```
 redis-cli.exe -h 服务器IP -p 端口号(默认6379)
@@ -1030,11 +1045,11 @@ redis-cli.exe -h 服务器IP -p 端口号(默认6379)
 
 
 
-## 数据类型
+### 数据类型
 
 Redis支持5类数据类型【String（字符串）、hash（哈希值）、list（列表）、set（集合）、zset（有序集合）】
 
-### 1.String
+#### 1.String
 
 string 是 redis 最基本的类型，一个 key 对应一个 value。
 
@@ -1044,7 +1059,7 @@ string 类型是二进制安全的。意思是 redis 的 string 可以包含任�
 
 
 
-#### SET命令
+##### SET命令
 
 设置指定 key 的值
 
@@ -1052,7 +1067,7 @@ string 类型是二进制安全的。意思是 redis 的 string 可以包含任�
 SET -key- -value-  
 ```
 
-#### GET命令
+##### GET命令
 
 获取指定 key 的值
 
@@ -1060,7 +1075,7 @@ SET -key- -value-
 GET -key-
 ```
 
-#### GETSET命令
+##### GETSET命令
 
 将给定 key 的值设为 value ，并返回 key 的旧值
 
@@ -1068,7 +1083,7 @@ GET -key-
 GETSET -key- -value-
 ```
 
-#### STRLEN命令
+##### STRLEN命令
 
 返回 key 所储存的字符串值的长度
 
@@ -1076,7 +1091,7 @@ GETSET -key- -value-
 STRLEN -key-
 ```
 
-#### MSET命令
+##### MSET命令
 
 同时设置一个或多个 key-value 对
 
@@ -1086,7 +1101,7 @@ MSET -key1- -value1- -key2- -value2- ...
 
 
 
-### 2.Hash
+#### 2.Hash
 
  hash 哈希 是一个键值(key=>value)对集合，string 类型的 field 和 value 的映射表。
 
@@ -1096,7 +1111,7 @@ hash 特别适合用于存储对象。
 
 
 
-#### HMSET命令
+##### HMSET命令
 
 为指定key设置hash表
 
@@ -1104,7 +1119,7 @@ hash 特别适合用于存储对象。
 HMSET -key- -field1- -value1- -field2- -value2- ...
 ```
 
-#### HGETALL命令
+##### HGETALL命令
 
 遍历整个key的hash表内容
 
@@ -1112,7 +1127,7 @@ HMSET -key- -field1- -value1- -field2- -value2- ...
 HGETALL -key-
 ```
 
-#### HGET命令
+##### HGET命令
 
 获取某个key中指定hash表内容
 
@@ -1120,7 +1135,7 @@ HGETALL -key-
 HGET -key- -field-
 ```
 
-#### HLEN命令
+##### HLEN命令
 
 获取hash表中字段的数量
 
@@ -1130,13 +1145,13 @@ HLEN -key-
 
 
 
-### 3.List
+#### 3.List
 
 List列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素到列表的头部（左边）或者尾部（右边）。
 
 
 
-#### LPUSH命令
+##### LPUSH命令
 
 将一个或多个值插入到列表头部。
 
@@ -1144,7 +1159,7 @@ List列表是简单的字符串列表，按照插入顺序排序。你可以添�
 LPUSH -key- -value1- -value2- ...
 ```
 
-#### LSET命令
+##### LSET命令
 
 通过索引来设置元素的值。
 
@@ -1152,7 +1167,7 @@ LPUSH -key- -value1- -value2- ...
 LSET -key- -index- -value-
 ```
 
-#### LLEN命令
+##### LLEN命令
 
 获取列表长度。
 
@@ -1160,7 +1175,7 @@ LSET -key- -index- -value-
 LLEN -key-
 ```
 
-#### LIINDEX命令
+##### LIINDEX命令
 
 通过索引获取列表中的元素。
 
@@ -1170,7 +1185,7 @@ LINDEX -key- -index-
 
 
 
-### 4.Set
+#### 4.Set
 
  Set 是 string 类型的无序集合。
 
@@ -1180,7 +1195,7 @@ Set不允许内容重复。
 
 
 
-#### SADD命令
+##### SADD命令
 
 添加一个 string 元素到 key 对应的 set 集合中，成功返回 1，如果元素已经在集合中返回 0。
 
@@ -1188,7 +1203,7 @@ Set不允许内容重复。
 SADD -key- -value1- -value2- ...
 ```
 
-#### SMEMBER命令
+##### SMEMBER命令
 
 返回集合中的所有的成员。 
 
@@ -1196,7 +1211,7 @@ SADD -key- -value1- -value2- ...
 SMEMBER -key-
 ```
 
-#### SCARD命令
+##### SCARD命令
 
 命令返回集合中元素的数量。
 
@@ -1204,7 +1219,7 @@ SMEMBER -key-
 SCARD -key-
 ```
 
-#### SISMEMBER命令
+##### SISMEMBER命令
 
 判断成员元素是否是集合的成员。
 
@@ -1214,7 +1229,7 @@ SISMEMBER -key- -value-
 
 
 
-### 5.Zset
+#### 5.Zset
 
 有序集合和集合一样也是 string 类型元素的集合,且不允许重复的成员。
 
@@ -1226,7 +1241,7 @@ SISMEMBER -key- -value-
 
 
 
-#### ZADD命令
+##### ZADD命令
 
 向有序集合添加一个或多个成员，或者更新已存在成员的分数
 
@@ -1234,7 +1249,7 @@ SISMEMBER -key- -value-
 ZADD -key- -score1- -value1- -score2- -value2- ...
 ```
 
-#### ZSCARD命令
+##### ZSCARD命令
 
 计算集合中元素的数量。
 
@@ -1242,7 +1257,7 @@ ZADD -key- -score1- -value1- -score2- -value2- ...
 ZSCARD -key-
 ```
 
-#### ZRANGE命令
+##### ZRANGE命令
 
 通过索引区间返回有序集合指定区间内的成员
 
@@ -1252,7 +1267,7 @@ ZRANGE -key- -minScore- -maxScore-
 
 
 
-## **发布订阅**
+### **发布订阅**
 
  发布订阅 (pub/sub) 是一种消息通信模式：发送者 (pub) 发送消息，订阅者 (sub) 接收消息。
 
@@ -1290,7 +1305,7 @@ Unsubscribe -channel1- -channel2-
 
 
 
-# SpringBoot+Redis
+## SpringBoot+Redis
 
 ### Maven依赖
 
@@ -2022,7 +2037,7 @@ public class User implements Serializable {
 
 
 
-# Shiro安全框架
+## Shiro安全框架
 
 Apache Shiro是一个强大且易用的Java安全框架,执行身份验证、授权、密码和会话管理。使用Shiro的易于理解的API,您可以快速、轻松地获得任何应用程序,从最小的移动应用程序到最大的网络和企业应用程序。
 
@@ -2030,11 +2045,11 @@ Apache Shiro是一个强大且易用的Java安全框架,执行身份验证、授
 
 shiro主要有三大功能模块：
 
-1. Subject：主体，一般指用户。
+1. **Subject：主体，一般指用户。**
 
-2. SecurityManager：安全管理器，管理所有Subject，可以配合内部安全组件。(类似于SpringMVC中的DispatcherServlet)
+2. **SecurityManager：安全管理器，管理所有Subject，可以配合内部安全组件。(类似于SpringMVC中的DispatcherServlet)**
 
-3. Realms：用于进行权限信息的验证，一般需要自己实现。
+3. **Realms：用于进行权限信息的验证，一般需要自己实现。**
 
 ### 细分功能
 
@@ -2060,7 +2075,7 @@ shiro主要有三大功能模块：
     </dependency>
 ```
 
-## 快速入门
+### 快速入门语句
 
 ```java
     // 获取当前用户对象 Subject
@@ -2090,9 +2105,9 @@ shiro主要有三大功能模块：
 
 
 
-## SpringBoot继承Shiro
+### SpringBoot继承Shiro
 
-### Maven依赖
+#### Maven依赖
 
 ```xml
         <dependency>
@@ -2102,7 +2117,7 @@ shiro主要有三大功能模块：
         </dependency>
 ```
 
-### 创建Realm类
+#### 创建Realm类
 
 ```java
 public class CustomRealm extends AuthorizingRealm {
@@ -2130,6 +2145,7 @@ public class CustomRealm extends AuthorizingRealm {
             simpleAuthorizationInfo.addRole(role.getRoleName());
             //添加权限
             for (Permissions permissions : role.getPermissions()) {
+                //将用户拥有的权限加载到获取权限中
                 simpleAuthorizationInfo.addStringPermission(permissions.getPermissionsName());
             }
         }
@@ -2166,7 +2182,9 @@ public class CustomRealm extends AuthorizingRealm {
 
 其中AuthenticationToken 用于收集用户提交的身份（如用户名）及凭据（如密码）。
 
-### 创建ShiroConfig配置类
+
+
+#### 创建ShiroConfig配置类
 
 ```java
 @Configuration
@@ -2225,9 +2243,13 @@ public class ShiroConfig {
 	role：拥有某个角色权限才能访问
 ```
 
+权限限定访问：
 
+```
+map.put("/set","perms[user:set]");   //只限定拥有‘user:set’权限的用户访问
+```
 
-### Controller类
+#### Controller类
 
 ```java
 @RestController
@@ -2273,18 +2295,76 @@ public class LoginController {
 
 3.使用Subject类的login方法判断登录结果，并捕捉相关错误异常。
 
-​	UnknownAccountException: 用户名不存在
 
-​	AuthenticationException: 账户或者密码错误
 
-​	AuthorizationException: 没有权限
+**登录错误异常**
 
-​	AccountException : 账号异常
+- ​	UnknownAccountException: 用户名不存在
 
-​		ConcurrentAccessException:      并发访问异常（多个用户同时登录时抛出）
- 		UnknownAccountException:        未知的账号
- 		ExcessiveAttemptsException:     认证次数超过限制
-​		 DisabledAccountException:       禁用的账号
-​		 LockedAccountException:     账号被锁定
-​		 UnsupportedTokenException:      使用了不支持的Token
+- ​	AuthenticationException: 账户或者密码错误
+
+- ​	AuthorizationException: 没有权限
+
+- ​	AccountException : 账号异常
+    - ConcurrentAccessException: 并发访问异常（多个用户同时登录时抛出）
+    - UnknownAccountException:未知的账号
+    - ExcessiveAttemptsException: 认证次数超过限制
+    -  DisabledAccountException: 禁用的账号
+    -  LockedAccountException: 账号被锁定
+    -  UnsupportedTokenException: 使用了不支持的Token
+
+
+
+### Shiro+Thymeleaf页面整合
+
+Maven依赖：
+
+```xml
+<!-- https://mvnrepository.com/artifact/com.github.theborakompanioni/thymeleaf-extras-shiro -->
+<dependency>
+    <groupId>com.github.theborakompanioni</groupId>
+    <artifactId>thymeleaf-extras-shiro</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+Themeleaf页面头部加入 xmlns:shiro="http://www.pollix.at/thymeleaf/shiro" 开启代码提示。
+
+```html
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+    
+      ...
+    
+</html>
+```
+
+
+
+#### 常用标签：
+
+##### The has Permission tag
+
+shiro:hasPermission="xxx"   判断当前用户是否拥有xxx权限
+
+```html
+<div shiro:hasPermission="user:set"></div>
+```
+
+##### The authenticated tag
+
+authenticated=“”  已经用户得到认证
+
+```html
+<a shiro:authenticated="" href="updateAccount.html">Update your contact information</a>
+```
+
+##### The hasRole tag
+
+shiro:hasRole="xxx"  判断当前用户为xxx权限
+
+```html
+<a shiro:hasRole="administrator" href="admin.html">Administer the system</a>
+```
 

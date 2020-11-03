@@ -8,6 +8,7 @@
 - 学习日志目录
 
   - Easy-captcha -验证码生成
+      - 使用方法
   - Mybatis XML映射文件详解
     - 基本SQL XML语句
     - 动态 SQL
@@ -36,8 +37,13 @@
   - Shiro安全框架
     - 主要功能
     - Maven依赖
-    - 快速入门
-
+  - 快速入门
   - SpringBoot继承Shiro
-
+    - SpringBoot继承Shiro
+      - Shiro+Thymeleaf页面整合
+  
+  
+  
+  
+  
   
