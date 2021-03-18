@@ -1,116 +1,7 @@
-# 我的学习日志
+# <font color=red>我的学习日志</font>
 
 ## **目录**
-- [我的学习日志](#我的学习日志)
-  - [**目录**](#目录)
-  - [获取验证码 easy-captcha](#获取验证码-easy-captcha)
-    - [Maven依赖](#maven依赖)
-    - [使用方法](#使用方法)
-  - [Mybatis XML映射文件详解](#mybatis-xml映射文件详解)
-    - [基本SQL XML语句](#基本sql-xml语句)
-      - [Select语句 -查询](#select语句--查询)
-      - [Insert、Update、Delete 语句](#insertupdatedelete-语句)
-      - [Foreach语句](#foreach语句)
-      - [Sql语句](#sql语句)
-      - [#{xxx}/${xxx} -字符串替换 语句](#xxxxxx--字符串替换-语句)
-      - [ResultMap -结果映射](#resultmap--结果映射)
-        - [id & result](#id--result)
-        - [Association -关联](#association--关联)
-        - [Collection -集合](#collection--集合)
-        - [Discriminator -鉴定器](#discriminator--鉴定器)
-    - [动态 SQL](#动态-sql)
-      - [if语句](#if语句)
-      - [choose、when、otherwise语句](#choosewhenotherwise语句)
-      - [trim、where、set语句](#trimwhereset语句)
-  - [TK.mybatis框架使用](#tkmybatis框架使用)
-    - [BaseMapper<T>方法：](#basemappert方法)
-    - [IdsMapper<T>方法：](#idsmappert方法)
-    - [ConditionMapper<T>方法：](#conditionmappert方法)
-  - [JWT（JSON Web Token)跨域身份验证](#jwtjson-web-token跨域身份验证)
-    - [结构解析](#结构解析)
-    - [使用JWT](#使用jwt)
-      - [1.Maven依赖](#1maven依赖)
-      - [2.利用数据，生成对应Token](#2利用数据生成对应token)
-      - [3.使用对应Token，获取数据](#3使用对应token获取数据)
-  - [SpringBoot+Mybatis整合](#springbootmybatis整合)
-    - [Maven依赖](#maven依赖-1)
-    - [操作方法](#操作方法)
-      - [1.编写实体类](#1编写实体类)
-      - [2.编写mapper接口](#2编写mapper接口)
-      - [3.编写mapper xml映射文件](#3编写mapper-xml映射文件)
-      - [4.编写service接口](#4编写service接口)
-      - [5.编写service实现类](#5编写service实现类)
-      - [6.编写controller文件](#6编写controller文件)
-      - [7.配置property文件(或者yml文件)](#7配置property文件或者yml文件)
-  - [Mybatis逆向工程](#mybatis逆向工程)
-    - [操作方法](#操作方法-1)
-      - [一.Maven依赖](#一maven依赖)
-      - [二.配置generatorConfig.xml文件](#二配置generatorconfigxml文件)
-      - [三.编写生成器](#三编写生成器)
-  - [PageHelper 分页](#pagehelper-分页)
-    - [Maven依赖](#maven依赖-2)
-    - [操作方法](#操作方法-2)
-      - [1.配置文件](#1配置文件)
-      - [2.编写对应需要分页controller层方法](#2编写对应需要分页controller层方法)
-  - [Redis基础学习](#redis基础学习)
-    - [服务器](#服务器)
-      - [打开服务器](#打开服务器)
-      - [访问服务器](#访问服务器)
-    - [数据类型](#数据类型)
-      - [1.String](#1string)
-        - [SET命令](#set命令)
-        - [GET命令](#get命令)
-        - [GETSET命令](#getset命令)
-        - [STRLEN命令](#strlen命令)
-        - [MSET命令](#mset命令)
-      - [2.Hash](#2hash)
-        - [HMSET命令](#hmset命令)
-        - [HGETALL命令](#hgetall命令)
-        - [HGET命令](#hget命令)
-        - [HLEN命令](#hlen命令)
-      - [3.List](#3list)
-        - [LPUSH命令](#lpush命令)
-        - [LSET命令](#lset命令)
-        - [LLEN命令](#llen命令)
-        - [LIINDEX命令](#liindex命令)
-      - [4.Set](#4set)
-        - [SADD命令](#sadd命令)
-        - [SMEMBER命令](#smember命令)
-        - [SCARD命令](#scard命令)
-        - [SISMEMBER命令](#sismember命令)
-      - [5.Zset](#5zset)
-        - [ZADD命令](#zadd命令)
-        - [ZSCARD命令](#zscard命令)
-        - [ZRANGE命令](#zrange命令)
-    - [**发布订阅**](#发布订阅)
-      - [SUBSCRIBE命令](#subscribe命令)
-      - [PUBLISH命令](#publish命令)
-      - [UNSUBSCRIBE命令](#unsubscribe命令)
-  - [SpringBoot+Redis](#springbootredis)
-    - [Maven依赖](#maven依赖-3)
-    - [配置方法](#配置方法)
-      - [1.配置properties文件(yaml文件)中的redis环境参数](#1配置properties文件yaml文件中的redis环境参数)
-      - [2.配置RedisConfig类](#2配置redisconfig类)
-      - [3.配置RedisUtil类](#3配置redisutil类)
-      - [4.创建实体类](#4创建实体类)
-      - [5.在Controller中使用（读写）](#5在controller中使用读写)
-  - [Shiro安全框架](#shiro安全框架)
-    - [主要功能](#主要功能)
-    - [细分功能](#细分功能)
-    - [Maven依赖](#maven依赖-4)
-    - [快速入门语句](#快速入门语句)
-    - [SpringBoot继承Shiro](#springboot继承shiro)
-      - [Maven依赖](#maven依赖-5)
-      - [创建Realm类](#创建realm类)
-      - [创建ShiroConfig配置类](#创建shiroconfig配置类)
-      - [Controller类](#controller类)
-    - [Shiro+Thymeleaf页面整合](#shirothymeleaf页面整合)
-      - [常用标签：](#常用标签)
-        - [The has Permission tag](#the-has-permission-tag)
-        - [The authenticated tag](#the-authenticated-tag)
-        - [The hasRole tag](#the-hasrole-tag)
-
-
+[toc]
 
 
 ## 获取验证码 easy-captcha
@@ -156,6 +47,265 @@ return Result.success(captchaMap);
 ```
 
 ------
+
+## MYSQL详解
+
+### 注意规范
+
+**注意:所有的创建和删除操作尽量添加 `IF EXISTS` 语句进行判断,以免报错.**
+
+* `` :反引号,字段名必须使用它包裹;
+* -- info :单行注释,注意其--后必须空出一格才可以.
+* /* info */ :多行注释.
+* SQL关键语句大小写不敏感,但为了快速阅读以及排错,建议写小写.
+* "" :引号,Default 默认语句和Comment 备注使用.
+
+### 修改表
+
+#### 修改表名
+
+```mysql
+ALTER TABLE 表名 RENAME AS 新表名 ;
+ALTER TABLE teacher RENAME AS student ;
+```
+
+#### 增加表字段
+
+```mysql
+ALTER TABLE 表名 ADD 字段名 列属性 ;
+ALTER TABLE teacher ADD age int(10) ;
+```
+
+#### 修改表字段
+
+```mysql
+ALTER TABLE 表名 MODIFY 字段名 新的列属性[] ;  -- 只能修改字段列的属性以及约束,不能修改字段名
+ALTER TABLE teacher MODIFY age int(12) ;
+```
+
+```mysql
+ALTER TABLE 表名 CHANGE 字段名 新字段名 新的列属性[] ;  -- 字段名及列属性都能修改
+ALTER TABLE teacher CHANGE age age1 int(13) ;
+```
+
+#### 删除表字段
+
+```mysql
+ALTER TABLE 表名 DROP 字段名 ;
+ALTER TABLE teacher DROP age ;
+```
+
+### MySql数据管理
+
+#### 外键(了解即可)
+
+#####  物理外键(不建议使用)
+
+方法一:创建表时,增加约束.
+
+不能单独删除被外键关系的表.
+
+方法二:ALTER TABEL 表名 ADD CONSTRAINT '约束名'  FOREIGN KEY('列名')  REFERENCES '表名'('列名')
+
+
+
+#### DML语言(全部记住)
+
+**数据库意义:数据存储,数据管理**
+
+DML语言:数据操作语言
+
+#### 添加
+
+```mysql
+-- 插入单行数据
+INSERT INTO 表名 (字段1,字段2,字段3,...) VALUES (值1,值2,值3,...);
+INSERT INTO 表名 VALUES (值1,值2,值3,...); -- 必须输入表所有字段值,并且位置一一对应,否则报错.
+-- 插入多行数据
+INSERT INTO 表名 (字段1,字段2,字段3,...) VALUES (值1,值2,值3,...),(值1,值2,值3,...),...
+```
+
+#### 修改
+
+```mysql
+UPDATE `表名` SET `字段` = `值` WHERE 条件...
+UPDATE `表名` SET `字段` = `值`; -- 无条件时默认修改所有列数据
+UPDATE `表名` SET `字段` = `值` , `字段` = `值` WHERE 条件... -- 修改多个字段值
+
+```
+
+#### 删除
+
+```mysql
+DELETE FROM 表名 WHERE 条件...
+TRUNCATE 表名 -- 清空表所有数据
+```
+
+**TRUNCATE删除所有数据时会将 自增字段 计数归零,而DELETE 则不会.**
+
+TRUNCATE删除所有数据不会影响事务.
+
+<font color=#0099ff size=5 face="黑体"> DELETE删除问题</font>: 重启数据库,在INNODB中,自增列从1开始(内存丢失).
+
+​														  在MyISAM中,自增列不会丢失计数.
+
+
+
+### DQL查询语言
+
+**DQL:Data query language -数据查询语言**
+
+```mysql
+SELECT * FROM 表名; -- 查询表中所有字段数据
+SELECT 字段1,字段2,字段3,... FROM 表名; 
+SELECT `字段1` AS 别名1,字段2 AS 别名2,字段3 AS 别名3,... FROM 表名;   -- 以别名查询出来字段数据
+
+-- 函数Concat(a,b)将a与b两结果想拼接
+SELECT CONCAT('姓名',StudentName) AS 新名字 FROM student;
+-- Distinct去重
+SELECT DISTINCT 字段 FROM 表名;
+```
+
+
+
+#### 联表查询JoinON详解
+
+![](picture\join.jpg)
+
+
+
+![](picture\20200117200621435834.png)
+
+思路:
+
+​	1.分析需求,分析查询的字段来自那些表,(连接查询)
+
+​	2.确定使用那种连接查询? 7种
+
+​	确定交叉点(这两表那些数据是相同的)
+
+​	判断的条件: 表1 字段1=表2 字段2
+
+```mysql
+-- join on 连接查询
+-- where 等值查询
+SELECT　s.studentNo,studentName,subjectNo,studentResult
+FROM student (AS)s  -- AS 可以省略
+INNER JOIN/ LEFT JOIN/ RIGHT JOIN result (AS)r
+WHERE/ ON  s.studentNo=r.studentNo
+
+SELECT　s.studentNo,studentName,subjectName,studentResult
+FROM student (AS)s  -- AS 可以省略
+RIGHT JOIN result (AS)r
+ON  s.studentNo=r.studentNo
+INNER JOIN subject sub
+ON r.subjectNO=sub.subjectNO
+-- 连接查询可以重叠查询
+```
+
+| 操作       | 描述                                      |
+| ---------- | ----------------------------------------- |
+| inner join | 如果表中至少有一个匹配,返回所有值         |
+| left join  | 即使右表中没有匹配的数据,也会从左表中返回 |
+| right join | 即使左表中没有匹配的数据,也会从右表中返回 |
+
+
+
+#### **自连接**
+
+自己的表和自己的表连接, **核心:一张表拆为两条一样的表** 
+
+<img src="C:\Users\Zssaer\Desktop\MyLeaning_doc\picture\3.jpg" style="zoom:50%;" />
+
+```MySQL
+-- 把一张表看出两张一模一样的表
+SELECT a.categoryName AS'父栏目',b.categoryName AS '子栏目'
+FROM category AS a,category AS b
+WHERE a.categoryid=b.pid
+```
+
+<img src="C:\Users\Zssaer\Desktop\MyLeaning_doc\picture\124.jpg" style="zoom:50%;" />
+
+
+
+#### 分页和排序
+
+ **分页:limit   排序:order by**
+
+Order by:通过字段排序:升序 ASC ,降序 DESC
+
+```mysql
+SELECT 字段1,字段2,...
+FROM 表名
+WHERE 条件
+ORDER BY 字段 (ASC/ DESC) 
+```
+
+Limit 起始值,显示个数 (起始值首项为0)
+
+```mysql
+SELECT 字段1,字段2,...
+FROM 表名
+WHERE 条件
+Limit 0,5 -- 从第一条数据开始,显示5条数据
+```
+
+​	-- 设定每页显示5条数据
+
+​    --第一页 limit 0,5	(1-1)*5
+
+​    --第二页 limit 5,5	(2-1)*5
+
+​    --第三页 limit 10,5	(3-1)*5
+
+​    --第N页  limit  (N-1)*PageSize,PageSize
+
+   --[PageSize:页面大小,(N-1)*PageSize:起始值,N:当前页]
+
+
+
+#### 子查询
+
+
+
+#### 常用函数
+
+​	ABS(-8)  --绝对值		CEILING(9.4) --向上取整		FLOOR(9.4)  --向下取整
+
+​	RAND()  --返回一个0-1之间的随机数	CHAR_LENGTH('scarf') --返回字符串的长度	CONCAT('2','3') --拼接字符串
+
+​	REPLACE('2333','23','41') --替换指定字符串内容	SUBSTR('safer',1,3) --返回指定位置字符串(字符串,截取位置,截取长度)
+
+#### 聚合函数及分组过滤
+
+​	GROUP BY 字段:通过字段来分组
+
+​	COUNT():查询表中记录条数
+
+​		COUNT(字段)	-- 会忽略所有的NULL值
+
+​		COUNT(*)	-- 不会忽略NULL值,本质 是计算行数
+
+​		COUNT(1)	-- 不会忽略NULL值,本质是计算行数
+
+​	SUM(字段):计算所有行总和
+
+​	AVG(字段):计算所有行平均分
+
+​	MAX(字段):查询所有行中最高分
+
+​	MIN(字段):查询所有行中最低分
+
+WHERE 条件中不能包含聚合函数.聚合函数过滤 需要使用 HAVING
+
+```mysql
+SELECT SubjectName,AVG(studentResult) AS '平均分'
+FROM result
+GROUP BY SubjectNo
+HAVING 平均分>80
+```
+
+
 
 ## Mybatis XML映射文件详解
 
@@ -795,6 +945,41 @@ System.out.println(decodedJWT.getClaim("userName").asString());
 
 ### 操作方法
 
+**application.yml文件配置**
+
+```yaml
+spring:
+  datasource:
+    username: root
+    password: 123456
+    #?serverTimezone=UTC解决时区的报错
+    url: jdbc:mysql://localhost:3306/springboot?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+
+    #Spring Boot 默认是不注入这些属性值的，需要自己绑定
+    #druid 数据源专有配置
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+
+    #配置监控统计拦截的filters，stat:监控统计、log4j：日志记录、wall：防御sql注入
+    #如果允许时报错  java.lang.ClassNotFoundException: org.apache.log4j.Priority
+    #则导入 log4j 依赖即可，Maven 地址：https://mvnrepository.com/artifact/log4j/log4j
+    filters: stat,wall,log4j
+    maxPoolPreparedStatementPerConnectionSize: 20
+    useGlobalDataSourceStat: true
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+```
+
 #### 1.编写实体类
 
 ```java
@@ -1161,6 +1346,8 @@ string 是 redis 最基本的类型，一个 key 对应一个 value。
 string 类型是二进制安全的。意思是 redis 的 string 可以包含任何数据。比如jpg图片或者序列化的对象。
 
 **string 类型的单个值最大能存储 512MB。**
+
+
 
 
 
@@ -2142,6 +2329,61 @@ public class User implements Serializable {
 
 
 
+## MD5+Salt+Hash散列进行数据加密
+
+对于存储重要信息内容（如密码、支付码）时，为了用户信息的安全性，必须使用数据加密。
+
+其中MD5+Salt+Hash散列 加密方式比较流行且简便。
+
+### 主要方法
+
+#### 注册用户时
+
+```java
+public class User {
+    private Integer id;
+    private String username;
+    private String password;
+	//保存注册时随机盐值，以确保登录时解密
+    private String salt;
+ 	...
+}
+```
+
+```java
+public class SaltUtils {
+    /**
+     * 生成随机Salt的静态方法，以确保Salt不固定
+     * @param n
+     * @return
+     */
+    public static String getSalt(int n){
+        char[] chars = "ABCDEFGHIJKLMNOPQRSTYUWXWZabcdefghijklmnopqrstyuwxwz0123456789!@#$%^&*()".toCharArray();
+        StringBuffer sb=new StringBuffer();
+        for (int i = 0; i < n; i++) {
+            char c=chars[new Random().nextInt(chars.length)];
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+}
+```
+
+```java
+/**
+* 以下步骤多在Service层实现
+*/
+//1.生成随机盐
+//2.将随机盐保存到数据
+String salt = SaltUtils.getSalt(8);
+//明文密码进行MD5 + salt + hash散列次数
+Md5Hash md5Hash = new Md5Hash(password,salt,1024);
+//将用户输入的密码进行16进制化
+password=md5Hash.toHex();
+```
+
+
+
 ## Shiro安全框架
 
 Apache Shiro是一个强大且易用的Java安全框架,执行身份验证、授权、密码和会话管理。使用Shiro的易于理解的API,您可以快速、轻松地获得任何应用程序,从最小的移动应用程序到最大的网络和企业应用程序。
@@ -2180,10 +2422,20 @@ shiro主要有三大功能模块：
     </dependency>
 ```
 
-### 快速入门语句
+###  快速入门语句
 
-```java
-    // 获取当前用户对象 Subject
+``` java
+    // 得到DefaultSecurityManager对象
+	DefaultSecurityManager defaultSecurityManager=new DefaultSecurityManager();
+    // 读取ini配置文件
+    IniRealm iniRealm=new IniRealm("classpath:shiro.ini");
+    // 配置DefaultSecurityManager对象
+    defaultSecurityManager.setRealm(iniRealm);
+    // 获取SecurityUtils对象
+	SecurityUtils.setSecurityManager(defaultSecurityManager);
+
+
+	// 获取当前用户对象 Subject
     Subject currentUser = SecurityUtils.getSubject();
 
     // 通过当前用户获取Session
@@ -2211,6 +2463,8 @@ shiro主要有三大功能模块：
 
 
 ### SpringBoot继承Shiro
+
+<img src="picture\32323.jpg" style="zoom: 67%;" />
 
 #### Maven依赖
 
@@ -2277,7 +2531,7 @@ public class CustomRealm extends AuthorizingRealm {
             return null;
         } else {
             //这里验证authenticationToken和simpleAuthenticationInfo的信息
-            SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(name, user.getPassword().toString(), getName());
+            SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(name, user.getPassword().toString(),ByteSource.Util.bytes("x23*2d"),getName());
             return simpleAuthenticationInfo;
         }
      }
@@ -2286,6 +2540,8 @@ public class CustomRealm extends AuthorizingRealm {
 创建Realm类继承AuthorizingRealm，重写doGetAuthorizationInfo（授权配置）、doGetAuthenticationInfo（认证配置）方法。
 
 其中AuthenticationToken 用于收集用户提交的身份（如用户名）及凭据（如密码）。
+
+**其中ByteSource.Util.bytes方法为用户设置时的随机盐值。**
 
 
 
@@ -2304,6 +2560,14 @@ public class ShiroConfig {
     @Bean
     public DefaultWebSecurityManager  securityManager() {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        //设置realm hash验证
+        HashedCredentialsMatcher credentialsMatcher= new HashedCredentialsMatcher();
+        //使用加密方法
+        credentialsMatcher.setHashAlgorithmName("md5");
+        //散列次数
+        credentialsMatcher.setHashIterations(1024);
+        userRealm.setCredentialsMatcher(credentialsMatcher);
+        //绑定Reaml
         securityManager.setRealm(myShiroRealm());
         return securityManager;
     }
@@ -2344,7 +2608,7 @@ public class ShiroConfig {
 	anno：无需认证即可访问
 	authc：必须认证才可以访问
 	user ：不许拥有记住我功能才能访问
-	perms：拥有对某个资源访问权限才能使用
+	perms：拥有对某个资源访问权限才能使用  （（perms认证必须放在authc认证前，否则无效））
 	role：拥有某个角色权限才能访问
 ```
 
@@ -2410,7 +2674,7 @@ public class LoginController {
 
 - ​	AuthorizationException: 没有权限
 
-- ​	AccountException : 账号异常
+- ​	Account Exception : 账号异常
     - ConcurrentAccessException: 并发访问异常（多个用户同时登录时抛出）
     - UnknownAccountException:未知的账号
     - ExcessiveAttemptsException: 认证次数超过限制
@@ -2439,13 +2703,9 @@ Themeleaf页面头部加入 xmlns:shiro="http://www.pollix.at/thymeleaf/shiro" �
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
-    
-      ...
-    
+      ... 
 </html>
 ```
-
-
 
 #### 常用标签：
 
@@ -2471,5 +2731,44 @@ shiro:hasRole="xxx"  判断当前用户为xxx权限
 
 ```html
 <a shiro:hasRole="administrator" href="admin.html">Administer the system</a>
+```
+
+
+
+### **权限、角色访问控制**
+
+#### 方法一：直接在页面控制（以Thymeleaf为例）
+
+```html
+    <!--拥有user:add权限的任何人才能看见-->
+    <div shiro:hasPermission="user:add:*">
+        <a th:href="@{/user/add}">Add</a>
+    </div>
+    <!--拥有admin角色才能看见-->
+    <div shiro:hasRole="admin">
+        <a th:href="@{/user/update}">Update</a>
+    </div>
+```
+
+#### 方法二：Controller代码层中控制
+
+```java
+    //获取当前用户
+    Subject subject = SecurityUtils.getSubject();
+    if (subject.hasRole("admin")) {
+        System.out.println("添加成功！");
+    }else{
+        System.out.println("添加失败！");
+```
+
+#### 方法三：代码注释控制
+
+```java
+    @RequestMapping("/user/add")
+    @RequiresRoles("admin") //判断角色
+ 	@RequiresPermissions("user:add:*") //判断权限
+    public String add() {
+        return "user/add";
+    }
 ```
 
