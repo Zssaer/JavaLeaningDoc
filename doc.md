@@ -155,6 +155,8 @@ TRUNCATE删除所有数据不会影响事务.
 
 **DQL:Data query language -数据查询语言**
 
+<img src="C:\Users\Zssaer\Desktop\MyLeaning_doc\picture\xs.jpg" style="zoom: 41%;" />
+
 ```mysql
 SELECT * FROM 表名; -- 查询表中所有字段数据
 SELECT 字段1,字段2,字段3,... FROM 表名; 
@@ -307,9 +309,255 @@ HAVING 平均分>80
 
 
 
+### 事务
+
+#### 1.事务简介
+
+ (1)在 MySQL 中只有使用了 Innodb 数据库引擎的数据库或表才支持事务。
+ (2)事务处理可以用来维护数据库的完整性，保证成批的 SQL 语句要么全部执行，要么全部不执行。
+ (3)事务用来管理 insert,update,delete 语句。
+
+ (4)Mysql自动默认开启事务自动提交.
+
+```mysql
+SET autocommit = 0 /* 关闭 */
+SET autocommit = 1 /* 开启(默认) */
+```
+
+#### 2.事务四大特征/原则
+
+一般来说，事务是必须满足4个条件（ACID）：：原子性（Atomicity，或称不可分割性）、一致性（Consistency）、隔离性（Isolation，又称独立性）、持久性（Durability）。
+
+原子性：一个事务（transaction）中的所有操作，**要么全部完成，要么全部失败**,不会只发生其中一个动作。
+
+一致性：在事务开始结束前后**数据结果要保证一定一致**.
+
+隔离性：数据库允许多个并发事务**同时**对其数据进行读写和修改的能力，多个并发事务不会互相影响。
+
+​				事务隔离分为不同级别:	
+
+- 脏读:指一个事务读取了另一个事务未提交的数据.
+- 不可重复读:在一个事务读取数据时,多次读取结果不同.(不一定错误,只是场合不对)
+- 幻读(虚读):在一个事务读取了别的事务插入的数据,导致前后读取不一致.
+
+持久性：事务处理结束后的数据不会随外界原因而导致数据丢失,**一旦事务提交不可逆**。
+
+#### 3.MYSQL 事务处理
+
+手动处理事务
+
+<img src="C:\Users\Zssaer\Desktop\MyLeaning_doc\picture\transaction.jpg" style="zoom: 33%;" />
+
+​		0.关闭事务自动提交
+
+```mysql
+SET autocommit = 0
+```
+
+​		1.事务开启
+
+```mysql
+START TRANSACTION  -- 标记一个事务的开始,从这之后的SQL语句都在一个事务内.
+```
+
+​		2.提交事务 :持久化 (成功的话)
+
+```mysql
+COMMIT
+```
+
+​		3.回滚事务 :回到之前的样子(失败的话)
+
+```mysql
+ROLLBACk
+```
+
+​		3.事务结束
+
+```mysql
+SET TRANSACTION = 1
+```
+
+​		4.保存点
+
+```mysql
+SAVEPOINT xxx1(保存点名)	-- 设置一个叫xxx1的事务保存点
+ROLLBACK TO SAVEPOINT xxx1(保存点名)	-- 回滚到xxx1保存点
+
+RELEASE SAVEPOINT xxx1(保存点名)	-- 撤销xxx1保存点
+```
+
+### 索引
+
+索引是帮助Mysql高效获取数据的**数据结构**.
+
+但索引的缺点：会降低更新表的速度，如对表进行INSERT、UPDATE和DELETE。因为更新表时，MySQL不仅要保存数据，还要保存一下索引文件。
+
+#### 索引分类
+
+- 主键索引 (PRIMARY KEY)
+
+  - 唯一标识,主键不可重复,只能有一个列为主键
+
+- 唯一索引 (UNIQUE KEY)
+
+  - 避免重复的列出现,唯一索引可以重复,多个列可以标识为 唯一索引
+
+-  常规索引 (KEY/INDEX) 
+
+  - 默认的index,key关键字来设置
+
+- 全文索引(FULL TEXT)
+
+  - 在特定的数据库才有,MyISAM
+  
+- 快速定位数据
+
+  
+#### 索引使用
+
+-- 在创建表时给字段添加索引
+
+-- 创建完毕后,添加索引
+
+```mysql
+SHOW INDEX FROM 表名 -- 显示表中的所有索引
+
+ALTER TABLE 表名 ADD FULLTEXT/UNIQUE  索引名(字段名) -- 修改表结构,添加一个全文索引
+
+CREATE INDEX/UNIQUE INDEX  索引名 ON 表名 (字段名) -- 在一个表中添加一个常规索引
+
+/*在创建表时添加索引*/
+CREATE TABLE mytable(  
+ 
+ID INT NOT NULL,   
+ 
+username VARCHAR(16) NOT NULL,  
+ 
+INDEX/UNIQUE [索引名] (username(length))  -- 如果是CHAR，VARCHAR类型，length可以小于字段实际长度；如果是BLOB和TEXT类型，必须指定 length。
+ 
+);  
+
+DROP INDEX [索引名] ON 表名; -- 删除索引
+
+```
+
+```MySQL
+-- 插入100万条数据
+CREATE FUNCTION mock_date()
+Returns INT
+DELIMITER $$  -- 写函数之前必须写,标志
+BEGIN
+	DECLARE num INT DEFAULT 1000000;
+	DECLARE i INT DEFAULT 0;
+	WHILE i<num DO
+		-- 插入语句
+		INSERT INTO 表名(字段1,字段2,...) VALUES(CONCAT('值1',i),CONCAT('值2',i),...);
+		SET i=i+1;
+	END WHILE;
+	RETURN i;
+END;
+
+```
+
+#### 索引原则
+
+- 索引不是越多越好,表中数据非常的时才考虑.
+- 不要对进程变动数据加索引
+- 小数据量的表不需要加索引
+- 索引一般加载常用来查询的字段上!
+
+索引的数据结构:
+
+​	Hash 类型的索引
+
+​	Btree :InnoDB默认的默认索引类型
+
+
+
+### 权限管理和备份
+
+#### 用户管理
+
+用户表: mysql.user表
+
+本质:对这张表进行增删改查
+
+```mysql
+CREATE USER 用户名 IDENTIFIED BY '密码'  -- 创建一个默认用户
+SET PASSWORD= PASSWORD('密码')  -- 修改当前用户密码
+SET PASSWORD FROM 用户名= PASSWORD('密码')  -- 修改指定用户密码
+
+RENAME USER 用户名 To 新用户名 -- 修改指定用户名
+GRANT ALL PRIVILEGES ON *.* TO 用户名 -- 给指定用户授权所有权限(除了给别人授权)在所有数据库中所有表
+SHOW GRANT FOR 用户名 -- 查看指定用户权限
+REVOKE ALL PRIVILEGES ON *.* FROM 用户名 -- 撤销指定用户所有权限在所有数据库中所有表
+
+DROP USER 用户名 -- 删除指定用户
+```
+
+#### Mysql备份
+
+1.直接拷贝data文件夹下的物理文件 
+
+2.使用可视化工具手动导出
+
+3.使用命令行导出  mysqldump 命令行
+
+```
+mysqldump -h`mysql地址` -u`用户名` -p`密码` 数据库名 表名 表2 表3 ... >物理磁盘位置:/文件名.sql(导出地址)
+```
+
+
+
+### 数据库三大范式
+
+为什么需要数据库范式化?
+
+- 信息重复
+
+- 更新异常
+
+- 插入异常
+
+  - 无法正常显示信息
+
+- 删除异常
+
+  - 丢失有效信息
+
+
+
+**第一范式(1NF)**
+
+原子性: 保证每列不可再分
+
+**第二范式(2NF)**
+
+前提:满足第一范式
+
+每张表只描述一个事情
+
+**第三范式(3NF)**
+
+前提:满足第一范式和第二范式
+
+确保数据表中每列数据和主键直接相关,而不能间接相关.
+
+
+
+**规范性和性能的问题:**
+
+关联查询的表不能成过三张表
+
+- 考虑商业化需求和目标(成本,用户体验)数据库的性能更加重要
+- 规范性能的问题的时候,需要适当考虑一下示范性
+- 故意给某些表增加一些冗余的字段(从多表查询变单表查询)
+- 故意增加一些计算列(大数据量降低为小数据量的查询:索引)
+
+
+
 ## Mybatis XML映射文件详解
-
-
 
 ### 基本SQL XML语句
 
@@ -1318,6 +1566,24 @@ pagehelper:
 ------
 
 ## Redis基础学习
+
+什么是NoSql
+
+NoSql=not only Sql
+
+
+
+泛指非关系型数据库,web2.0互联网诞生,传统的关系型数据库难以对付Web2.0时代.尤其超大规模的高并发社区.
+
+关系型数据库:表格,行列记录.(POI)
+
+
+
+**NoSQL的特点:**
+
+1.方便扩展(数据之间没有关系)
+
+2.大数据量高性能(Redis 一秒写8万次,读取11万)
 
 ### 服务器
 
@@ -2772,3 +3038,116 @@ shiro:hasRole="xxx"  判断当前用户为xxx权限
     }
 ```
 
+## JAVA设计模式
+
+### OOP七大原则
+
+开：开闭原则
+
+口：接口隔离原则
+
+里：里氏替换原则
+
+合：合成复用原则
+
+最：最少知道原则（迪米特原则）
+
+单：单一职责原则
+
+依：依赖倒置原则
+
+### 单例模式
+
+单例模式（Singleton Pattern）是 Java 中最简单的设计模式之一.这种类型的设计模式属于创建型模式，它提供了一种创建对象的最佳方式。
+
+**注意：**
+
+- 1、单例类只能有**一个实例**。
+
+- 2、单例类必须自己创建**自己的唯一实例**。
+
+- 3、单例类必须给所有其他对象提供这一实例。
+
+- 
+
+  **单例模式类的构造器必须为private私有化,并且需要内建一个实例,必为其提供一个Get实例的公共方法.**
+
+  **获取单例模式的类时只有通过使用该Get方法获取当前实例.**
+
+```java
+public class SingleObject {
+ 
+   //创建 SingleObject 的一个对象
+   private static SingleObject instance = new SingleObject();
+ 
+   //让构造函数为 private，这样该类就不会被实例化
+   private SingleObject(){}
+ 
+   //获取唯一可用的对象 
+   public static SingleObject getInstance(){
+      return instance;
+   }
+ 
+   public void showMessage(){
+      System.out.println("Hello World!");
+   }
+}
+```
+
+### 工厂模式
+
+工厂模式实现了**创建者和调用者的分离**
+
+工厂模式分为: 简单工厂模式
+
+​						  工厂方法模式
+
+​						  抽象工厂模式
+
+
+
+核心本质:  实例化对象不能使用new,而用工厂方法代替
+
+​				    将选择实现类,建立统一管理和控制.
+
+
+
+**工厂模式需要创建一个工厂类,用来返回对应需求的实体类.**
+
+```Java
+public class Rectangle implements Shape {
+ 
+   @Override
+   public void draw() {
+      System.out.println("Inside Rectangle::draw() method.");
+   }
+}
+```
+
+```java
+public class ShapeFactory {
+    
+   //使用 getShape 方法获取形状类型的对象
+   //简单工厂模式
+   public Shape getShape(String shapeType){
+      if(shapeType == null){
+         return null;
+      }        
+      if(shapeType.equalsIgnoreCase("CIRCLE")){
+         return new Circle();
+      } else if(shapeType.equalsIgnoreCase("RECTANGLE")){
+         return new Rectangle();
+      } else if(shapeType.equalsIgnoreCase("SQUARE")){
+         return new Square();
+      }
+      return null;
+   }
+      
+}
+```
+
+
+
+
+
+​										
