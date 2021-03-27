@@ -1585,12 +1585,50 @@ NoSql=not only Sql
 
 2.大数据量高性能(Redis 一秒写8万次,读取11万)
 
+
+
+Redis是开源的一个内存数据库，数据保存在内存中，但是我们都知道内存的数据变化是很快的，也容易发生丢失。幸好Redis还为我们提供了持久化的机制，分别是RDB(Redis DataBase)和AOF(Append Only File)。
+
+
+
+### Linu下安装
+
+**一.**将安装文件包复制到 opt 文件夹下解压
+
+**二.**安装C++环境包
+
+```bash
+yum install gcc-c++
+```
+
+**三.**进入redis文件夹 运行 make 命令 ,然后在运行 make install 命令.
+
+​	  Redis默认安装路径 'usr/local/bin/'
+
+**四.**将Redis配置文件复制到Redis默认安装路径usr/local/bin/下.  之后就使用这个作为配置文件启动.
+
+**五.**Redis默认不是后台启动的.需要修改配置文件
+
+```
+daemonize yes
+```
+
+**六.**启动Redis服务.
+
+七.查看redis服务打开端口状态
+
+```
+ps -ef|grep redis
+```
+
+
+
 ### 服务器
 
 #### 打开服务器
 
 ```
-redis-server.exe
+redis-server.exe  (/.../redis.conf)
 ```
 
 #### 访问服务器
@@ -1599,11 +1637,45 @@ redis-server.exe
 redis-cli.exe -h 服务器IP -p 端口号(默认6379)
 ```
 
+### 基础知识
 
+Redis默认有16个数据库
+
+默认使用第0个数据库. 可以使用select进行切换数据库
+
+```
+select (2)  # 切换数据库
+
+dbsize  # 查看数据库大小
+
+flushdb  # 清空当前数据库
+flushall  # 清空全部数据库
+
+exists (key)  #判断是否存在key,返回0,1
+exists (key) (数据库名)  #移动key到指定数据库中,返回0,1
+
+expire (key) (秒数)  #设置key的过期时间,返回0,1  key过期后会自动为null
+```
+
+Redis是单线程(Redis6.0支持多线程).Redis是基于 内存操作,CPU不是Redis的性能瓶颈,Redis的瓶颈是根据机器的内存和网络带宽. 
+
+Redis将所有的数据放在内存中的,所有说使用单线程性能最高.
 
 ### 数据类型
 
-Redis支持5类数据类型【String（字符串）、hash（哈希值）、list（列表）、set（集合）、zset（有序集合）】
+Redis支持5类数据类型:
+
+​	**String（字符串）**
+
+​	**hash（散列）**
+
+​	**list（列表）**
+
+​	**set（集合）**
+
+​	**zset（有序集合）**
+
+
 
 #### 1.String
 
@@ -1613,7 +1685,9 @@ string 类型是二进制安全的。意思是 redis 的 string 可以包含任�
 
 **string 类型的单个值最大能存储 512MB。**
 
-
+```bash
+set user:1:xx {name=aa,age=32,emil=231432@qq.com}
+```
 
 
 
@@ -1639,6 +1713,14 @@ GET -key-
 
 ```
 GETSET -key- -value-
+```
+
+##### KEYS命令
+
+查询当前数据库所有key
+
+```
+KEYS *
 ```
 
 ##### STRLEN命令
@@ -1717,6 +1799,14 @@ List列表是简单的字符串列表，按照插入顺序排序。你可以添�
 LPUSH -key- -value1- -value2- ...
 ```
 
+##### LRANGE命令
+
+根据指定长度获取对应list中值
+
+```
+LRANGE key -start index- -stop index-
+```
+
 ##### LSET命令
 
 通过索引来设置元素的值。
@@ -1741,13 +1831,30 @@ LLEN -key-
 LINDEX -key- -index-
 ```
 
+##### LPOP/RPOP命令
+
+删除最后一个元素/删除第一个元素
+
+```
+LPOP -key-
+RPOP -key-
+```
+
+##### RPOPLPUSH命令
+
+删除第一个元素并将其添加到另一个List列表中
+
+```
+RPOPLPUSH -key- -other key-
+```
+
 
 
 #### 4.Set
 
  Set 是 string 类型的无序集合。
 
-Set不允许内容重复。
+**Set不允许内容重复。**
 
 集合是通过哈希表实现的，所以添加，删除，查找的复杂度都是 0或者1
 
@@ -1779,10 +1886,52 @@ SCARD -key-
 
 ##### SISMEMBER命令
 
-判断成员元素是否是集合的成员。
+判断成员元素是否是集合的成员。返回 0或者1
 
 ```
 SISMEMBER -key- -value-
+```
+
+##### SREM命令
+
+移除set集合中的指定元素
+
+```
+SREM -key- -value-
+```
+
+##### SRANDMEMBER命令
+
+在指定集合中随机获取指定个数的成员
+
+```
+SRANDMEMBER -key- -size(默认为1)-
+```
+
+##### 对比命令
+
+###### 	SDIFF命令
+
+​	展示出两集合中的差集
+
+```
+SDIFF -key1- -key2- 
+```
+
+###### 	SINTER命令
+
+​	展示出两集合中的交集
+
+```
+SINTER -key1- -key2- 
+```
+
+###### 	SUNION命令
+
+​	展示出两集合中的并集
+
+```
+SUNION -key1- -key2- 
 ```
 
 
