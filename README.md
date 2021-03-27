@@ -3,45 +3,168 @@
 
 文件编写开始时间：2020-10-27
 
-
-
-- 学习日志目录
-
-  - Easy-captcha -验证码生成
-      - 使用方法
-  - Mybatis XML映射文件详解
-    - 基本SQL XML语句
-    - 动态 SQL
-  - TK.mybatis框架使用
-    - BaseMapper<T>方法
-    - IdsMapper<T>方法
-    - ConditionMapper<T>方法
-  - JWT（JSON Web Token)跨域身份验证
-    - 结构解析
-    - 使用JWT
-  - SpringBoot+Mybatis整合
-    - Maven依赖
-    - 操作方法
-  - Mybatis逆向工程
-    - 操作方法
-  - PageHelper 分页
-    - Maven依赖
-    - 操作方法
-  - Redis基础学习
-    - 服务器
-    - 数据类型
-    - 发布订阅
-  - SpringBoot+Redis
-    - Maven依赖
-    - 配置方法
-  - Shiro安全框架
-    - 主要功能
-    - Maven依赖
-  - 快速入门
-  - SpringBoot继承Shiro
-    - SpringBoot继承Shiro
-      - Shiro+Thymeleaf页面整合
-  
+    - 获取验证码 easy-captcha
+        - Maven依赖
+        - 使用方法
+    - MYSQL详解
+        - 注意规范
+        - 修改表
+            - 修改表名
+            - 增加表字段
+            - 修改表字段
+            - 删除表字段
+        - MySql数据管理
+            - 外键(了解即可)
+                - 物理外键(不建议使用)
+            - DML语言(全部记住)
+            - 添加
+            - 修改
+            - 删除
+        - DQL查询语言
+            - 联表查询JoinON详解
+            - **自连接**
+            - 分页和排序
+            - 子查询
+            - 常用函数
+            - 聚合函数及分组过滤
+        - 事务
+            - 1.事务简介
+            - 2.事务四大特征/原则
+            - 3.MYSQL 事务处理
+        - 索引
+            - 索引分类
+            - 索引使用
+            - 索引原则
+        - 权限管理和备份
+            - 用户管理
+            - Mysql备份
+        - 数据库三大范式
+    - Mybatis XML映射文件详解
+        - 基本SQL XML语句
+            - Select语句 -查询
+            - Insert、Update、Delete 语句
+            - Foreach语句
+            - Sql语句
+            - #{xxx}/${xxx} -字符串替换 语句
+            - ResultMap -结果映射
+                - id & result
+                - Association -关联
+                - Collection -集合
+                - Discriminator -鉴定器
+        - 动态 SQL
+            - if语句
+            - choose、when、otherwise语句
+            - trim、where、set语句
+    - TK.mybatis框架使用
+        - BaseMapper<T>方法：
+        - IdsMapper<T>方法：
+        - ConditionMapper<T>方法：
+    - JWT（JSON Web Token)跨域身份验证
+        - 结构解析
+        - 使用JWT
+            - 1.Maven依赖
+            - 2.利用数据，生成对应Token
+            - 3.使用对应Token，获取数据
+    - SpringBoot+Mybatis整合
+        - Maven依赖
+        - 操作方法
+            - 1.编写实体类
+            - 2.编写mapper接口
+            - 3.编写mapper xml映射文件
+            - 4.编写service接口
+            - 5.编写service实现类
+            - 6.编写controller文件
+            - 7.配置property文件(或者yml文件)
+    - Mybatis逆向工程
+        - 操作方法
+            - 一.Maven依赖
+            - 二.配置generatorConfig.xml文件
+            - 三.编写生成器
+    - PageHelper 分页
+        - Maven依赖
+        - 操作方法
+            - 1.配置文件
+            - 2.编写对应需要分页controller层方法
+    - Redis基础学习
+        - Linu下安装
+        - 服务器
+            - 打开服务器
+            - 访问服务器
+        - 基础知识
+        - 数据类型
+            - 1.String
+                - SET命令
+                - GET命令
+                - GETSET命令
+                - KEYS命令
+                - STRLEN命令
+                - MSET命令
+            - 2.Hash
+                - HMSET命令
+                - HGETALL命令
+                - HGET命令
+                - HLEN命令
+            - 3.List
+                - LPUSH命令
+                - LRANGE命令
+                - LSET命令
+                - LLEN命令
+                - LIINDEX命令
+                - LPOP/RPOP命令
+                - RPOPLPUSH命令
+            - 4.Set
+                - SADD命令
+                - SMEMBER命令
+                - SCARD命令
+                - SISMEMBER命令
+                - SREM命令
+                - SRANDMEMBER命令
+                - 对比命令
+                    - SDIFF命令
+                    - SINTER命令
+                    - SUNION命令
+            - 5.Zset
+                - ZADD命令
+                - ZSCARD命令
+                - ZRANGE命令
+        - **发布订阅**
+            - SUBSCRIBE命令
+            - PUBLISH命令
+            - UNSUBSCRIBE命令
+    - SpringBoot+Redis
+        - Maven依赖
+        - 配置方法
+            - 1.配置properties文件(yaml文件)中的redis环境参数
+            - 2.配置RedisConfig类
+            - 3.配置RedisUtil类
+            - 4.创建实体类
+            - 5.在Controller中使用（读写）
+    - MD5+Salt+Hash散列进行数据加密
+        - 主要方法
+            - 注册用户时
+    - Shiro安全框架
+        - 主要功能
+        - 细分功能
+        - Maven依赖
+        - 快速入门语句
+        - SpringBoot继承Shiro
+            - Maven依赖
+            - 创建Realm类
+            - 创建ShiroConfig配置类
+            - Controller类
+        - Shiro+Thymeleaf页面整合
+            - 常用标签：
+                - The has Permission tag
+                - The authenticated tag
+                - The hasRole tag
+        - **权限、角色访问控制**
+            - 方法一：直接在页面控制（以Thymeleaf为例）
+            - 方法二：Controller代码层中控制
+            - 方法三：代码注释控制
+    - JAVA设计模式
+        - OOP七大原则
+        - 单例模式
+        - 工厂模式
   
   
   
