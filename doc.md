@@ -3,7 +3,6 @@
 ## **目录**
 [toc]
 
-
 ## 获取验证码 easy-captcha
 
 ### Maven依赖
@@ -1745,7 +1744,7 @@ MSET -key1- -value1- -key2- -value2- ...
 
  hash 哈希 是一个键值(key=>value)对集合，string 类型的 field 和 value 的映射表。
 
-hash 特别适合用于存储对象。
+**hash 特别适合用于存储对象。**
 
 每个 hash 可以存储 232 - 1 键值对（40多亿）。
 
@@ -1773,6 +1772,14 @@ HGETALL -key-
 
 ```
 HGET -key- -field-
+```
+
+##### HDEL命令
+
+删除整个key中的某个field以及对应value
+
+```
+HDEL -key- -field-
 ```
 
 ##### HLEN命令
@@ -1940,7 +1947,9 @@ SUNION -key1- -key2-
 
 有序集合和集合一样也是 string 类型元素的集合,且不允许重复的成员。
 
-不同的是每个元素都会关联一个 double 类型的分数。redis 正是通过分数来为集合中的成员进行从小到大的排序。
+不同的是每个元素都会关联一个 double 类型的分数。
+
+**redis 正是通过分数来为集合中的成员进行从小到大的排序。**
 
 **有序集合的成员是唯一的,但分数(score)却可以重复。**
 
@@ -1964,17 +1973,133 @@ ZADD -key- -score1- -value1- -score2- -value2- ...
 ZSCARD -key-
 ```
 
-##### ZRANGE命令
+##### ZRANGE/ZREVRANGE命令
 
 通过索引区间返回有序集合指定区间内的成员
 
 ```
-ZRANGE -key- -minScore- -maxScore-
+ZRANGE/ZREVRANGE -key- -minScore- -maxScore- (-withscores-)
+```
+
+### 三种特殊数据类型
+
+#### Geospatial - 地理位置
+
+Geospatial 可以推算地理位置信息,两地之间距离 ,方圆几里的人.
+
+**GEOSPATIAL的底层原理是ZSET.** 所以也可以使用ZSET的命令
+
+##### Geoadd - 添加地理位置
+
+```bash
+# 两极无法添加,通常我们使用java程序一次性导入
+Geoadd -表名- -东经- -北纬- -列名- [-东经- -北纬- -列名-]...
+Geoadd china:city 106.73 31.86 bazhong
+```
+
+##### Geopos - 查询地理位置
+
+```bash
+# 获取指定的城市的经纬度
+geopos -表名- -列名-
+geopos china:city shanghai
+```
+
+##### Geodist - 计算地理之间距离
+
+单位:
+
+- **M** 表示 单位为米 (默认)
+- **KM** 表示 单位为千米
+- **MI**表示 单位为英里
+- **FT** 表示 单位为英寸
+
+```
+Geodist -表名- -列名1- -列名2- [单位]
+Geodist china:city chengdu bazhong km
+```
+
+##### Georadius - 寻找附近(通过经纬度)
+
+```
+Georadius -表名- -经度- -纬度- -半径距离- [单位] [withcoord/withdist] [count 数量]
+Georadius china:city 110 30 500 km count 3
+```
+
+##### Georadiusbymember - 寻找附近(通过指定元素)
+
+```
+Georadiusbymember -表名- -列名- -半径距离- [单位]
+Georadiusbymember china:city bazhong 1000 km
+```
+
+
+
+#### Hyperloglog数据结构 - 基数统计
+
+Redis Hyperloglog - 基数统计.
+
+​	*基数:不可重复的元素,可以接受误差.*
+
+网页的UV(一个人访问网站多次,依旧算一个人的数据量)
+
+​	传统的方式,set保存用户的id,然后就可以统计set中的元素数量作为访问标准,会消耗大量的资源,比较麻烦.
+
+Hyperloglog的优点:
+
+- 占用的内存固定,2^64大小元素,只需要12KB内存存储.
+
+```bash
+PFADD mykey a b c d e f g h i j k  # 创建第一组元素
+(integer) 1
+PFCOUNT mykey  # 统计第一组元素基数数量
+(integer) 11
+
+PFADD mykey2 a b c d p q l # 创建第二组元素
+(integer) 1
+PFCOUNT mykey2  # 统计第二组元素基数数量
+(integer) 7
+
+# PFMERGE(合并log) -newkey- -key1- -key2-
+PFMERGE mykey3 mykey mykey2  # 合并第一组元素和第二组元素
+OK
+PFCOUNT mykey3 # 统计第三组元素基数数量
+(integer) 15
+```
+
+如果允许容错,那么一定可以使用Hyperloglog. 但如果不允许容错,那使用SET或者自己的数据类型即可 .
+
+#### Bitmaps - 位图(位存储)
+
+统计用户信息,活跃,不活跃,登录,未登录,打卡,未打卡...两种状态所有Bitmaps!
+
+Bitmaps数据结构,二进制记录,只有0,1 两种状态.
+
+365天的数据状态=365 bit  1字节=8bit 46个字节即可.
+
+```bash
+# Setbit -表名- -时间- -状态(0\1)-
+127.0.0.1:6379> setbit sign 0 1 # 周一 打卡
+(integer) 0
+127.0.0.1:6379> setbit sign 1 0 # 周二 未打卡
+(integer) 0
+127.0.0.1:6379> setbit sign 2 1 # 周三 打卡
+(integer) 0
+127.0.0.1:6379> setbit sign 3 1 # 周四 打卡
+(integer) 0
+127.0.0.1:6379> setbit sign 4 0 # 周五 未打卡
+(integer) 0
+127.0.0.1:6379> getbit sign 4  # 查询周五打卡状态
+(integer) 0
+127.0.0.1:6379> bitcount sign  # 查询所有打卡次数(只统计1)
+(integer) 3
 ```
 
 
 
 ### **发布订阅**
+
+
 
  发布订阅 (pub/sub) 是一种消息通信模式：发送者 (pub) 发送消息，订阅者 (sub) 接收消息。
 

@@ -127,6 +127,15 @@
                 - ZADD命令
                 - ZSCARD命令
                 - ZRANGE命令
+         -三种特殊数据类型
+             - geospatial-地理位置
+                    - geoadd-添加地理位置
+                    - geopos-查询地理位置
+                    - geodist-计算地理之间距离
+                    - georadius-寻找附近通过经纬度
+                    - georadiusbymember-寻找附近通过指定元素
+             - hyperloglog数据结构-基数统计
+             - bitmaps-位图位存储
         - **发布订阅**
             - SUBSCRIBE命令
             - PUBLISH命令
@@ -165,8 +174,9 @@
         - OOP七大原则
         - 单例模式
         - 工厂模式
+
   
+
   
-  
-  
+
   
