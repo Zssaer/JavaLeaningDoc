@@ -171,11 +171,11 @@ SELECT DISTINCT 字段 FROM 表名;
 
 #### 联表查询JoinON详解
 
-![](picture\join.jpg)
+<img src="picture\join.jpg"/>
 
 
 
-![](picture\20200117200621435834.png)
+<img src="picture\20200117200621435834.png"/>
 
 思路:
 
@@ -2109,7 +2109,7 @@ Bitmaps数据结构,二进制记录,只有0,1 两种状态.
 
 当有新消息通过 PUBLISH 命令发送给频道 channel1 时， 这个消息就会被发送给订阅它的三个客户端：
 
-![](picture\pubsub2.png)
+<img src="picture\pubsub2.png"/>
 
 
 
@@ -2185,7 +2185,7 @@ Redis会单独创建一个(fork)子进程来进行持久化,先将数据写入�
 
 <font color=red>RDB保存的文件是dump.rdb</font> 在工作环境我们会将该文件进行备份.
 
-![](picture\dbfile.jpg)
+<img src="picture\dbfile.jpg"/>
 
 
 
