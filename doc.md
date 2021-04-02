@@ -1354,6 +1354,7 @@ public class SysOrderServiceImpl extends BaseServiceImpl<SysOrder> implements Sy
 public class OrderController {
    
     private static  final Logger LOGGER = LoggerFactory.getLogger(OrderController.class);
+    
     @Autowired
     private SysOrderService sysOrderService;
 
