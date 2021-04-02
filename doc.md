@@ -1586,7 +1586,9 @@ NoSql=not only Sql
 
 
 
-Redis是开源的一个内存数据库，数据保存在内存中，但是我们都知道内存的数据变化是很快的，也容易发生丢失。幸好Redis还为我们提供了持久化的机制，分别是RDB(Redis DataBase)和AOF(Append Only File)。
+Redis是开源的一个内存数据库，数据保存在内存中，但是我们都知道内存的数据变化是很快的，也容易发生丢失。
+
+幸好Redis还为我们提供了持久化的机制，分别是RDB(Redis DataBase)和AOF(Append Only File)。
 
 
 
@@ -2135,9 +2137,164 @@ Publish -channel- -message-
 Unsubscribe -channel1- -channel2-
 ```
 
+### 事务
 
+Redis的事务本质:一组命令的集合. 一个事务中所有的命令都会被序列化,在事务执行过程中,会按照顺序执行!
+
+Redis单条命令保证原子性,但Redis的事务不包证原子性!
+
+<font color=red>**-Redis事务没有隔离级别的概念-**</font>
+
+
+
+#### 事务执行步骤
+
+- 开启事务(multi)
+
+- 命令入队(...)
+
+- 执行事务(exec)  / 撤销事务(discard)
+
+#### 事务监控
+
+**悲观锁**:无论什么操作都认为会存在问题,随时都会上锁
+
+**乐观锁**:无论什么操作都不会认为会存在问题,随时都不上锁.更新数据时会判断一下,在此期间是否修改过数据,
+
+​			获取Version.更新时对比Version,没变则更新成功,否则失败.
+
+​		测试多线程修改值,使用watch可以当作redis的乐观锁的操作.unwatch取消乐观锁.
+
+
+
+### Redis的持久化
+
+​	面试和工作,持久化都是重点!
+
+#### RDB(Redis DataBase)
+
+指定的时间间隔内将内存中的数据集快照 写入磁盘中,恢复时就将快照读取到内存中.
+
+Redis会单独创建一个(fork)子进程来进行持久化,先将数据写入一个临时文件中,再用这个临时文件替换上场持久化好的文件.
+
+整个过程主进程不会进行任何IO操作的,这就确保了极高的性能.
+
+**RDB缺点:最后一次持久化后的数据宕机可能丢失.**
+
+**<font color=red>Redis默认持久化就是RDB</font>**,一般情况下不需要修改这个配置!
+
+<font color=red>RDB保存的文件是dump.rdb</font> 在工作环境我们会将该文件进行备份.
+
+![](picture\dbfile.jpg)
+
+
+
+RDB触发机制:
+
+​	1.save的规则满足情况下触发RDB持久化规则.
+
+​	2.执行了flushall命令,也会触发RDB持久化规则.
+
+​	3.退出Redis,也会触发RDB持久化规则
+
+如何恢复RDB文件:
+
+​	1.将需要恢复的RDB文件放置到redis启动的文件目录下就可以,redis启动时就会自动检查dump.rdb文件并恢复其中的数据.
+
+​	2.查看需要存放的位置
+
+```bash
+127.0.0.1:6379> config get dir
+1) "dir"
+2) "D:\\redis"  # 如果在这个目录下查找dump.rdb,启动就会自动恢复其中的数据.
+```
+
+
+
+RDB优点:
+
+​	1.适合大规模的数据恢复!
+
+​	2.对数据完整性要求不高!
+
+RDB缺点:
+
+​	1.需要一定时间间隔进行操作.最后一次持久化后的数据宕机可能丢失.
+
+​	2.fork进程的时候,会占用一定的内容空间.
+
+<hr>
+
+
+
+## Jedis
+
+Jedis是Redis官方推荐的Java连接开发工具.使用Java操作Redis的中间键.
+
+### Maven依赖
+
+```xml
+<!--导入jedis包-->
+<!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
+<dependency>
+    <groupId>redis.clients</groupId>
+    <artifactId>jedis</artifactId>
+    <version>3.3.0</version>
+</dependency>
+<!--导入fastjson包-->
+<!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>fastjson</artifactId>
+    <version>1.2.75</version>
+</dependency>
+```
+
+### 编码测试
+
+- 连接数据库
+
+  ```java
+  //1.创建一个Jedis对象
+  Jedis jedis = new Jedis("127.0.0.1",6379);
+  System.out.println(jedis.ping());
+  ```
+
+- 操作命令
+
+  ```java
+  JSONObject jsonObject=new JSONObject();
+  jsonObject.put("hello","world");
+  jsonObject.put("name","zssaer");
+  //开启redis事务
+  Transaction multi=jedis.multi();
+  String jsonString = jsonObject.toJSONString();
+  
+  try {
+      multi.set("user1",jsonString);
+      multi.exec();
+  } catch (Exception e) {
+      multi.discard();
+      e.printStackTrace();
+  }finally {
+      System.out.println(jedis.get("user1"));
+      jedis.close();
+  }
+  ```
+
+- 断开连接
+
+  ```java
+  jedis.close(); //关闭连接
+  ```
 
 ## SpringBoot+Redis
+
+在SpringBoot2.x后,原来使用的Jedis被替换成了lettuce.
+
+Jedis:底层采用的是直连方式,多个线程操作是不安全的. 多线程连接操作需要使用jedis-pool连接池!更像BIO模式
+
+lettuce:采用netty,实例可以在多个线程中共享,不存在线程不安全的情况.可以减少线程数量.更像NIO模式.
 
 ### Maven依赖
 
@@ -2147,6 +2304,49 @@ Unsubscribe -channel1- -channel2-
     <artifactId>spring-boot-starter-data-redis</artifactId>
     <version>2.3.0.RELEASE</version>
 </dependency>
+
+<dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.12.1</version>
+</dependency>
+
+```
+
+**RedisAutoConfiguration源码分析**:
+
+```java
+@Bean
+@ConditionalOnMissingBean(name = {"redisTemplate"}) //我们可以自己定义个redisTemplate来替换这个默认的!
+@ConditionalOnSingleCandidate(RedisConnectionFactory.class)
+public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+	//默认的RedisTemplate 没有过多设置,redis对象都是需要序列化!
+    //两个泛型都是object,object类型,我们后使用需要强制转换<String,object>
+    RedisTemplate<Object, Object> template = new RedisTemplate();
+    template.setConnectionFactory(redisConnectionFactory);
+    return template;
+}
+
+@Bean
+@ConditionalOnMissingBean
+@ConditionalOnSingleCandidate(RedisConnectionFactory.class)
+public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    StringRedisTemplate template = new StringRedisTemplate();
+    template.setConnectionFactory(redisConnectionFactory);
+    return template;
+}
+```
+
+RedisTemplate使用:
+
+```java
+//opsForValue 操作String
+//opsForList 操作List
+//opsForSet 操作Set
+//opsForHash 操作Hash
+//opsForZset 操作Zset
+redisTemplate.opsForValue().set("mykey","myvalue");
+System.out.println(redisTemplate.opsForValue().get("mykey"));
 ```
 
 ### 配置方法
@@ -2811,6 +3011,7 @@ public class RedisUtil {
 #### 4.创建实体类
 
 ```java
+@Component
 public class User implements Serializable {
     private Integer id;
 
