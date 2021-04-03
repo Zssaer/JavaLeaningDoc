@@ -1,4 +1,4 @@
-# <font color=red>我的学习日志</font>
+# <font color=red>	我的学习日志</font>
 
 ## **目录**
 [toc]
@@ -2224,7 +2224,259 @@ RDB缺点:
 
 ​	2.fork进程的时候,会占用一定的内容空间.
 
+
+
+#### AOF(Append Only File)
+
+AOF:将我们的所有命令都记录下来(history),恢复时就把history文件全部执行一次!
+
+原理:以日志的形式记录每个操作,将Redis执行过的每个指令记录下来(读取操作不记录),只需增加文件,不许改写文件.Redis重启后根据日志文件进行全部执行以达到恢复内容.
+
+<font color=red>AOF默认不开启.需要手动在config配置文件配置. </font>
+
+```bash
+appendonly yes # 开启AOF
+```
+
+AOF保存的是appendonly.aof文件(在config配置文件配置)
+
+```bash
+appendfilename "appendonly.aof" # 保存为appendonly.aof文件
+```
+
+AOF持久化策略(在config配置文件配置)
+
+```bash
+appendfsync everysec # AOF每一秒写一次
+no-appendfsync-on-rewrite no  # AOF不重写,保证数据安全性
+```
+
+AOF默认文件无限追加,文件会越来越大.
+
+如果AOF文件存在错误,Redis则不能正常启动服务.
+
+Redis给我们通过了redis-check-aof工具.可以对错误的AOF文件进行恢复.但被破坏的数据会被丢失.
+
+```bash
+redis-check-aof --fix appendonly.aof # 修复AOF文件
+```
+
+
+
+AOF优点:
+
+​	1.每一步修改都会被同步,文件完整性更好!
+
+​	2.默认每秒同步一次
+
+​	3.从不同步,效率最高.
+
+AOF缺点:
+
+​	1.相对于数据文件来说,AOF远远大于RDB,修复速度比RDB慢.
+
+​	2.AOF运行效率比RDB慢.所以Redis默认配置RDB持久化,而非AOF持久化.
+
+
+
+### Redis主从复制
+
+概率:
+
+指一台Redis服务器的数据,复制到其他Redis服务器.  前者被称为主节点(master/leader),后者称为从节点(slave/follower).
+
+主从复制,读写分离,**数据的复制是单向的,只能从主节点到从节点. Master以写为主,Slave以读为主.**
+
+
+
+**主从复制作用主要包括:**
+
+1.数据冗余:主从复制实现数据的热备份,是持久化以外的数据冗余方式.
+
+2.故障恢复:当主节点出现的问题时.可以由从节点通过服务,实现快速的故障恢复.
+
+3.负载均衡:配合读写分离,分担服务器负担.
+
+4.高可用(集群)基石:主从复制还是哨兵模式和集群能够实施的基础.
+
+
+
+在工程项目中一般要配置三个Redis服务器(一主二从) ,来保证基本使用.
+
+<font color=red>== 单台Redis最大使用内存不应超过20GB ==</font>
+
+主要是公司中,主从复制就必须要使用,因为真实项目不可能单机使用Redis!
+
+#### 	配置环境
+
+```bash
+127.0.0.1:6379> info replication  #查看该服务器信息
+# Replication
+role:master  # 主节点
+connected_slaves:0   #没有从机,单机
+master_replid:b5bc2229c79b87ab1925372736a6684ff1a0332c
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:0
+second_repl_offset:-1
+repl_backlog_active:0
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:0
+repl_backlog_histlen:0
+```
+
+​	1.复制多个config配置文件,以启动多个服务器
+
+​	2.修改各个配置文件的port端口号(为了本机测试不冲突,不易相同)
+
+​	3.修改配置文件中log 文件名(为了本机测试不冲突,名称不易相同)
+
+​	4.修改配置文件中pid 名称(为了本机测试不冲突,名称不易相同)
+
+​	5.修改配置文件中RDB的dump.rdb文件名(为了本机测试不冲突,名称不易相同)
+
+​	6.利用配置文件启动多个Redis服务器.
+
+默认情况下,每台Redis服务器都是主节点;一般情况下只配置从节点,不用配置主节点.
+
+```bash
+# slaveof 服务器IP 端口号
+127.0.0.1:6380> slaveof 127.0.0.1 6379 # 配置127.0.0.1 6379接口下的服务器为主节点
+OK
+```
+
+<font color=red>注:真实的主从配置是在Config配置文件中配置,使用slaveof命令只是暂时的.</font>
+
+```bash
+# slaveof <masterip> <masterport>  # 使用时去掉前'#'即可
+```
+
+
+
+**==主从复制细节==**
+
+主节点可以进行写入操作,从节点只能读取操作.
+
+主机断开,从机依然连接到主机,依旧可以进行读取操作.
+
+如果使用命令行配置主从关系,从机打开服务器将会断开主从关系,恢复为主节点.此时服务器的数据将为断开前主节点的数据.
+
+恢复主从关系其主节点将会发送sync同步命令,其主节点数据就可以继续读写.
+
+
+
+#### 层层链路
+
+**当 一个从节点 其 主节点 为 另一个主节点的从节点 时,后者依旧为从节点.**
+
+<img src="picture\zcgx.jpg" style="zoom: 67%;" />
+
+删除主从关系:
+
+```bash
+127.0.0.1:6380> slaveof no one # 删除之前设置的主从关系,恢复为主节点
+OK
+```
+
+
+
+### 哨兵模式
+
+自动切换主从关系的模式.
+
+主从切换的模式方法是:当主服务器宕机后,需要手动把一台服务器切换为主服务器 ,费时.
+
+​											而Redis2.8后支持Sentinel(哨兵)框架解决该问题.
+
+哨兵模式能够后台监控主机是否故障,如果故障了会根据投票数<font color=red>自动将从库转换为主库.</font>
+
+
+
+哨兵模式是一个特殊的模式,是一个独立的进程,需要独立运行. 
+
+​			**其原理是哨兵通过发送命令,等待Redis服务器响应,从而监控多个Redis实例.**
+
+<img src="picture\sbms.jpg" style="zoom: 50%;" />
+
+然而一个哨兵进程监控Redis服务器,也有可能出现问题,为此,**可以使用多个哨兵进行监控. 各个哨兵之间还会进行监控,从而形成多哨兵模式.**
+
+<img src="picture\dsbms.jpg" style="zoom:50%;" />
+
+
+
+配置哨兵模式:
+
+​	1.配置哨兵配置文件 sentinel.conf
+
+```bash
+------- 简易配置 ----------
+# sentinel monitor 被监控的名称 主机地址 端口 1(投票制)
+sentinel monitor myredis 127.0.0.1 6379 1 
+
+------- 全部默认 ----------
+# 这个是Redis6379配置内容，其他文件同理新增然后改一下端口即可，26380
+#当前Sentinel服务运行的端口
+protected-mode no
+port 26381
+# 哨兵监听的主服务器 后面的1表示主机挂掉以后进行投票，只需要1票就可以从机变主机
+sentinel monitor mymaster 127.0.0.1 6379 2
+# 3s内mymaster无响应，则认为mymaster宕机了 默认为30s
+sentinel down-after-milliseconds mymaster 3000
+#如果10秒后,mysater仍没启动过来，则启动failover  
+sentinel failover-timeout mymaster 10000  
+# 执行故障转移时， 最多有1个从服务器同时对新的主服务器进行同步
+sentinel parallel-syncs mymaster 1
+# 设置哨兵sentinel 连接主从的密码 注意必须为主从设置一样的验证密码，没有的话不用设置
+sentinel auth-pass mymaster 123456
+```
+
+​	2.启动哨兵.
+
+```bash
+# Windows下启动哨兵模式
+redis-server sentinel.conf --sentinel
+# Linux下启动哨兵模式
+redis-sentinel sentinel.conf
+```
+
+如果此时Master节点断开了,这是就会在其中从机中投票选出新主机(Master节点). 
+
+可以从哨兵日志查看出新主节点服务器.
+
+```bash
+[16196] 03 Apr 13:15:00.092 * +failover-state-wait-promotion slave 127.0.0.1:6381 127.0.0.1 6381 @ myredis 127.0.0.1 6379  # 6379端口主节点断开
+[16196] 03 Apr 13:15:01.079 # +promoted-slave slave 127.0.0.1:6381 127.0.0.1 6381 @ myredis 127.0.0.1 6379
+[16196] 03 Apr 13:15:01.079 # +failover-state-reconf-slaves master myredis 127.0.0.1 6379
+[16196] 03 Apr 13:15:01.150 * +slave-reconf-sent slave 127.0.0.1:6380 127.0.0.1 6380 @ myredis 127.0.0.1 6379
+[16196] 03 Apr 13:15:02.140 * +slave-reconf-inprog slave 127.0.0.1:6380 127.0.0.1 6380 @ myredis 127.0.0.1 6379
+[16196] 03 Apr 13:15:02.140 * +slave-reconf-done slave 127.0.0.1:6380 127.0.0.1 6380 @ myredis 127.0.0.1 6379
+[16196] 03 Apr 13:15:02.211 # +failover-end master myredis 127.0.0.1 6379
+[16196] 03 Apr 13:15:02.211 # +switch-master myredis 127.0.0.1 6379 127.0.0.1 6381  # 主节点切换为6381端口服务器
+[16196] 03 Apr 13:15:02.212 * +slave slave 127.0.0.1:6380 127.0.0.1 6380 @ myredis 127.0.0.1 6381
+[16196] 03 Apr 13:15:02.212 * +slave slave 127.0.0.1:6379 127.0.0.1 6379 @ myredis 127.0.0.1 6381
+```
+
+如果原主节点服务器重启后,其原主节点服务器只能当做新主节点服务器的从机.
+
+
+
+**哨兵模式优点:**
+
+​	1.哨兵集群,基于主从复制的模式,所有的主从配置优点它全都有.
+
+​	2.主从可以切换,故障可以转移,系统的可用性更好.
+
+​	3.哨兵模式就是主从模式的升级,手动到自动.
+
+**哨兵模式缺点**:
+
+​	1.Redis不好在线扩容,集群容量一旦到达上限,在线扩容就十分麻烦.
+
+​	2.实现哨兵模式的配置很麻烦.
+
+
+
 <hr>
+
 
 
 
