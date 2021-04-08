@@ -12,7 +12,7 @@
 <dependency>
    <groupId>com.github.whvcse</groupId>
    <artifactId>easy-captcha</artifactId>
-   <version>${easy.captcha.version}</version>
+   <version>1.6.2</version>
 </dependency>
 ```
 
@@ -3876,6 +3876,205 @@ public class ShapeFactory {
 
 
 
+## Swagger
+
+#### 简介
+
+Swagger 是一个规范和完整的框架，用于生成、描述、调用和可视化 RESTful 风格的 Web 服务。
+
+前后端分离 Vue+SpringBoot
 
 
-​										
+
+#### SpringBoot集成Swagger
+
+1.新建SpringBoot-Web项目
+
+2.导入相Maven关依赖
+
+```xml
+<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger-ui -->
+<dependency>
+    <groupId>io.springfox</groupId>
+    <artifactId>springfox-swagger-ui</artifactId>
+    <version>2.9.2</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+```
+
+3.编写一个Hello工程
+
+4.配置Swagger Config
+
+```java
+@Configuration
+@EnableSwagger2 //开启Swagger2
+public class SwaggerConfig {
+
+}
+```
+
+打开http://localhost:8080/swagger-ui.html
+
+<img src="picture\swagger.jpg" style="zoom:67%;" />
+
+#### 配置Swagger
+
+Swagger的bean实例Docket;
+
+````java
+@Configuration
+@EnableSwagger2 //开启Swagger2
+public class SwaggerConfig {
+
+    @Bean
+    public Docket docket(){
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo());
+    }
+
+    //配置Swagger信息 apiInfo类
+    private ApiInfo apiInfo(){
+        Contact contact = new Contact("Zssaer", "https://baidu.com", "641348448@qq.com");
+        return new ApiInfo("Zssaer的Swagger API文档",
+                "Api Documentation",
+                "1.1",
+                "urn:tos",
+                contact,
+                "Apache 2.0",
+                "http://www.apache.org/licenses/LICENSE-2.0",
+                new ArrayList());
+    }
+}
+````
+
+##### Swagger配置扫描接口
+
+```java
+@Bean
+    public Docket docket(){
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+            	//是否开启Swagger,默认为true
+            	.enable(true/false)
+                .select()
+                //RequestHandlerSelectors,配置要扫描接口的方式
+            		//basePackage:指定地址扫描
+            		//any:扫描全部
+            		//none:不扫描
+            		//withClassAnnotation:扫描类上的注解,参数是一个注解的反射对象
+            		//withMethodAnnotation:扫描方法上的注解
+              	.apis(RequestHandlerSelectors.basePackage("com.example.swaggertest.controller")/.any/.none/
+                    .withClassAnnotation/.withMethodAnnotation)
+            	//过滤路径
+                .paths(PathSelectors.ant("/swaggertest/**"))
+                .build();
+    }
+
+//配置Swagger扫描指定地址的Controller
+Docket.select(RequestHandlerSelectors.basePackage(包名地址)).build()
+```
+Swagger只在生产环境中使用,不在发布时使用:
+
+- 判断是否为生产环境  flag=false
+
+- 注入enabel(false)
+
+1.在application.properties表明使用的配置文件
+
+  ```
+  spring.profiles.active=dev
+  ```
+
+使用对应的application-*.properties的配置文件 配置其他内容; *:spring.profiles.active的内容
+
+2.在SwaggerConfig配置中进行判断
+
+```java
+@Bean
+    public Docket docket(Environment environment){
+        //获取项目的开发环境:
+        //设置要显示的Swagger环境,可以规定多个环境
+        Profiles profiles=Profiles.of("dev","xx",...);
+        //通过environment.acceptsProfiles判断是否当前是否处在设定当中
+        boolean flag = environment.acceptsProfiles(profiles);
+
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
+            	//判断是否开启Swagger
+                .enable(flag)
+                .select()
+                //RequestHandlerSelectors,配置要扫描接口的方式
+                .apis(RequestHandlerSelectors.basePackage("com.example.swaggertest.controller"))
+                .build();
+    }
+```
+
+
+
+##### 配置API的分组
+
+```java
+Docket(DocumentationType.SWAGGER_2)
+                .groupName("zty")
+```
+
+​	如需要配置多个分组,就需要多个Docket.
+
+```
+@Bean
+public Docket docket1() {
+	return new Docket(DocumentationType.SWAGGER_2).groupName("zty1")
+}
+@Bean
+public Docket docket2() {
+	return new Docket(DocumentationType.SWAGGER_2).groupName("zty2")
+}
+@Bean
+public Docket docket3() {
+	return new Docket(DocumentationType.SWAGGER_2).groupName("zty3 ")
+}
+```
+
+
+
+##### 扫描实体类
+
+1.创建一个实体类
+
+```Java
+//ApiModel:在Swagger中对其类进行注释
+@ApiModel("用户实体类")
+public class User {
+	//ApiModelProperty:在Swagger中对其属性进行注释
+    @ApiModelProperty("用户名")
+    public String username;
+    @ApiModelProperty("密码")
+    public String password;
+}
+```
+
+2.在Swagger扫描的包中返回实体类,Swagger会自动将其导入Model中
+
+```java
+
+@RestController
+public class HelloController {
+    
+    //ApiOperation:在Swagger中对其方法进行注释
+    @ApiOperation("Hello控制类")
+    @PostMapping("/user")
+    //@ApiParam:在Swagger中对其参数进行注释
+    public User user(@ApiParam("用户名") String username){
+        return new User();
+    }
+}
+```
+
+<img src="picture\apimodel.jpg" style="zoom: 50%;" />
+
