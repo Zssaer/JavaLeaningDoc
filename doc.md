@@ -45,6 +45,19 @@ captchaMap.put("image", captcha.toBase64());
 return Result.success(captchaMap);
 ```
 
+AJAX 刷新验证码
+
+```javascript
+function refreshcode(obj)
+{
+  obj.src="/captcha?id="+Math.random();
+};
+```
+
+```html
+<img src="/captcha" width="105px" height="45px" onclick="refreshcode(this)" />
+```
+
 ------
 
 ## MYSQL详解
@@ -1188,6 +1201,14 @@ System.out.println(decodedJWT.getClaim("userName").asString());
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>2.1.0</version>
         </dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.alibaba/druid -->
+		<dependency>
+    		<groupId>com.alibaba</groupId>
+    		<artifactId>druid</artifactId>
+    		<version>1.2.5</version>
+		</dependency>
+
 ```
 
 ### 操作方法
@@ -2561,7 +2582,10 @@ lettuce:采用netty,实例可以在多个线程中共享,不存在线程不安�
 <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.12.1</version>
+    		<dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
 </dependency>
 
 ```
@@ -3408,12 +3432,13 @@ shiro主要有三大功能模块：
 ### Maven依赖
 
 ```xml
-    <!--shiro-core-->
+    <!--shiro-->
     <dependency>
-      <groupId>org.apache.shiro</groupId>
-      <artifactId>shiro-core</artifactId>
-      <version>1.6.0</version>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-spring</artifactId>
+            <version>1.7.1</version>
     </dependency>
+
 ```
 
 ###  快速入门语句
@@ -3547,22 +3572,24 @@ public class ShiroConfig {
 	//将自己的验证方式加入容器
     @Bean
     public CustomRealm myShiroRealm() {
-        return new CustomRealm();
-    }
-
-    //权限管理，配置主要是Realm的管理认证
-    @Bean
-    public DefaultWebSecurityManager  securityManager() {
-        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        CustomRealm myShiroRealm = new CustomRealm();
         //设置realm hash验证
         HashedCredentialsMatcher credentialsMatcher= new HashedCredentialsMatcher();
         //使用加密方法
         credentialsMatcher.setHashAlgorithmName("md5");
         //散列次数
         credentialsMatcher.setHashIterations(1024);
-        userRealm.setCredentialsMatcher(credentialsMatcher);
+        myShiroRealm.setCredentialsMatcher(credentialsMatcher);
+        return myShiroRealm;
+    }
+
+    //权限管理，配置主要是Realm的管理认证
+    @Bean
+    public DefaultWebSecurityManager  securityManager() {
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        securityManager.setSessionManager(SessionManager());
         //绑定Reaml
-        securityManager.setRealm(myShiroRealm());
+        securityManager.setRealm(myShiroRealm);
         return securityManager;
     }
 
@@ -3584,6 +3611,15 @@ public class ShiroConfig {
         shiroFilterFactoryBean.setUnauthorizedUrl("/error");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(map);
         return shiroFilterFactoryBean;
+    }
+    
+    //设置SessionManager,防止Shiro在第一次重定向时发送Jsessionid
+    @Bean
+    public DefaultWebSessionManager SessionManager(){
+        DefaultWebSessionManager defaultSessionManager = new DefaultWebSessionManager();
+        //将sessionIdUrlRewritingEnabled属性设置成false
+        defaultSessionManager.setSessionIdUrlRewritingEnabled(false);
+        return defaultSessionManager;
     }
 
     //注入权限管理
@@ -3884,6 +3920,12 @@ Swagger 是一个规范和完整的框架，用于生成、描述、调用和可
 
 前后端分离 Vue+SpringBoot
 
+1可以通过Swagger 给一些难以理解 的属性或者接口,增加注释信息.
+
+2接口文档实时更新
+
+3可以在线测试
+
 
 
 #### SpringBoot集成Swagger
@@ -4077,4 +4119,189 @@ public class HelloController {
 ```
 
 <img src="picture\apimodel.jpg" style="zoom: 50%;" />
+
+## Thymeleaf
+
+Thymeleaf 是一个现代服务器端 Java 模板引擎，用于 web 和独立环境。
+
+### Maven依赖
+
+```
+<!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-thymeleaf -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    <version>2.3.3.RELEASE</version>
+</dependency>
+```
+
+### 首次使用
+
+只要我们把HTML页面放在classpath:/templates/，thymeleaf就能自动渲染；
+
+1.导入thymeleaf的名称空间
+
+```
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+```
+
+2、使用thymeleaf语法；
+
+```
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>成功！</h1>
+    <!--th:text 将div里面的文本内容设置为 -->
+    <div th:text="${hello}">这是显示欢迎信息</div>
+</body>
+</html>
+```
+
+### 语法规则
+
+<img src="picture\thymeleaf.png" style="zoom: 80%;" />
+
+**th：任意html属性；来替换原生属性的值**
+
+1.表达式
+
+​    ${...}：获取变量值；
+​    		1）、获取对象的属性、调用方法
+​    		2）、使用内置的基本对象：
+​    			#ctx : the context object.
+​    			#vars: the context variables.
+​                #locale : the context locale.
+​                #request : (only in Web Contexts) the HttpServletRequest object.
+​                #response : (only in Web Contexts) the HttpServletResponse object.
+​                #session : (only in Web Contexts) the HttpSession object.
+​                #servletContext : (only in Web Contexts) the ServletContext object.
+
+​		  3）、内置的一些工具对象：
+​			#uris : methods for escaping parts of URLs/URIs
+​			#dates : methods for java.util.Date objects: formatting, component extraction, etc.
+​			#calendars : analogous to #dates , but for java.util.Calendar objects.
+​			#numbers : methods for formatting numeric objects.
+​			#strings : methods for String objects: contains, startsWith, prepending/appending, etc.
+​			#objects : methods for objects in general.
+​			#bools : methods for boolean evaluation.
+​			#arrays : methods for arrays.
+​			#lists : methods for lists.
+​			#sets : methods for sets.
+​			#maps : methods for maps.
+
+​	*{...}：选择表达式：和${}在功能上是一样；
+​    		补充：配合 th:object="${session.user}：
+
+```html
+<div th:object="${session.user}">
+    <p>Name: <span th:text="*{firstName}">Sebastian</span>.</p>
+    <p>Surname: <span th:text="*{lastName}">Pepper</span>.</p>
+    <p>Nationality: <span th:text="*{nationality}">Saturn</span>.</p>
+</div>
+```
+
+#{...}：获取国际化内容
+@{...}：定义URL；
+
+    ```html
+<link href="asserts/css/dashboard.css" th:href="@{/asserts/css/dashboard.css}" rel="stylesheet">
+    ```
+
+~{...}：片段引用表达式
+
+```html
+<div th:insert="~{commons :: main}">...</div>
+```
+
+#### thymeleaf公共页面元素抽取
+
+```html
+1、抽取公共片段
+<div th:fragment="copy">
+&copy; 2011 The Good Thymes Virtual Grocery
+</div>
+
+2、引入公共片段
+<div th:insert="~{footer :: copy}"></div>
+~{templatename::selector}：模板名::选择器
+~{templatename::fragmentname}:模板名::片段名
+
+3、默认效果：
+insert的公共片段在div标签中
+如果使用th:insert等属性进行引入，可以不用写~{}：
+行内写法可以加上：[[~{}]];[(~{})]；
+```
+
+thymeleaf有三种引入公共片段的th属性：
+
+​	**th:insert**：将公共片段整个插入到声明引入的元素中
+
+​	**th:replace**：将声明引入的元素替换为公共片段
+
+​	**th:include**：将被引入的片段的内容包含进这个标签中
+
+三种方式的区别
+
+```html
+footer.html下设置th:fragment
+<footer th:fragment="copy">
+&copy; 2011 The Good Thymes Virtual Grocery
+</footer>
+
+引入方式
+<div th:insert="footer :: copy"></div>
+<div th:replace="footer :: copy"></div>
+<div th:include="footer :: copy"></div>
+
+th:insert的效果
+<div>
+    <footer>
+    &copy; 2011 The Good Thymes Virtual Grocery
+    </footer>
+</div>
+
+th:replace的效果
+<footer>
+&copy; 2011 The Good Thymes Virtual Grocery
+</footer>
+
+th:include的效果
+<div>
+&copy; 2011 The Good Thymes Virtual Grocery
+</div>
+```
+
+对于跨路径下引用:
+
+```html
+在commos下bar.html中:
+<!--topbar-->
+<nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0" th:fragment="topbar">
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="http://getbootstrap.com/docs/4.0/examples/dashboard/#">[[${session.loginUser}]]</a>
+    <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
+    <ul class="navbar-nav px-3">
+        <li class="nav-item text-nowrap">
+            <a class="nav-link" href="http://getbootstrap.com/docs/4.0/examples/dashboard/#">Sign out</a>
+        </li>
+    </ul>
+</nav>
+
+<nav class="col-md-2 d-none d-md-block bg-light sidebar" id="sidebar">
+	<a class="nav-link active"  th:class="${activeUri=='emps'?'nav-link active':'nav-link'}">
+    </a>
+</nav>
+
+
+在其他页面下引用
+...
+<div th:replace="commons/bar::topbar"></div>
+<!--使用#id选择器,()可以传递参数-->
+<div th:replace="commons/bar::#sidebar(activeUri='emps')"></div>
+...
+```
 
