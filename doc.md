@@ -1015,8 +1015,8 @@ MyBatis 提供了 choose 元素，它有点像 Java 中的 switch 语句。
 创建BaseMapper接口继承Mapper<T>, ConditionMapper<T> 
 
 ```java
-public interface BaseMapper<T> extends Mapper<T>, ConditionMapper<T> {
-    ...
+public interface BaseMapper<T> extends Mapper<T>, ConditionMapper<T> IdsMapper<T>,
+        InsertListMapper<T>{
 }
 ```
 
@@ -1423,6 +1423,7 @@ mybatis:
 
 <generatorConfiguration>
    <context id="sakila" targetRuntime="MyBatis3">
+       
       <!-- 生成的Java文件的编码 -->
       <property name="javaFileEncoding" value="UTF-8" />
       <!-- 格式化java代码 -->
@@ -1431,7 +1432,15 @@ mybatis:
       <!-- 格式化XML代码 -->
       <property name="xmlFormatter"
               value="org.mybatis.generator.api.dom.DefaultXmlFormatter" />
-
+	  <!-- 使用tkMapper插件 -->
+       <plugin type="tk.mybatis.mapper.generator.MapperPlugin">
+            <!-- <property name="mappers" value="tk.mybatis.mapper.common.Mapper,tk.mybatis.mapper.hsqldb.HsqldbMapper"/> -->
+           <!-- value可以为默认的,也可以为用户定义的tkMapper实体类 -->
+            <property name="mappers" value="tk.mybatis.mapper.common.Mapper"/>
+            <!-- caseSensitive默认false，当数据库表名区分大小写时，可以将该属性设置为true -->
+            <property name="caseSensitive" value="true"/>
+        </plugin>
+       
       <commentGenerator>
          <!-- 是否去除自动生成的注释 true：是 ： false:否 -->
          <property name="suppressAllComments" value="true"  />
@@ -1467,7 +1476,12 @@ mybatis:
       <javaClientGenerator type="XMLMAPPER"
                       targetPackage="com.example.seconddemowebrestfulcrud.mapper"
                       targetProject=".\src\main\java"/>
-
+       
+       <!--生成service,serviceImpl-->
+       <javaServiceGenerator targetPackage="com.shsoft.platform.service" targetProject="src/main/java"
+                              implementationPackage="com.shsoft.platform.service">
+       </javaServiceGenerator>
+       
       <!-- 指定数据库表 -->
       <table schema="23" tableName="user_info"
             domainObjectName="User"
@@ -4126,7 +4140,7 @@ Thymeleaf 是一个现代服务器端 Java 模板引擎，用于 web 和独立�
 
 ### Maven依赖
 
-```
+```xml
 <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-thymeleaf -->
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -4141,13 +4155,13 @@ Thymeleaf 是一个现代服务器端 Java 模板引擎，用于 web 和独立�
 
 1.导入thymeleaf的名称空间
 
-```
+```html
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 ```
 
 2、使用thymeleaf语法；
 
-```
+```html
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -4208,9 +4222,9 @@ Thymeleaf 是一个现代服务器端 Java 模板引擎，用于 web 和独立�
 #{...}：获取国际化内容
 @{...}：定义URL；
 
-    ```html
+```html
 <link href="asserts/css/dashboard.css" th:href="@{/asserts/css/dashboard.css}" rel="stylesheet">
-    ```
+```
 
 ~{...}：片段引用表达式
 
@@ -4305,3 +4319,81 @@ th:include的效果
 ...
 ```
 
+## Vue
+
+### 环境配置
+
+**一.下载Node.js**
+
+官方地址：https://nodejs.org/en/download/
+
+**二.设置nodejs prefix（全局）和cache（缓存）路径**
+
+在Node.js目录下新建**node_global**和**node_cache**两个文件夹
+
+<img src="picture\node.png" style="zoom: 80%;" />
+
+**三.设置缓存文件夹**
+
+```bash
+npm config set cache "D:\vueProject\nodejs\node_cache"
+```
+
+**四.设置全局模块存放路径**
+
+```bash
+npm config set prefix "D:\vueProject\nodejs\node_global"
+```
+
+**五.设置环境变量**
+
+将其Node.js目录下**node_global**文件夹添加至Path中。
+
+新增系统变量NODE_PATH，路径为Node.js目录下**node_modules**文件夹。
+
+**六.安装Vue**
+
+```bash
+cnpm install vue -g
+```
+
+**七.安装vue命令行工具，即vue-cli 脚手架**
+
+```bash
+cnpm install vue-cli -g
+```
+
+
+
+### 利用vue-cli脚手架搭建新项目
+
+在CMD定位至项目目录下输入
+
+```bash
+vue init webpack-simple 项目名称（使用英文)
+```
+
+其中项目名称中不能使用大写.
+
+CMD定位到工程目录下，安装该工程依赖的模块，这些模块将被安装在：项目名称\node_module目录下，node_module文件夹会被新建，而且根据package.json的配置下载该项目的modules
+
+```bash
+cnpm install
+```
+
+
+
+### 运行Vue项目
+
+```bash
+cnpm run dev  / npm run dev
+```
+
+### Vue打包上线
+
+```bash
+ npm run build 
+```
+
+打包完成后，会生成 dist 文件夹，如果已经修改了文件路径，可以直接打开本地文件查看。
+项目上线时，只需要将 dist 文件夹放到服务器就行了。
