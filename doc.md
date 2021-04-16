@@ -4119,11 +4119,12 @@ public class User {
 
 ```java
 
+@Api(tags = "用户管理")
 @RestController
 public class HelloController {
     
     //ApiOperation:在Swagger中对其方法进行注释
-    @ApiOperation("Hello控制类")
+    @ApiOperation(value = "登录", notes = "用户登录")
     @PostMapping("/user")
     //@ApiParam:在Swagger中对其参数进行注释
     public User user(@ApiParam("用户名") String username){
@@ -4363,9 +4364,7 @@ cnpm install vue -g
 cnpm install vue-cli -g
 ```
 
-
-
-### 利用vue-cli脚手架搭建新项目
+**利用vue-cli脚手架搭建新项目**
 
 在CMD定位至项目目录下输入
 
@@ -4381,15 +4380,13 @@ CMD定位到工程目录下，安装该工程依赖的模块，这些模块将�
 cnpm install
 ```
 
-
-
-### 运行Vue项目
+**八.运行Vue项目**
 
 ```bash
 cnpm run dev  / npm run dev
 ```
 
-### Vue打包上线
+**九.Vue打包上线**
 
 ```bash
  npm run build 
@@ -4397,3 +4394,693 @@ cnpm run dev  / npm run dev
 
 打包完成后，会生成 dist 文件夹，如果已经修改了文件路径，可以直接打开本地文件查看。
 项目上线时，只需要将 dist 文件夹放到服务器就行了。
+
+
+
+### vue.js基础
+
+属性绑定：
+
+v-bind:xxx="aaa" / v-bind:title="message3"
+
+​	将aaa内容绑定到XXX属性上
+
+事件监听器：
+
+v-on:xxx="aaa"   /  v-on:click="sayHi"
+
+​	XXX属性进行监听，返回aaa内容
+
+双向绑定：
+
+v-model="XXX" / v-model="message"
+
+​	将XXX进行view，model双向绑定到上，修改一处会同时变化
+
+```html
+<div id="main">
+    {{message}}
+    {{message2}}
+	<!-- 将message3内容绑定到title属性中 -->
+    <span v-bind:title="message3">
+    鼠标悬停几秒钟查看此处动态绑定的提示信息！
+    </span>
+    <!--foreach循环-->
+    <li v-for="(item,index) in items">
+        {{item.ms}}---{{index}}
+    </li>
+
+    <button v-on:click="sayHi">Click Me</button>
+    <!--model双向绑定-->
+    <input type="text" v-model="message">
+    <p></p>
+    <input type="radio" name="sex" value="男" v-model="sex" checked>男
+    <input type="radio" name="sex" value="女" v-model="sex">女
+    <p>选择了: {{sex}}</p>
+</div>
+
+<!--导入vue.js-->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
+<script>
+    var vm=new Vue({
+        el:"#main",
+        data:{
+            message : "Hello,Vue!",
+            message2 : "Hello,World!",
+            message3 : "Hello,World!!!",
+            items : [
+                {ms : "ms1"},
+                {ms : "ms2"},
+                {ms : "ms3"}
+            ],
+            sex : ""
+        },
+        // 方法必须定义在Vue的methods中
+        methods:{
+            sayHi:function(){
+                alert(this.message);
+            }
+        }
+    });
+</script>
+```
+
+#### Vue组件
+
+组件是可复用的Vue实例,就是一组可以自定义使用的模板,跟JSTL的自定义标签、Thymeleaf的th:fragment相似。
+
+```javascript
+ 	// 定义一个Vue组件 名为 'demo'
+    Vue.component("demo",{
+        template : '<li>Hello,World</li>'
+    });
+    
+    var vm= new Vue({
+        el : "#main"
+    });
+```
+
+```html
+<div id="main">
+    <demo></demo>
+</div>
+```
+
+Vue组件不能直接访问data层数据,需要绑定到template中的propos属性中。组件中可以带属性。
+
+```html
+<!--view层-->
+<div id="main">
+    <!--template不能直接访问data层数据,需要绑定到template中的propos属性中-->
+    <demo v-for="item in items" v-bind:item1="item"></demo>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
+<script>
+    // 定义一个Vue组件 名为 'demo' 内含一个'item1'的属性
+    Vue.component("demo",{
+        props : ['item1'],
+        template : '<li>{{item1}}</li>'
+    });
+
+    var vm= new Vue({
+        el : "#main",
+        data : {
+            items : ["Vue.js!","JavaScript","JQuery"]
+        }
+    });
+</script>
+```
+
+
+
+## SpringBoot Result对象
+
+**前后端分离项目中，后端输出Result对象并封装为Json数据，传递给前段进行处理。**
+
+从而Springboot项目中需要定义Result对象进行传递。
+
+### 一：定义响应码枚举
+
+```java
+ /**
+ * @Description: 响应码枚举，参考HTTP状态码的语义
+ * @author zty
+ * @date 2021/4/16 09:42
+ */
+public enum RetCode {
+   // 成功
+   SUCCESS(200),
+   // 失败
+   FAIL(400),
+   // 未认证（签名错误）
+   UNAUTHORIZED(401),
+   // 接口不存在
+   NOT_FOUND(404),
+   // 服务器内部错误
+   INTERNAL_SERVER_ERROR(500);
+ 
+   private final int code;
+ 
+   RetCode(int code) {
+      this.code = code;
+   }
+   public int code() {
+        return code;
+    }
+}
+```
+
+### 二：创建返回对象Result实体（泛型）
+
+```java
+/**
+ * @Description: 统一API响应结果封装,返回对象实体
+ * @author zty
+ * @date 2021/4/16 09:43
+ */
+public class RetResult<T> {
+ 
+   public int code;
+ 
+   private String msg;
+ 
+   private Object data;
+ 
+   public RetResult<T> setCode(RetCode retCode) {
+      this.code = retCode.code;
+      return this;
+   }
+ 
+   public int getCode() {
+      return code;
+   }
+ 
+   public RetResult<T> setCode(int code) {
+      this.code = code;
+      return this;
+   }
+ 
+   public String getMsg() {
+      return msg;
+   }
+ 
+   public RetResult<T> setMsg(String msg) {
+      this.msg = msg;
+      return this;
+   }
+ 
+   public T getData() {
+      return data;
+   }
+ 
+   public RetResult<T> setData(T data) {
+      this.data = data;
+      return this;
+   }
+    public String toString() {
+        // 使用FastJson 输出为json数据给前台
+        return JSON.toJSONString(this);
+    }
+ 
+}
+```
+
+### 四：返回结果数据格式封装 / 响应结果生成工具
+
+```java
+/**
+ * @Description: 将结果转换为封装后的对象
+ * @author
+ * @date 2021/4/16 09:45
+ */
+public class RetResponse {
+ 
+   private final static String SUCCESS = "操作成功";
+ 
+   public static <T> RetResult<T> makeOKRsp() {
+      return new RetResult<T>().setCode(RetCode.SUCCESS).setMsg(SUCCESS);
+   }
+ 
+   public static <T> RetResult<T> makeOKRsp(T data) {
+      return new RetResult<T>().setCode(RetCode.SUCCESS).setMsg(SUCCESS).setData(data);
+   }
+ 
+   public static <T> RetResult<T> makeErrRsp(String message) {
+      return new RetResult<T>().setCode(RetCode.FAIL).setMsg(SUCCESS);
+   }
+ 
+   public static <T> RetResult<T> makeRsp(int code, String msg) {
+      return new RetResult<T>().setCode(code).setMsg(msg);
+   }
+    
+   public static <T> RetResult<T> makeRsp(int code, String msg, T data) {
+      return new RetResult<T>().setCode(code).setMsg(msg).setData(data);
+   }
+    
+   public static void genHttpResult(HttpServletResponse response,Integer httpCode,String msg) {
+    	response.setCharacterEncoding("UTF-8");
+        response.setHeader("Content-type", "application/json;charset=UTF-8");
+        response.setStatus(httpCode);
+        try {
+            response.getWriter().write(JSON.toJSONString(msg));
+        } catch (IOException ex) {
+        }
+   }
+}
+```
+
+### 五：返回Result功能测试
+
+```java
+@RestController
+@Api(tags = "用户管理")
+@RequestMapping("/users")
+public class UserController {
+	@PostMapping("/selectById")
+    public RetResult<UserInfo> selectById(Integer id){
+    	UserInfo userInfo = userInfoService.selectById(id);
+    	return RetResponse.makeOKRsp(userInfo);
+	}
+}
+```
+
+前段请求返回数据格式
+
+```
+{
+    "code": 200,
+    "msg": "success",
+    "data": {
+        "id": 1,
+        "userName": "1"
+    }
+}
+```
+
+
+
+## maven pom文件配置
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!--项目的构件标识符，版本。 子项目不需要配置 -->
+    <modelVersion>4.0.0</modelVersion>
+	<groupId>cn.xxx1</groupId>
+	<version>1.0.0</version>
+    
+    <!--父项目的坐标。如果项目中没有规定某个元素的值，那么父项目中的对应值即为项目的默认值。 坐标包括group ID，artifact ID和 version。-->   
+    <parent>
+    	<groupId>cn.xxxx</groupId>
+		<artifactId>xxx</artifactId>
+		<version>1.0.0</version>
+    </parent>
+    
+    <artifactId>xxx1</artifactId>
+    
+    <properties>
+        <!-- 项目字符集编码 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 项目输出字符集编码 -->
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- 项目java版本 -->
+        <java.version>1.8</java.version>
+        <!-- 项目中的XXX架包版本 -->
+        <xxx.version>1.5.9.RELEASE</springboot.version>
+        ...
+    </properties>
+    <!-- 继承自该项目的所有子项目的默认依赖信息。这部分的依赖信息不会被立即解析,而是当子项目声明一个依赖（必须描述group ID和 artifact ID信息），如果group ID和artifact ID以外的一些信息没有描述，则通过group ID和artifact ID 匹配到这里的依赖，并使用这里的依赖信息。-->    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+				<groupId>xxx</groupId>
+				<artifactId>xxx</artifactId>
+				<version>xxx</version>
+			</dependency>
+        </dependencies>    
+    </dependencyManagement>
+    
+    <dependencies>
+            <dependency>
+				<groupId>xxx</groupId>
+				<artifactId>xxx</artifactId>
+				<version>xxx</version>
+			</dependency>
+    </dependencies> 
+    
+    <!--构建项目需要的信息-->    
+    <build>
+        <!--子项目可以引用的默认插件信息。该插件配置项直到被引用时才会被解析或绑定到生命周期。给定插件的任何本地配置都会覆盖这里的配置-->
+        <pluginManagement>
+                <plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<source>${java.version}</source>
+						<target>${java.version}</target>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<configuration>
+						<!-- 热部署 -->
+						<fork>true</fork>
+					</configuration>
+				</plugin>
+        </pluginManagement>
+    </build>
+    
+    <!-- 定义项目模块-子项目 -->
+    <modules>
+		<module>deltalpha-core</module>
+		<module>xxx</module>
+         ...
+	</modules>
+    <!--项目分发信息，在执行mvn deploy后表示要发布的位置。有了这些信息就可以把网站部署到远程服务器或者把构件部署到远程Maven仓库。--> 
+    <distributionManagement>
+		<repository>
+			<id>xxx</id>
+			<name>xxx</name>
+			<url>xxxx</url>
+		</repository>
+	</distributionManagement>
+</project>
+```
+
+
+
+## UUID（通用唯一识别码）
+
+UUID 目的是让分布式系统中的所有元素，都能有唯一的辨识信息，而不需要通过中央控制端来做辨识信息的指定。
+
+UUID是指在一台机器上生成的数字，它保证对在同一时空中的所有机器都是唯一的。
+
+标准的UUID格式为：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (例如8-4-4-4-12)
+
+​	直接生成的ID中有“-”存在，如果不需要，可以使用replace()方法去掉。
+
+### UUID生成工具类
+
+```java
+/**
+ * UUID工具类
+ *
+ */
+public class UUIDUtils {
+    private static final char[] CHAR_ARR = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
+            'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
+
+    /**
+     * 生成uuid
+     *
+     * @return
+     */
+    public static String getUUID() {
+        String uid = UUID.randomUUID().toString().replace("-", "");
+        return uid;
+    }
+
+    /**
+     * 获取随机字符串
+     *
+     * @param len 长度
+     * @return
+     */
+    public static String getRandomChar(int len) {
+        StringBuffer sb = new StringBuffer("");
+        Random random = new Random();
+        for (int i = 0; i < len; i++) {
+            sb.append(CHAR_ARR[random.nextInt(CHAR_ARR.length)]);
+        }
+        return sb.toString();
+    }
+
+}
+```
+
+
+
+## RESTful项目登录模块的实现
+
+0.定义ResultCode
+
+```java
+public enum ResultCode {
+    SUCCESS(200),
+    FAIL(400),
+    UNAUTHORIZED(401),
+    NOT_FOUND(404),
+    INTERNAL_SERVER_ERROR(500);
+
+    private final int code;
+
+    private ResultCode(int code) {
+        this.code = code;
+    }
+
+    public int code() {
+        return this.code;
+    }
+}
+```
+
+1、项目的控制层中
+
+```java
+@RestController
+@Api(tags = "用户管理")
+@RequestMapping("/users")
+public class UserController {
+@PostMapping("/login")
+    @ApiOperation(value = "登录", notes = "用户登录")
+    @SysLog("登录")
+    public Result login(@RequestBody LoginReq req) throws Exception {
+        // 获取验证码缓存
+        String cacheVerifyCode = imgValidService.get(req.getValidKey());
+        // 判断验证码正确性
+        if(!req.getVerifyCode().equals(cacheVerifyCode)) {
+            // 抛出自定义错误,其内容为发送操作失败Result.
+            // 自定义错误 在其SpringmvcConfig中配置
+            throw new ServiceException("验证码错误");
+        }
+        // userService.login返回登陆凭证 将其登陆凭证返回Result
+        return ResultGenerator.genSuccessResult(userService.login(req));
+    }
+}
+
+```
+
+2.LoginReq 登陆请求类
+
+```java
+/**
+ * 用于登陆请求
+ *
+ */
+@ApiModel
+public class LoginReq {
+
+    @ApiModelProperty(value = "用户名", dataType = "String")
+    private String userName;
+    @ApiModelProperty(value = "用户密码", dataType = "String")
+    private String password;
+    @ApiModelProperty(value = "验证码", dataType = "String")
+    private String verifyCode;
+    @ApiModelProperty(value = "验证码验证key", dataType = "String")
+    private String validKey;
+
+    public String getVerifyCode() {
+        return verifyCode;
+    }
+    public void setVerifyCode(String verifyCode) {
+        this.verifyCode = verifyCode;
+    }
+    public String getValidKey() {
+        return validKey;
+    }
+    public void setValidKey(String validKey) {
+        this.validKey = validKey;
+    }
+    public String getUserName() {
+        return userName;
+    }
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+```
+
+3.返回Result类
+
+```java
+public class Result {
+    private int code;
+    private String message;
+    private Object data;
+    private Object todoTasks;
+
+    public Result() {
+    }
+
+    public Result setCode(ResultCode resultCode) {
+        this.code = resultCode.code();
+        return this;
+    }
+
+    public int getCode() {
+        return this.code;
+    }
+
+    public String getMessage() {
+        return this.message;
+    }
+
+    public Result setMessage(String message) {
+        this.message = message;
+        return this;
+    }
+
+    public Object getData() {
+        return this.data;
+    }
+
+    public Result setData(Object data) {
+        this.data = data;
+        return this;
+    }
+
+    public void setCode(int code) {
+        this.code = code;
+    }
+
+    public Object getTodoTasks() {
+        return this.todoTasks;
+    }
+
+    public void setTodoTasks(Object todoTasks) {
+        this.todoTasks = todoTasks;
+    }
+
+    public String toString() {
+        // 使用FastJson 输出为json数据给前台
+        return JSON.toJSONString(this);
+    }
+}
+```
+
+4.ResultGenerator-Result生成类
+
+```java
+public class ResultGenerator {
+    private static final String DEFAULT_SUCCESS_MESSAGE = "操作成功";
+
+    public ResultGenerator() {
+    }
+	
+    public static Result genSuccessResult() {
+        return (new Result()).setCode(ResultCode.SUCCESS).setMessage("操作成功");
+    }
+	//生成操作成功的Result并且携带数据
+    public static Result genSuccessResult(Object data) {
+        return (new Result()).setCode(ResultCode.SUCCESS).setMessage("操作成功").setData(data);
+    }
+	//生成操作错误的Result并且携带错误信息
+    public static Result genFailResult(String message) {
+        return (new Result()).setCode(ResultCode.FAIL).setMessage(message);
+    }
+
+    public static void genHttpResult(HttpServletResponse response, Integer httpCode, String msg) {
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Content-type", "application/json;charset=UTF-8");
+        response.setStatus(httpCode);
+
+        try {
+            response.getWriter().write(JSON.toJSONString(msg));
+        } catch (IOException var4) {
+        }
+
+    }
+}
+```
+
+<img src="picture\result.jpg" style="zoom:100%;" />
+
+5.UserServiceImpl中,进行登陆信息判断并返回登陆凭证.
+
+```java
+@Service
+@Transactional
+public class UserServiceImpl extends AbstractService<User> implements UserService {
+	@Resource
+	private UserMapper userMapper;
+	@Autowired
+	OnLineService onLineService;
+	...
+        
+	/**
+	 * 用户密码登陆
+	 */
+	@Override
+	public LoginResp login(LoginReq loginReq) throws Exception {
+        // 从登陆请求中获取用户输入的各个信息
+		String loginName = loginReq.getUserName();
+		String password = loginReq.getPassword();
+		if (ValidateUtil.isEmpty(loginName) || ValidateUtil.isEmpty(password)) {
+			throw new ServiceException("登陆名和密码不能为空");
+		}
+        // 将用户输入的明文密码转换为MD5格式 (为了将其密码复杂化将其头部加入用户名)
+		String enPwd = MD5Tools.MD5(loginName + password);
+		
+        // 利用TKmybatis,生成User表的Condition
+		Condition con = new Condition(User.class);
+        // 将其条件拼接
+        // 相当于 'loginName=xxx and password=xxx and status=xx'
+        // UserStatusEnum.NORMAL.getCode() 获取用户账号的状态
+		con.createCriteria().andEqualTo("loginName", loginReq.getUserName()).andEqualTo("password", 								enPwd).andEqualTo("status", UserStatusEnum.NORMAL.getCode());
+		
+        //Tkmybits中selectByCondition按条件查询用户
+		List<User> userLt = userMapper.selectByCondition(con);
+
+		User user = new User();
+		// 判断用户是否存在
+		if (ValidateUtil.isEmpty(userLt)) {
+			throw new ServiceException("用户名或密码错误");
+		} else {
+			user = userLt.get(0);
+		}
+
+		// 登陆
+		StringBuffer sbBuffer = new StringBuffer();
+		sbBuffer.append(loginName);
+		sbBuffer.append(UUIDUtils.getUUID());
+		// 生成登陆凭证(为了安全话将其MD5加密)
+		String voucher = MD5Tools.MD5(sbBuffer.toString());
+		
+        // 生成数据传输类 
+		UserDTO userRedis = new UserDTO();
+        // 将用户信息复制给 数据传输类(移除密文,确保后续传输安全性).
+		BeanUtils.copyProperties(user, userRedis);
+		//利用onLineService设置用户的在线信息
+		onLineService.add(voucher, userRedis, null);
+
+        //登陆凭证
+		LoginResp resp = new LoginResp();
+		resp.setVoucher(voucher);
+		resp.setUserInfo(userCoverter.covert(userRedis));
+		return resp;
+	}
+}	
+```
+
+
+
