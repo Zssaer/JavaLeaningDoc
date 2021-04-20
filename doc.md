@@ -4352,6 +4352,16 @@ npm config set prefix "D:\vueProject\nodejs\node_global"
 
 新增系统变量NODE_PATH，路径为Node.js目录下**node_modules**文件夹。
 
+
+
+**基于 Node.js 安装cnpm（淘宝镜像）**
+
+```
+npm install -g cnpm --registry=https://registry.npm.taobao.org
+```
+
+
+
 **六.安装Vue**
 
 ```bash
@@ -4486,7 +4496,7 @@ v-model="XXX" / v-model="message"
 </div>
 ```
 
-Vue组件不能直接访问data层数据,需要绑定到template中的propos属性中。组件中可以带属性。
+<font color="red">**Vue组件不能直接访问data层数据,需要绑定到template中的propos属性中。组件中可以带属性。**</font>
 
 ```html
 <!--view层-->
@@ -4511,6 +4521,313 @@ Vue组件不能直接访问data层数据,需要绑定到template中的propos属�
     });
 </script>
 ```
+
+#### Axios异步通讯
+
+Axios API:
+
+使用`axios` 可以传递其他链接下的数据,以及传递数据.
+
+​	在前后端分离项目进行前后端链接通讯.
+
+````html
+<div id="vue">
+    <div>
+        {{info.name}}
+        {{info.address.city}}
+        <a v-bind:href="info.url">Baidu</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    var vm = new Vue({
+        el: "#vue",
+        data:{
+            info:null
+        },
+        mounted(){ //钩子函数
+            axios.get('../data.json').then(response=>(this.info=response.data));
+        }
+    });
+</script>
+````
+
+data.json:
+
+```json
+{
+  "name":"test",
+  "url": "http://baidu.com",
+  "page": 1,
+  "isNonProfit":true,
+  "address": {
+    "street": "含光门",
+    "city":"陕西西安",
+    "country": "中国"
+  },
+  "links": [
+    {
+      "name": "bilibili",
+      "url": "https,://www.bilibili.com/"
+    },
+    {
+     "name": "4399",
+      "url": "https,://www.4399.com/"
+    },
+    {
+      "name": "百度",
+      "url": "https,://www.baidu.com/"
+    }
+  ]
+}
+```
+
+```javascript
+ mounted(){ //钩子函数
+            axios.get('../data.json').then(response=>(this.info=response.data));
+        }
+```
+
+#### Slot插槽
+
+slot:可重复定义的组件
+
+```html
+<div id="main">
+    <todo>
+        <utitle slot="title-slot" :title="mytitle"></utitle>
+        <items slot="items-slot" v-for="item in myitems" :item="item"></items>
+    </todo>
+</div>
+
+<!--导入vue.js-->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
+<script>
+    Vue.component("todo",{
+       template: '<div>\
+                  <slot name="title-slot"></slot>\
+                     <ul>\
+                       <slot name="items-slot"></slot>\
+                     </ul>\
+                  </div>'
+    });
+    Vue.component("utitle",{
+        props:['title'],
+        template: '<div>{{title}}</div>'
+    });
+    Vue.component("items",{
+        props:['item'],
+        template: '<li>{{item}}</li>'
+    });
+
+
+    var vm=new Vue({
+        el: "#main",
+        data:{
+            mytitle: 'zssaer',
+            myitems: ["zty","sdf","gfr","rgg","sxc","oju","zty"]
+        }
+
+    });
+</script>
+```
+
+<img src="F:\MyLeaning_doc\picture\slot.png" style="zoom:110%;" />
+
+在component中的template下<slot name="xxx"></slot>定义插槽.
+
+name为该插槽的名称,当一个组件存在多个slot时,使用name的值来区分.
+
+在view中使用complete充当插槽时,定义slot="slot-name".
+
+
+
+<font color="red">**注意:在 2.6.0 中，我们为具名插槽和作用域插槽引入了一个新的统一的语法 (即 `v-slot` 指令)。它取代了 `slot` 和 `slot-scope` 这两个目前已被废弃但未被移除且仍在[文档中](https://cn.vuejs.org/v2/guide/components-slots.html#废弃了的语法)的 attribute。**</font>
+
+
+
+#### 自定义事件
+
+$emit( 自定义事件名, 参数 ):
+
+$emit 绑定一个自定义事件event，当这个这个语句被执行到的时候，就会将参数arg传递给父组件，父组件通过@事件(v-on:事件) 进行监听并接收参数。
+
+```html
+<div id="main">
+    <todo>
+        <utitle slot="title-slot" :title="mytitle"></utitle>
+        <items slot="items-slot" v-for="(item,index) in myitems" :item="item" :index="index" @remove="removeItems(index)"></items>
+    </todo>
+</div>
+
+<!--导入vue.js-->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.21/dist/vue.min.js"></script>
+<script>
+    Vue.component("todo",{
+       template: '<div>\
+                  <slot name="title-slot"></slot>\
+                     <ul>\
+                       <slot name="items-slot"></slot>\
+                     </ul>\
+                  </div>'
+    });
+    Vue.component("utitle",{
+        props:['title'],
+        template: '<div>{{title}}</div>'
+    });
+    Vue.component("items",{
+        props:['item','index'],
+        template: '<li>{{index}}---{{item}} <button @click="remove">Delete</button></li>',
+        methods:{
+            remove: function () {
+                this.$emit('remove',this.index)  
+            }
+        }
+    });
+
+
+    var vm=new Vue({
+        el: "#main",
+        data:{
+            mytitle: 'zssaer',
+            myitems: ["zty","sdf","gfr","rgg","sxc","oju","zty"]
+        },
+        methods:{
+            removeItems:function (index) {
+                console.log("删除了"+this.myitems[index]+"元素");
+                this.myitems.splice(index,1); //一次删除一个元素
+            }
+        }
+    });
+```
+
+#### WebPack打包
+
+WebPack可以将其项目modules中的js文件全部打包为一个js文件.减少项目导入的资源量.
+
+1.使用npm,安装webpack以及webpack-cli
+
+```bash
+npm install webpack -g
+npm install webpack-cli -g
+```
+
+2.在modules文件夹定义一个hello.js文件
+
+```javascript
+//暴露其方法,使其可以被外部调用. 相当于JAVA中的public修饰符
+exports.sayHi = function () {
+    document.write("<h1>Hi!</h1>");
+}
+```
+
+3.在modules文件夹定义入口文件main.js文件
+
+```
+var hello = require("./hello");  //使用require方法调用其它module文件,并将其赋值给hello.相当于JAVA中的new
+hello.sayHi();  //使用其中的方法
+```
+
+
+
+2.在项目主目录下创建webpack.config.js文件
+
+```javascript
+module.exports = {
+    entry: './modules/main.js',  //定义其js入口文件
+    // mode: 'development',
+    output: {
+        filename: "./js/bundle.js"  //输出位置,其外自动为dist文件夹
+    }
+};
+```
+
+3.使用webpack在项目主目录下打包
+
+```bash
+webpack
+```
+
+
+
+#### Vue-router路由
+
+1.在项目中安装vue-router(如果使用脚手架构建vue项目时安装了router的话可以跳过)
+
+```bash
+npm install vue-router --save-dev
+//cnpm install vue-router --save-dev
+```
+
+2.在src下新建router文件夹,并创建index.js文件进行配置Router. ('index.js'为Vue默认下的router文件)
+
+```javascript
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+/*导入相关组件*/
+import Content from '../components/Content'
+import IndexPage from '../components/Index'
+
+//安装路由
+Vue.use(VueRouter);
+
+//配置导出路由
+export default new VueRouter({
+  routes:[
+    {
+      //路由路径  相当于Spring中的@RequestMapping
+      path:'/content',
+      name:'content',
+      //跳转的组件
+      component: Content
+    },
+    {
+      path:'/main',
+      name:'main',
+      component: IndexPage
+    }
+      ...
+  ]
+});
+```
+
+3.在入口main.js文件下导入,配置router
+
+```javascript
+import Router from './router'  //Vue默认配置下会自动扫描router下的index文件
+
+new Vue({
+  el: '#app',
+  //配置路由
+  router:Router,
+  ...
+})
+```
+
+4.在显示Vue下进行使用Router
+
+```vue
+<template>
+  <div id="app">
+    <H1>ONEREPULIC OF THE POP ARTISTS FROM UNITED STATES OF AMERICA</H1>
+    <!-- 设置Router路径 -->
+    <router-link to="/content">CONTENT</router-link>
+    <router-link to="/main">INDEX</router-link>
+    <!-- 展示Router内容 -->
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'App',
+}
+</script>
+```
+
+<router-link>:进行设置路由链接    <router-view>:进行展示路由内容
 
 
 
