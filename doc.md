@@ -4793,6 +4793,26 @@ export default new VueRouter({
 });
 ```
 
+注意:使用import引入component的话,会导致其项目打包时路由里的所有component都会打包在一个js中，造成进入首页时，需要加载的内容过多，时间相对比较长。
+
+当你用require这种方式引入的时候，会将你的component分别打包成不同的js，加载的时候也是按需加载，只用访问这个路由网址时才会加载这个js。
+
+```javascript
+resolve => require(['../components/Index'], resolve),
+```
+
+```javascript
+{
+      // 进行路由配置,规定'/'引入到home组件
+      path: '/',
+      component: resolve => require(['../components/Index'], resolve),
+      meta: {
+        title: 'home'
+}
+```
+
+
+
 3.在入口main.js文件下导入,配置router
 
 ```javascript
@@ -4812,7 +4832,7 @@ new Vue({
 <template>
   <div id="app">
     <H1>ONEREPULIC OF THE POP ARTISTS FROM UNITED STATES OF AMERICA</H1>
-    <!-- 设置Router路径 -->
+    <!-- 设置Router超链接,相当于a -->
     <router-link to="/content">CONTENT</router-link>
     <router-link to="/main">INDEX</router-link>
     <!-- 展示Router内容 -->
@@ -4828,6 +4848,274 @@ export default {
 ```
 
 <router-link>:进行设置路由链接    <router-view>:进行展示路由内容
+
+
+
+在方法中进行路由转发跳转导航:
+
+```javascript
+// 使用vue-router路由到指定页面,该方式叫做编程式导航
+this.$router.push("/main");
+```
+
+##### 路由嵌套
+
+在一个页面中部分切换显示内容,而不跳转新页面. 做到局部刷新,则可以使用Vue-router的路由嵌套方法.  如导航栏点击切换主内容,页面局部刷新,导航栏部分不变,主内容改变.
+
+```vue
+...
+<el-submenu index="1">
+        <template slot="title"><i class="el-icon-message"></i>用户管理</template>
+          <el-menu-item index="1-1">
+          	  <!-- 设置路由跳转链接 -->
+              <router-link to="/user/profile">个人信息</router-link>  
+          </el-menu-item>
+        <el-menu-item index="1-2">
+        	  <!-- 设置路由跳转链接 -->
+              <router-link to="/user/list">用户列表</router-link> 
+        </el-menu-item>
+ </el-submenu>
+...
+
+<el-main>
+    <!-- 在该部分进行路由显示 -->
+    <router-view />
+</el-main>
+```
+
+在路由配置文件下:
+
+```javascript
+routes:[
+    ...
+    {
+      path:'/main',
+      component: resolve => require(['../views/Main.vue'],resolve),
+      // 嵌套路由,做到局部刷新
+      children:[
+        {
+          path:'/user/profile',
+          component: resolve => require(['../views/user/Profile.vue'],resolve)
+        },
+        {
+          path:'/user/list',
+          component: resolve => require(['../views/user/List.vue'],resolve)
+        },
+      ]
+    },
+    ...
+  ]
+```
+
+
+
+##### 路由参数传递
+
+路由跳转时,可以传递参数.  
+
+```vue
+<router-link :to="{name:'UserProfile',params:{id:23}}">个人信息</router-link>  
+```
+
+在路由配置中:
+
+```javascript
+{
+      path:'/main',
+      component: resolve => require(['../views/Main.vue'],resolve),
+      // 嵌套路由
+      children:[
+        {
+          // 后续添加:参数名,以实现参数传递
+          path:'/user/profile:id',
+          //定义其路由名
+          name:'UserProfile',
+          component: resolve => require(['../views/user/Profile.vue'],resolve)
+        },
+        {
+          path:'/user/list',
+          component: resolve => require(['../views/user/List.vue'],resolve)
+}
+```
+
+v-bind:to="{name:'路由名(在配置中定义)',params:{参数名:参数值}}"
+
+ 	<font color="red">--但会在地址中 会暴露参数值 --</font>
+
+###### 1.通过路由直接获取参数值
+
+在传递后的页面中显示:
+
+```vue
+<template>
+<div>
+    <h1>个人信息</h1>
+    {{$route.params.id}}
+</div>   
+</template>
+```
+
+​	使用{{$route.params.参数名}}进行提取出参数值
+
+​	<font color="red">**注意:在Vue中声明其template下只能存在一个根元素,不能存在一个以上的元素.**</font>
+
+###### 2.通过props进行获取参数
+
+在路由配置中:
+
+```
+{
+   path:'/user/profile:id',
+   name:'UserProfile',
+   component: resolve => require(['../views/user/Profile.vue'],resolve),
+   // 设置其允许接收属性值
+   props:true
+}
+```
+
+在传递后的页面中显示:
+
+```vue
+<div>
+    <h1>个人信息</h1>
+    {{id}}
+</div>   
+
+<script>
+    export default {
+    	// 获取其传递的值
+        props:['id'],
+        name: "UserProfile"
+    }
+</script>
+```
+
+
+
+##### 路由重定向
+
+使用Vue-Router可以将转发页面进行重定向.
+
+在路由配置中:
+
+```javascript
+{
+  path:'/goHome',
+  // 跳转页面进行重定向
+  redirect:'/main'
+}
+```
+
+
+
+### ElementUI
+
+ElementUi是一个国内基于Vue2.0的桌面端组件库,类似于Bootstrap.
+
+```bash
+
+npm i element-ui -S
+# 安装Sass加载器
+npm i node-sass sass-loader --save-dev
+
+```
+
+在main.js文件中:
+
+```javascript
+new Vue({
+  el: '#app',
+  ...
+  render: h => h(App) //Element Ui
+})
+```
+
+
+
+### 在单个页面设置Body背景颜色:
+
+```javascript
+export default {
+	...
+	// 更改单个页面颜色
+    mounted() {
+      //设置背景颜色
+      document.querySelector('body').setAttribute('style', 'background-color:#268785')
+    },
+    beforeDestroy() {
+      document.querySelector('body').removeAttribute('style')
+    }
+}
+```
+
+
+
+### 单个页面设置显示标题
+
+在Vue项目中的页面不包含head元素,所以无法通过head修改其title 为其修改页面标题.
+
+#### 1.修改项目title
+
+通过修改项目中的index.html文件中的title来实现更改首页项目的显示标题
+
+#### 2.单个页面设置不同标题
+
+在路由配置中:
+
+```javascript
+routes: [
+        {
+            path: '/index',
+            name: 'index',
+            component: Index,
+            meta:{
+                // 页面标题title
+                title: '首页'
+            }
+            ...
+        ]    
+```
+
+在main.js中:
+
+```javascript
+import router from './router'
+
+router.beforeEach((to, from, next) => {
+  /* 路由发生变化修改页面title */
+  if (to.meta.title) {
+    document.title = to.meta.title
+  }
+  next()
+})
+```
+
+### 设置404页面
+
+在路由配置中:
+
+```javascript
+routes:[
+	...
+	{
+	  // * 代表错误页面
+      path:'*',
+      component: resolve => require(['../views/404.vue'],resolve)
+    }
+}
+```
+
+### 路由钩子
+
+beforeRouteEnter:在路由前执行   其效果相当于拦截器 chain
+
+beforeRouteLeave:在路由后执行
+
+
+
+
+
+
 
 
 
