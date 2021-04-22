@@ -5109,11 +5109,121 @@ routes:[
 
 beforeRouteEnter:在路由前执行   其效果相当于拦截器 chain
 
-beforeRouteLeave:在路由后执行
+beforeRouteLeave:离开路由前执行
 
+```javascript
+beforeRouteEnter:(to,from,next)=>{
+	...
+	next();
+}
+beforeRouteLeave:(to,from,next)=>{
+	...
+	next();
+}
+```
 
+参数说明:
 
+​	to:路由将要跳转的路径信息
 
+​	from:路径跳转前的路径信息
+
+​	next:路由的控制参数
+
+​			next():跳入下个页面
+
+​			next('/path'):改变路由的跳转方向,使其跳到另一个路由
+
+​			next(false):取消路由跳转,返回原来的页面
+
+​			next((vm)=>{}):仅在beforeRouteEnter中使用,vm是组件实例
+
+#### 在钩子函数中使用异步请求
+
+1.安装Axios 
+
+```bash
+npm install axios -s   
+# cnpm install axios -s
+npm install --save axios vue-axios
+# cnpm install --save axios vue-axios
+```
+
+2.在入口文件main.js配置Axios
+
+```javascript
+import Vue from 'vue'
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+
+Vue.use(VueAxios, axios)
+
+```
+
+按照这个顺序分别引入这三个文件： `vue`, `axios` 和 `vue-axios`
+
+3.在应用的component中使用Axios:
+
+```javascript
+methods:{
+            getData:function(){
+                 this.axios({
+                     method: 'get',
+                     url: 'http://localhost:8080/static/mock/data.json'
+                 }).then((response)=>{
+                     console.log(response.data)
+                     this.posts=response.data;
+                 });
+            }
+        }
+```
+
+4.在路由钩子中应用:
+
+```javascript
+beforeRouteEnter:(to,from,next)=>{
+            console.log("进入路由之前");
+            next(vm => {
+                vm.getData();  //进入路由前执行getData方法
+            });
+        }
+```
+
+### Vue常见问题
+
+**VUE使用axios数据请求时将其数据赋值报错 TypeError: Cannot set property 'xxxx' of undefined** 
+
+​		在函数里面进行赋值 `this.list = response.data.result`  报错TypeError: Cannot set property ‘listgroup’ of undefined
+
+主要原因：
+
+​		在 then的内部不能使用Vue的实例化的this, 因为在内部 this 没有被绑定。
+
+解决办法：
+
+1、用ES6箭头函数，箭头方法可以和父方法共享变量
+
+```javascript
+# ...then(function(response)){});
+...then((response)=>{
+                     this.posts=response.data;
+                 });
+```
+
+2、在请求axios外面定义一下 var that=this
+
+```javascript
+getData:function(){
+                 var that=this;
+                 this.axios({
+                     method: 'get',
+                     url: 'http://localhost:8080/static/mock/data.json'
+                 }).then(function(response){
+                     console.log(response.data)
+                     that.posts=response.data;
+                 });
+            }
+```
 
 
 
@@ -5430,6 +5540,49 @@ public class UUIDUtils {
 
 
 ## RESTful项目登录模块的实现
+
+### 配置跨域访问配置类
+
+前后端交互数据时,其双都必须配置其对应跨域配置才可以进行相互访问数据.
+
+SpringBoot后端配置跨域Config类:
+
+```java
+@Configuration
+public class Corsconfig implements WebMvcConfigurer {
+
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            	// 设置其允许的前段路径地址
+                .allowedOriginPatterns("*")
+            	// 设置其允许使用的方法
+                .allowedMethods("POST", "GET", "PUT", "OPTIONS", "DELETE")
+                .maxAge(3600)
+                .allowCredentials(true);
+    }
+
+}
+```
+
+前段配置跨域类(config/index.js)
+
+```javascript
+dev: {
+	...
+	proxyTable: {
+               '/api': {
+               		// 设置其允许的前段路径地址
+                    target: 'http://localhost:8081',
+                    changeOrigin: true,
+                    pathRewrite: {
+                      '^/api': '/' 
+                    }
+                  }
+          },
+}
+```
+
+### 实现方法
 
 0.定义ResultCode
 
