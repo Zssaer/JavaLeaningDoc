@@ -3512,7 +3512,7 @@ shiro主要有三大功能模块：
 #### 创建Realm类
 
 ```java
-public class CustomRealm extends AuthorizingRealm {
+    public class CustomRealm extends AuthorizingRealm {
 
     @Autowired
     private LoginService loginService;
