@@ -3,180 +3,192 @@
 
 文件编写开始时间：2020-10-27
 
-    - 获取验证码 easy-captcha
-        - Maven依赖
-        - 使用方法
-    - MYSQL详解
-        - 注意规范
-        - 修改表
-            - 修改表名
-            - 增加表字段
-            - 修改表字段
-            - 删除表字段
-        - MySql数据管理
-            - 外键(了解即可)
-                - 物理外键(不建议使用)
-            - DML语言(全部记住)
-            - 添加
-            - 修改
-            - 删除
-        - DQL查询语言
-            - 联表查询JoinON详解
-            - **自连接**
-            - 分页和排序
-            - 子查询
-            - 常用函数
-            - 聚合函数及分组过滤
-        - 事务
-            - 1.事务简介
-            - 2.事务四大特征/原则
-            - 3.MYSQL 事务处理
-        - 索引
-            - 索引分类
-            - 索引使用
-            - 索引原则
-        - 权限管理和备份
-            - 用户管理
-            - Mysql备份
-        - 数据库三大范式
-    - Mybatis XML映射文件详解
-        - 基本SQL XML语句
-            - Select语句 -查询
-            - Insert、Update、Delete 语句
-            - Foreach语句
-            - Sql语句
-            - #{xxx}/${xxx} -字符串替换 语句
-            - ResultMap -结果映射
-                - id & result
-                - Association -关联
-                - Collection -集合
-                - Discriminator -鉴定器
-        - 动态 SQL
-            - if语句
-            - choose、when、otherwise语句
-            - trim、where、set语句
-    - TK.mybatis框架使用
-        - BaseMapper<T>方法：
-        - IdsMapper<T>方法：
-        - ConditionMapper<T>方法：
-    - JWT（JSON Web Token)跨域身份验证
-        - 结构解析
-        - 使用JWT
-            - 1.Maven依赖
-            - 2.利用数据，生成对应Token
-            - 3.使用对应Token，获取数据
-    - SpringBoot+Mybatis整合
-        - Maven依赖
-        - 操作方法
-            - 1.编写实体类
-            - 2.编写mapper接口
-            - 3.编写mapper xml映射文件
-            - 4.编写service接口
-            - 5.编写service实现类
-            - 6.编写controller文件
-            - 7.配置property文件(或者yml文件)
-    - Mybatis逆向工程
-        - 操作方法
-            - 一.Maven依赖
-            - 二.配置generatorConfig.xml文件
-            - 三.编写生成器
-    - PageHelper 分页
-        - Maven依赖
-        - 操作方法
-            - 1.配置文件
-            - 2.编写对应需要分页controller层方法
-    - Redis基础学习
-        - Linu下安装
-        - 服务器
-            - 打开服务器
-            - 访问服务器
-        - 基础知识
-        - 数据类型
-            - 1.String
-                - SET命令
-                - GET命令
-                - GETSET命令
-                - KEYS命令
-                - STRLEN命令
-                - MSET命令
-            - 2.Hash
-                - HMSET命令
-                - HGETALL命令
-                - HGET命令
-                - HLEN命令
-            - 3.List
-                - LPUSH命令
-                - LRANGE命令
-                - LSET命令
-                - LLEN命令
-                - LIINDEX命令
-                - LPOP/RPOP命令
-                - RPOPLPUSH命令
-            - 4.Set
-                - SADD命令
-                - SMEMBER命令
-                - SCARD命令
-                - SISMEMBER命令
-                - SREM命令
-                - SRANDMEMBER命令
-                - 对比命令
-                    - SDIFF命令
-                    - SINTER命令
-                    - SUNION命令
-            - 5.Zset
-                - ZADD命令
-                - ZSCARD命令
-                - ZRANGE命令
-         -三种特殊数据类型
-             - geospatial-地理位置
-                    - geoadd-添加地理位置
-                    - geopos-查询地理位置
-                    - geodist-计算地理之间距离
-                    - georadius-寻找附近通过经纬度
-                    - georadiusbymember-寻找附近通过指定元素
-             - hyperloglog数据结构-基数统计
-             - bitmaps-位图位存储
-        - **发布订阅**
-            - SUBSCRIBE命令
-            - PUBLISH命令
-            - UNSUBSCRIBE命令
-    - SpringBoot+Redis
-        - Maven依赖
-        - 配置方法
-            - 1.配置properties文件(yaml文件)中的redis环境参数
-            - 2.配置RedisConfig类
-            - 3.配置RedisUtil类
-            - 4.创建实体类
-            - 5.在Controller中使用（读写）
-    - MD5+Salt+Hash散列进行数据加密
-        - 主要方法
-            - 注册用户时
-    - Shiro安全框架
-        - 主要功能
-        - 细分功能
-        - Maven依赖
-        - 快速入门语句
-        - SpringBoot继承Shiro
-            - Maven依赖
-            - 创建Realm类
-            - 创建ShiroConfig配置类
-            - Controller类
-        - Shiro+Thymeleaf页面整合
-            - 常用标签：
-                - The has Permission tag
-                - The authenticated tag
-                - The hasRole tag
-        - **权限、角色访问控制**
-            - 方法一：直接在页面控制（以Thymeleaf为例）
-            - 方法二：Controller代码层中控制
-            - 方法三：代码注释控制
-    - JAVA设计模式
-        - OOP七大原则
-        - 单例模式
-        - 工厂模式
+      1.    目录    (#)
+      2.  获取验证码 easy-captcha  (#easy-captcha)
+    	  2.1.  Maven依赖  (#Maven)
+    	  2.2.  使用方法  (#-1)
+      3.  MYSQL详解  (#MYSQL)
+    	  3.1.  注意规范  (#-1)
+    	  3.2.  修改表  (#-1)
+    		  3.2.1.  修改表名  (#-1)
+    		  3.2.2.  增加表字段  (#-1)
+    		  3.2.3.  修改表字段  (#-1)
+    		  3.2.4.  删除表字段  (#-1)
+    	  3.3.  MySql数据管理  (#MySql)
+    		  3.3.1.  外键(了解即可)  (#-1)
+    		  3.3.2.  DML语言(全部记住)  (#DML)
+    		  3.3.3.  添加  (#-1)
+    		  3.3.4.  修改  (#-1)
+    		  3.3.5.  删除  (#-1)
+    	  3.4.  DQL查询语言  (#DQL)
+    		  3.4.1.  联表查询JoinON详解  (#JoinON)
+    		  3.4.2.    自连接    (#-1)
+    		  3.4.3.  分页和排序  (#-1)
+    		  3.4.4.  子查询  (#-1)
+    		  3.4.5.  常用函数  (#-1)
+    		  3.4.6.  聚合函数及分组过滤  (#-1)
+    	  3.5.  事务  (#-1)
+    		  3.5.1.  1.事务简介  (#-1)
+    		  3.5.2.  2.事务四大特征/原则  (#-1)
+    		  3.5.3.  3.MYSQL 事务处理  (#MYSQL-1)
+    	  3.6.  索引  (#-1)
+    		  3.6.1.  索引分类  (#-1)
+    		  3.6.2.  索引使用  (#-1)
+    		  3.6.3.  索引原则  (#-1)
+    	  3.7.  权限管理和备份  (#-1)
+    		  3.7.1.  用户管理  (#-1)
+    		  3.7.2.  Mysql备份  (#Mysql)
+    	  3.8.  数据库三大范式  (#-1)
+      4.  Mybatis XML映射文件详解  (#MybatisXML)
+    	  4.1.  基本SQL XML语句  (#SQLXML)
+    		  4.1.1.  Select语句 -查询  (#Select-)
+    		  4.1.2.  Insert、Update、Delete 语句  (#InsertUpdateDelete)
+    		  4.1.3.  Foreach语句  (#Foreach)
+    		  4.1.4.  Sql语句  (#Sql)
+    		  4.1.5.  #{xxx}/${xxx} -字符串替换 语句  (#xxxxxx-)
+    		  4.1.6.  ResultMap -结果映射  (#ResultMap-)
+    	  4.2.  动态 SQL  (#SQL)
+    		  4.2.1.  if语句  (#if)
+    		  4.2.2.  choose、when、otherwise语句  (#choosewhenotherwise)
+    		  4.2.3.  trim、where、set语句  (#trimwhereset)
+      5.  TK.mybatis框架使用  (#TK.mybatis)
+    	  5.1.  BaseMapper<T>方法：  (#BaseMapperT)
+    	  5.2.  IdsMapper<T>方法：  (#IdsMapperT)
+    	  5.3.  ConditionMapper<T>方法：  (#ConditionMapperT)
+      6.  JWT（JSON Web Token)跨域身份验证  (#JWTJSONWebToken)
+    	  6.1.  结构解析  (#-1)
+    	  6.2.  使用JWT  (#JWT)
+    		  6.2.1.  1.Maven依赖  (#Maven-1)
+    		  6.2.2.  2.利用数据，生成对应Token  (#Token)
+    		  6.2.3.  3.使用对应Token，获取数据  (#Token-1)
+      7.  SpringBoot+Mybatis整合  (#SpringBootMybatis)
+    	  7.1.  Maven依赖  (#Maven-1)
+    	  7.2.  操作方法  (#-1)
+    		  7.2.1.  1.编写实体类  (#-1)
+    		  7.2.2.  2.编写mapper接口  (#mapper)
+    		  7.2.3.  3.编写mapper xml映射文件  (#mapperxml)
+    		  7.2.4.  4.编写service接口  (#service)
+    		  7.2.5.  5.编写service实现类  (#service-1)
+    		  7.2.6.  6.编写controller文件  (#controller)
+    		  7.2.7.  7.配置property文件(或者yml文件)  (#propertyyml)
+      8.  Mybatis逆向工程  (#Mybatis)
+    	  8.1.  操作方法  (#-1)
+    		  8.1.1.  一.Maven依赖  (#.Maven)
+    		  8.1.2.  二.配置generatorConfig.xml文件  (#.generatorConfig.xml)
+    		  8.1.3.  三.编写生成器  (#.)
+      9.  PageHelper 分页  (#PageHelper)
+    	  9.1.  Maven依赖  (#Maven-1)
+    	  9.2.  操作方法  (#-1)
+    		  9.2.1.  1.配置文件  (#-1)
+    		  9.2.2.  2.编写对应需要分页controller层方法  (#controller-1)
+      10.  Redis基础学习  (#Redis)
+    	  10.1.  Linu下安装  (#Linu)
+    	  10.2.  服务器  (#-1)
+    		  10.2.1.  打开服务器  (#-1)
+    		  10.2.2.  访问服务器  (#-1)
+    	  10.3.  基础知识  (#-1)
+    	  10.4.  数据类型  (#-1)
+    		  10.4.1.  1.String  (#String)
+    		  10.4.2.  2.Hash  (#Hash)
+    		  10.4.3.  3.List  (#List)
+    		  10.4.4.  4.Set  (#Set)
+    		  10.4.5.  5.Zset  (#Zset)
+    	  10.5.  三种特殊数据类型  (#-1)
+    		  10.5.1.  Geospatial - 地理位置  (#Geospatial-)
+    		  10.5.2.  Hyperloglog数据结构 - 基数统计  (#Hyperloglog-)
+    		  10.5.3.  Bitmaps - 位图(位存储)  (#Bitmaps-)
+    	  10.6.    发布订阅    (#-1)
+    		  10.6.1.  SUBSCRIBE命令  (#SUBSCRIBE)
+    		  10.6.2.  PUBLISH命令  (#PUBLISH)
+    		  10.6.3.  UNSUBSCRIBE命令  (#UNSUBSCRIBE)
+    	  10.7.  事务  (#-1)
+    		  10.7.1.  事务执行步骤  (#-1)
+    		  10.7.2.  事务监控  (#-1)
+    	  10.8.  Redis的持久化  (#Redis-1)
+    		  10.8.1.  RDB(Redis DataBase)  (#RDBRedisDataBase)
+    		  10.8.2.  AOF(Append Only File)  (#AOFAppendOnlyFile)
+    	  10.9.  Redis主从复制  (#Redis-1)
+    		  10.9.1.  	配置环境  (#-1)
+    		  10.9.2.  层层链路  (#-1)
+    	  10.10.  哨兵模式  (#-1)
+      11.  Jedis  (#Jedis)
+    	  11.1.  Maven依赖  (#Maven-1)
+    	  11.2.  编码测试  (#-1)
+      12.  SpringBoot+Redis  (#SpringBootRedis)
+    	  12.1.  Maven依赖  (#Maven-1)
+    	  12.2.  配置方法  (#-1)
+    		  12.2.1.  1.配置properties文件(yaml文件)中的redis环境参数  (#propertiesyamlredis)
+    		  12.2.2.  2.配置RedisConfig类  (#RedisConfig)
+    		  12.2.3.  3.配置RedisUtil类  (#RedisUtil)
+    		  12.2.4.  4.创建实体类  (#-1)
+    		  12.2.5.  5.在Controller中使用（读写）  (#Controller)
+      13.  MD5+Salt+Hash散列进行数据加密  (#MD5SaltHash)
+    	  13.1.  主要方法  (#-1)
+    		  13.1.1.  注册用户时  (#-1)
+      14.  Shiro安全框架  (#Shiro)
+    	  14.1.  主要功能  (#-1)
+    	  14.2.  细分功能  (#-1)
+    	  14.3.  Maven依赖  (#Maven-1)
+    	  14.4.   快速入门语句  (#-1)
+    	  14.5.  SpringBoot继承Shiro  (#SpringBootShiro)
+    		  14.5.1.  Maven依赖  (#Maven-1)
+    		  14.5.2.  创建Realm类  (#Realm)
+    		  14.5.3.  创建ShiroConfig配置类  (#ShiroConfig)
+    		  14.5.4.  Controller类  (#Controller-1)
+    	  14.6.  Shiro+Thymeleaf页面整合  (#ShiroThymeleaf)
+    		  14.6.1.  常用标签：  (#-1)
+    	  14.7.    权限、角色访问控制    (#-1)
+    		  14.7.1.  方法一：直接在页面控制（以Thymeleaf为例）  (#Thymeleaf)
+    		  14.7.2.  方法二：Controller代码层中控制  (#Controller-1)
+    		  14.7.3.  方法三：代码注释控制  (#-1)
+      15.  JAVA设计模式  (#JAVA)
+    	  15.1.  OOP七大原则  (#OOP)
+    	  15.2.  单例模式  (#-1)
+    	  15.3.  工厂模式  (#-1)
+      16.  Swagger  (#Swagger)
+    		  16.1.  简介  (#-1)
+    		  16.2.  SpringBoot集成Swagger  (#SpringBootSwagger)
+    		  16.3.  配置Swagger  (#Swagger-1)
+      17.  Thymeleaf  (#Thymeleaf-1)
+    	  17.1.  Maven依赖  (#Maven-1)
+    	  17.2.  首次使用  (#-1)
+    	  17.3.  语法规则  (#-1)
+    		  17.3.1.  thymeleaf公共页面元素抽取  (#thymeleaf)
+      18.  Vue  (#Vue)
+    	  18.1.  环境配置  (#-1)
+    	  18.2.  vue.js基础  (#vue.js)
+    		  18.2.1.  Vue组件  (#Vue-1)
+    		  18.2.2.  Axios异步通讯  (#Axios)
+    		  18.2.3.  Slot插槽  (#Slot)
+    		  18.2.4.  自定义事件  (#-1)
+    		  18.2.5.  WebPack打包  (#WebPack)
+    		  18.2.6.  Vue-router路由  (#Vue-router)
+    	  18.3.  ElementUI  (#ElementUI)
+    	  18.4.  在单个页面设置Body背景颜色:  (#Body:)
+    	 18.5.  单个页面设置显示标题  (#-1)
+    		 18.5.1.  1.修改项目title  (#title)
+    		 18.5.2.  2.单个页面设置不同标题  (#-1)
+    	  18.6.  设置404页面  (#404)
+    	  18.7.  路由钩子  (#-1)
+    		  18.7.1.  在钩子函数中使用异步请求  (#-1)
+    	  18.8.  Vue常见问题  (#Vue-1)
+      19.  SpringBoot Result对象  (#SpringBootResult)
+    	  19.1.  一：定义响应码枚举  (#-1)
+    	  19.2.  二：创建返回对象Result实体（泛型）  (#Result)
+    	  19.3.  四：返回结果数据格式封装 / 响应结果生成工具  (#-1)
+    	  19.4.  五：返回Result功能测试  (#Result-1)
+      20.  maven pom文件配置  (#mavenpom)
+      21.  UUID（通用唯一识别码）  (#UUID)
+    	  21.1.  UUID生成工具类  (#UUID-1)
+      22.  RESTful项目登录模块的实现  (#RESTful)
+    	  22.1.  配置跨域访问配置类  (#-1)
+    	  22.2.  实现方法  (#-1)
+      23.  Ehcache 缓存  (#Ehcache)
+    	  23.1.   ehcache 和 redis 比较  (#ehcacheredis)
+    	  23.2.  Maven引入依赖  (#Maven-1)
+    	  23.3.  项目整合  (#-1)
 
   
 
-  
 
-  
+
