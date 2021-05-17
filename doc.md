@@ -1,6 +1,7 @@
 # <font color=red>	我的学习日志</font>
 
 ## **目录**
+
 [toc]
 
 ## 获取验证码 easy-captcha
@@ -5006,6 +5007,14 @@ v-bind:to="{name:'路由名(在配置中定义)',params:{参数名:参数值}}"
 }
 ```
 
+#### 参数检验
+
+```javascript
+validate({参数值}){
+	return true/false
+}
+```
+
 
 
 ### ElementUI
@@ -6021,3 +6030,196 @@ public class EhcacheComponent {
 }
 ```
 
+
+
+
+
+## Nuxt.js
+
+Nuxt.js 是一个基于 Vue.js 的通用应用框架。
+
+通过对客户端/服务端基础架构的抽象组织，Nuxt.js 主要关注的是应用的 **UI 渲染**,特点是支持服务端渲染。
+
+
+
+### 安装和运行
+
+确保安装了 npx（npx 在 NPM 版本 5.2.0 默认安装了）：
+
+```bash
+$ npx create-nuxt-app <项目名>
+
+# 项目名称
+$ Project name: mynuxtweb
+# 项目语言
+$ Programming language: JavaScript
+# 项目管理工具
+$ Package manager: Npm
+# 项目框架
+$ UI framework: None
+# 项目通讯模块
+$ Nuxt.js modules: Axios - Promise based HTTP client
+# 项目js检验工具
+$ Linting tools: (Press <space> to select, <a> to toggle all, <i> to invert selection)
+# 项目测试工具
+$ Testing framework: None
+# 项目渲染模式
+$ Rendering mode: Universal (SSR / SSG)
+# 项目开发服务
+$ Deployment target: Server (Node.js hosting)
+# 项目开发配置工具
+$ Development tools: jsconfig.json (Recommended for VS Code if you're not using typescript)
+# Github名
+$ What is your GitHub username? zssaer
+# 项目版本管理工具
+$ Version control system: None
+
+# 运行项目
+$ npm run dev
+
+# 编译产品模式
+$ npm run build
+$ npm run start
+```
+
+nuxt的端口号默认为3000
+
+#### 修改默认端口号
+
+package.json
+
+```json
+{
+ ...
+ "config": {
+    "nuxt":{
+      // 地址
+      "host":"127.0.0.1",
+      // 端口  
+      "port":"1818"
+    }
+  }
+  ...
+}  
+```
+
+
+
+### 项目文件
+
+```
+/pages                            //单独网页文件夹,存放写的页面，我们主要的工作区域
+/layouts                          // 布局目录，用于组织应用的布局组件，不可更改。
+/layouts/default.vue              //默认首页布局
+/layouts/error.vue                //默认错误页面布局
+/.nuxt                            // Nuxt自动生成，临时的用于编辑的文件，build
+/assets                           // 用于组织未编译的静态资源入LESS、SASS 或 JavaScript
+/components                       // 用于自己编写的Vue组件，比如滚动组件，日历组件，分页组件
+/middleware                       // 用于存放中间件
+/plugins                          // 用于存放JavaScript插件的地方
+/static                           // 用于存放静态资源文件，比如图片
+/store                            // 用于组织应用的Vuex 状态管理
+nuxt.config.json                 // 用于组织Nuxt.js应用的个性化配置，已覆盖默认配置
+package.json                     // npm包管理配置文件
+```
+
+
+
+引用文件
+
+| `~` 或 `@`   | srcDir  |
+| ------------ | ------- |
+| `~~` 或 `@@` | rootDir |
+
+默认情况下，`srcDir` 和 `rootDir` 相同。
+
+**提示:** 在您的 `vue` 模板中, 如果你需要引入 `assets` 或者 `static` 目录, 使用 `~/assets/your_image.png` 和 `~/static/your_image.png`方式。
+
+
+
+### 全局css文件设置
+
+1.将自定义全局css文件放置到静态资源文件夹assets下
+
+2.编辑nuxt.config.js文件
+
+```javascript
+...
+// Global CSS: https://go.nuxtjs.dev/config-css
+  css: [
+  // 放置全局css文件
+  '~/assets/css/normailze.css'
+  ],
+...
+```
+
+使用顺序: 局部CSS内容>全局CSS内容
+
+
+
+### 路由功能
+
+存放在pages下的页面将会自动添加路由跳转功能.
+
+Nuxt.js推荐使用<nuxt-link>进行路由跳转,而不是使用<a>标签.
+
+```html
+<!--使用path进行跳转-->
+<nuxt-link to="/">Home</nuxt-link>
+<!--使用路由name进行跳转-->
+<nuxt-link :to="{name:'article'}">article</nuxt-link>
+<!--使用路由name并传递参数跳转-->
+<nuxt-link :to="{name:'article',params:{id:123}}">article</nuxt-link>
+```
+
+#### 动态路由跳转
+
+在 Nuxt.js 里面定义带参数的动态路由，需要创建对应的**以下划线作为前缀**的 Vue 文件 或 目录。
+
+如: article/_id.vue
+
+```html
+<li><nuxt-link :to="{name:'article-id',params:{id:123}}">Article123</nuxt-link></li>
+```
+
+
+
+### 默认模板和默认模块
+
+#### 默认模板
+
+所有页面都统一附加使用该模板.适合添加页面头部内容或者页尾等重复信息
+
+在其项目文件下新建**app.html**文件.Nuxt.js将自动识别为默认模板(父模块).
+
+```html
+<html>
+<head>
+	<!-- 调用Nuxt.config.js文件下的全局head属性 -->
+    {{ HEAD }}
+</head>    
+<body>
+    <P>THIS IS TEMPLATE</P>
+	<!-- 其子模块下的内容 -->
+    {{ APP }}
+</body>
+</html>
+```
+
+建立默认模块后,需要重启Nuxt项目.
+
+
+
+#### 默认布局
+
+默认布局功能级别和默认模板相同,但区别在于    **默认布局无法改变其head部分内容,并且是由vue构建而成.**
+
+默认布局在其项目的layout文件夹下名为 **default.vue**,默认模块项目生成时自动生成无需单独新建.
+
+
+
+### 自定义404页面
+
+在Nuxt下404页面可以自定义设置.
+
+在其layout文件夹下新建error.vue文件,即为自定义404页面
