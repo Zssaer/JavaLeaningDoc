@@ -4,7 +4,7 @@
 
 [toc]
 
-## 获取验证码 easy-captcha
+## 1.获取验证码 easy-captcha
 
 ### Maven依赖
 
@@ -4525,9 +4525,24 @@ v-model="XXX" / v-model="message"
 
 #### Axios异步通讯
 
-Axios API:
+安装Axios:
 
-使用`axios` 可以传递其他链接下的数据,以及传递数据.
+```
+npm install --save axios vue-axios
+```
+
+Axios API:使用`axios` 可以传递其他链接下的数据,以及传递数据.
+
+main.js中进行配置Axios:
+
+```javascript
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+
+Vue.use(VueAxios, axios)
+```
+
+
 
 ​	在前后端分离项目进行前后端链接通讯.
 
@@ -5032,6 +5047,11 @@ npm i node-sass sass-loader --save-dev
 在main.js文件中:
 
 ```javascript
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';    // 默认主题
+
+Vue.use(ElementUI);
+
 new Vue({
   el: '#app',
   ...
@@ -5197,6 +5217,206 @@ beforeRouteEnter:(to,from,next)=>{
             });
         }
 ```
+
+### Vue前端传输表单
+
+```vue
+<el-form
+        :model="ruleForm"
+        :rules="rules"
+        ref="ruleForm"
+        label-width="70px"
+        label-position="left"
+        class="login-form"
+      >
+    <el-form-item prop="userName" label="用户名">
+          <el-input v-model="ruleForm.userName" prefix-icon="fa fa-user" placeholder="请输入登录名称"></el-input>
+    </el-form-item>
+    <el-form-item prop="password" label="密码">
+          <el-input
+            type="password"
+            placeholder="请输入登录密码"
+            prefix-icon="fa fa-lock"
+            v-model="ruleForm.password"
+            @keyup.enter.native="submitForm('ruleForm')"
+          ></el-input>
+    </el-form-item>
+    <el-form-item prop label="验证码">
+          <el-col :span="10">
+            <el-input
+              v-model="ruleForm.verifyCode"
+              prefix-icon="fa fa-get-pocket"
+              placeholder="输入验证码"
+              @keyup.enter.native="submitForm('ruleForm')"
+            ></el-input>
+          </el-col>
+          <el-col :span="12" :offset="2">
+            <div class="imgDiv">
+              <img :src="doCaptcha" alt @click="editCaptcha" />
+            </div>
+          </el-col>
+          <div class="login-btn">
+          <el-button type="warning" @click="submitForm('ruleForm')" :loading="loging">登 录</el-button>
+          </div>
+    </el-form-item>
+</el-form>  
+...
+<script>
+    import { userLogin,getCationCode} from "../../api/api";
+    const code = "200";
+    export default {
+        data() {
+            ...
+        	return {
+                doCaptcha: "",
+      			loging: false,
+        		ruleForm: {
+        			userName: "",
+        			password: "",
+	        		verifyCode: "",
+    	    		validKey: ""
+      			},
+        		rules: {
+        			userName: [{required: true, message: "请输入用户名", trigger: "blur" }],
+				    password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+				    verifyCode: [{ required: true, message: "请输入验证码", trigger: "blur" }]
+    	  		},
+    		}
+        }
+        methods: {
+            editCaptcha() {
+                    this.getImg();
+            },
+            getImg() {
+                getCaptcha({}).then((res) => {
+                    if (res.data.code == code) {
+                    this.doCaptcha = res.data.data.baseImg;
+                    this.ruleForm.validKey = res.data.data.validKey;
+                    }
+                });
+            },
+        	submitForm(formName) {
+                const self = this;
+                self.$refs[formName].validate(valid => {
+                    if (valid) {
+                        this.loging = true;
+         				userLogin(this.ruleForm).then(res => {
+                            this.loging = false;
+                            if (res.data.code == code) {
+                                localStorage.setItem("user",JSON.stringify(res.data.data.userInfo));
+                                localStorage.setItem("voucher", res.data.data.voucher);
+                                if(res.data.data.isInitialPassword == 1) { //初始密码
+                                    this.$alert('检测到您的密码为初始密码，请点击确定后进行修改', '提示', {
+                                        confirmButtonText: '确定',
+                                        callback: action => {this.dialogVisible = true;}
+                                    });
+                                }else {
+                                    this.$message({
+                                        message: "登录成功！",
+                                        type: "success"
+                                    });
+                                    window.name = res.data.data.voucher;
+                                    self.$router.push("/readme");
+                                }
+                            }else {
+                                this.$message.error(res.data.message);
+                                return false;
+                            }
+                        }).catch(function(error) {
+                            console.log(error);
+                            self.loging = false;
+                            self.$message.error("网络故障，请稍后再试");
+                        });
+                    }else {
+                        console.log("error submit!!");
+                        return false;
+                    }
+                }); 
+            },   
+	    }
+        mounted() {
+    	    this.getImg();
+	    },
+        
+    }
+</script>
+```
+
+
+
+### 设置VUE页面切换动画
+
+
+<img src="picture\1401304-20190517151550181-1731529454.png" style="zoom:80%;" />
+
+1.**在app.vue里使用transition标签**
+
+```vue
+<div id="app">
+    <transition :name="transitionName">
+      <router-view/>
+    </transition>
+</div>
+...
+<script>
+export default {
+    ...
+  data(){
+    ...
+    return{
+      ...
+      transitionName: "slide-right"  //初始化过度动画
+    }
+  },
+  watch: {
+    $route(to,from){
+      // 切换动画
+      let isBack = this.$router.isBack;  // 监听路由变化时的状态为前进还是后退
+      if(isBack){
+        this.transitionName = "slide-right";
+      }else{
+        this.transitionName = "slide-left";
+      }
+      this.$router.isBack = false;
+    }
+  }
+}
+</script>    
+```
+
+2.**在app.vue里监听用户是跳转还是后退** 
+
+```javascript
+...
+window.addEventListener('popstate',function(e){
+  router.isBack = true
+},false)
+```
+
+3.**编写动画效果**
+
+```css
+ .slide-left-enter, .slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(100%)
+  }
+
+  .slide-left-leave-to, .slide-right-enter {
+    opacity: 0;
+    transform: translateX(-100%)
+  }
+
+  .slide-left-enter-active, .slide-left-leave-active, .slide-right-enter-active, .slide-right-leave-active {
+    transition: 1.5s;
+    position: absolute;
+    top:0;
+  }
+...
+```
+
+4.**配置路由跳转**
+
+
 
 ### Vue常见问题
 
