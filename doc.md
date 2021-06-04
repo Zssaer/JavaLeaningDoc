@@ -59,6 +59,189 @@ function refreshcode(obj)
 <img src="/captcha" width="105px" height="45px" onclick="refreshcode(this)" />
 ```
 
+
+
+## Git版本管理
+
+Git 是一个开源的分布式版本控制系统，用于敏捷高效地处理任何或小或大的项目,适合单人,多人合作开发。
+
+Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个开放源码的版本控制软件。
+
+无论是国外的GitHub.GitLab,还是国内的Gitee都是Git项目代码管理网站.
+
+### Git 与 SVN 区别
+
+Git和SVN都是项目版本控制软件,但一些区别:
+
+**Git 是分布式的，SVN 不是**：这是 Git 和其它非分布式的版本控制系统，例如 SVN，CVS 等，最核心的区别。
+
+**Git 把内容按元数据方式存储，而 SVN 是按文件：**所有的资源控制系统都是把文件的元信息隐藏在一个类似 .svn、.cvs 等的文件夹里。
+
+**Git 分支和 SVN 的分支不同：**分支在 SVN 中一点都不特别，其实它就是版本库中的另外一个目录。
+
+**Git 没有一个全局的版本号，而 SVN 有：**目前为止这是跟 SVN 相比 Git 缺少的最大的一个特征。
+
+**Git 的内容完整性要优于 SVN：**Git 的内容存储使用的是 SHA-1 哈希算法。这能确保代码内容的完整性，确保在遇到磁盘故障和网络问题时降低对版本库的破坏。
+
+在目前国内大部分公司优先使用Git为主,一部分对内公司采用SVN.
+
+
+
+### Git安装
+
+Git 各平台安装包下载地址为：http://git-scm.com/downloads
+
+#### Linux 平台上安装
+
+Git 的工作需要调用 curl，zlib，openssl，expat，libiconv 等库的代码，所以需要先安装这些依赖工具。
+
+在有 yum 的系统上（比如 Fedora）或者有 apt-get 的系统上（比如 Debian 体系），可以用下面的命令安装：
+
+各 Linux 系统可以使用其安装包管理工具（apt-get、yum 等）进行安装：
+
+```
+$ yum install curl-devel expat-devel gettext-devel \
+  openssl-devel zlib-devel
+
+$ yum -y install git-core
+
+$ git --version
+git version 1.7.1
+```
+
+#### Git 配置
+
+Git 提供了一个叫做 git config 的工具，专门用来配置或读取相应的工作环境变量。
+
+在 Windows 系统上，Git 会找寻用户主目录下的 .gitconfig 文件。主目录即 $HOME 变量指定的目录，一般都是 C:\Documents and Settings\$USER。
+
+Git 还会尝试找寻 /etc/gitconfig 文件，只不过看当初 Git 装在什么目录，就以此作为根目录来定位。
+
+
+
+配置个人的用户名称和电子邮件地址：
+
+```bash
+$ git config --global user.name "runoob"
+$ git config --global user.email test@runoob.com
+```
+
+如果用了 **--global** 选项，那么更改的配置文件就是位于你用户主目录下的那个，以后你所有的项目都会默认使用这里配置的用户信息。
+
+
+
+我们先来理解下 Git 工作区、暂存区和版本库概念：
+
+- **工作区：**就是你在电脑里能看到的目录。
+
+- **暂存区：**英文叫 stage 或 index。一般存放在 **.git** 目录下的 index 文件（.git/index）中，所以我们把暂存区有时也叫作索引（index）。
+
+- **版本库：**工作区有一个隐藏目录 **.git**，这个不算工作区，而是 Git 的版本库。
+
+### Git使用入门
+
+使用Git前，需要先建立一个仓库(repository)。您可以使用一个已经存在的目录作为Git仓库或创建一个空目录,或者去克隆其他项目
+
+1.使用命令在其项目文件夹下来创建Git项目,或者从其他项目下克隆下来
+
+```bash
+git init    #新建项目到文件夹
+git clone [项目地址]  #克隆其他项目到当前文件夹
+```
+
+2.设置该项目的远程服务器位置(可以在Github,Gitee上进行新建项目以便获取地址),以便之后上传文件(克隆项目跳过此步骤)
+
+```
+git remote add origin [项目地址]
+```
+
+2.使用命令来添加需要提交的文件
+
+```bash
+git add [文件名][文件名]...  #添加指定文件到暂存区
+git add [dir]   	 #添加指定目录到暂存区，包括子目录
+git add . 			#添加当前目录下的所有文件到暂存区
+```
+
+3.现在我们已经添加了这些文件，我们希望它们能够真正被保存在Git HEAD中。
+
+```bash
+git commit -m "提交信息" 
+git commit -a     # -a 参数设置后下次修改文件后不需要执行 git add 命令，直接来提交
+```
+
+4.现在我们修改之后可以进行推送到服务器中。
+
+```bash
+git push -u origin master  #将其HEAD区推出至远程服务器中的Master分支中
+git push #将其推出至当前所在分支中
+```
+
+5.当远程服务器中代码更新后,你可以从远程服务器中获取最新代码并合并本地的版本。
+
+```bash
+git pull #默认将当前分支更新合并
+git pull origin master:feature_A          #将远程服务器中的origin 的 master 分支拉取过来，与本地的 feature_A 分支合并。
+```
+
+6.获取历史提交版本信息
+
+```bash
+git log
+```
+
+7.撤回版本
+
+```
+git reset [版本值]   #返回至指定版本(版本值只需要一部分头部即可)
+git reset HEAD^     #回退至上个版本
+```
+
+
+
+
+
+### 分支管理
+
+几乎每一种版本控制系统都以某种形式支持分支。
+
+使用分支意味着你可以从开发主线上分离开来，然后在不影响主线的同时继续工作。
+
+用于多功能多人合作工作.
+
+
+
+1.创建分支 切换分支:
+
+```bash
+git branch [分支名]		#创建分支
+git checkout [分支名]		#切换分支
+git checkout -b [分支名]	#创建并切换分支
+```
+
+2.删除分支
+
+```bash
+git branch -d [分支名]
+```
+
+3.合并分支:一旦某分支有了独立内容，你终究会希望将它合并回到你的主分支。 你可以使用以下命令将任何分支合并到当前分支中去
+
+```
+git merge [分支名]       #将其分支内容合并到当前分支
+```
+
+但不是每次合并都会非常成功,如果其中同一个文件内容之间有区别,则会发生冲突.这时Git会将其两分支文件合并并标记冲突位置.
+
+手动解决冲突后使用`git add`来告知Git文件冲突已解决.并提交保存
+
+```
+git add [文件名]
+git commit -m [信息]
+```
+
+
+
 ------
 
 ## MYSQL详解
@@ -5456,6 +5639,134 @@ getData:function(){
 
 
 
+### Vue3
+
+#### 创建项目
+
+1.使用命令行创建
+
+```
+vue create `项目名`
+```
+
+2.使用图形UI创建
+
+```
+vue ui
+```
+
+#### Setup()
+
+使用 `setup` 函数时，它将接受两个参数：
+
+1. `props`
+
+2. `context`
+
+其中
+
+​     Props: `setup` 函数中的第一个参数是 `props`。正如在一个标准组件中所期望的那样，`setup` 函数中的 `props` 是响应式的，当传入新的 prop 时，它将被更新。
+
+```js
+export default {
+  props: {
+    title: String
+  },
+  setup(props) {
+    console.log(props.title)
+  }
+}
+```
+
+但是，因为 `props` 是响应式的，你**不能使用 ES6 解构**，因为它会消除 prop 的响应性。
+
+​	Context:传递给 `setup` 函数的第二个参数是 `context`。`context` 是一个普通的 JavaScript 对象，它暴露组件的三个 property：
+
+```js
+export default {
+  setup(props, context) {
+    // Attribute (非响应式对象)
+    console.log(context.attrs)
+
+    // 插槽 (非响应式对象)
+    console.log(context.slots)
+
+    // 触发事件 (方法)
+    console.log(context.emit)
+  }
+}
+```
+
+访问组件中的 property:
+
+**vue 2.0 生命周期对比 3.0 生命周期**
+
+```
+2.0 周期名称    3.0 周期名称    说明
+                setup
+beforeCreate   beforeCreate     组件创建之前
+created         created    组件创建完成
+beforeMount    onBeforeMount    组件挂载之前
+mounted        onMounted    组件挂载完成
+beforeUpdate    onBeforeUpdate    数据更新，虚拟 DOM 打补丁之前
+updated        onUpdated    数据更新，虚拟 DOM 渲染完成
+beforeDestroy    onBeforeUnmount    组件销毁之前
+destroyed       onUnmounted    组件销毁后
+```
+
+执行 `setup` 时，组件实例尚未被创建。因此，你只能访问以下 property：
+
+- `props`
+
+- `attrs`
+
+- `slots`
+
+- `emit`
+
+也就是无法访问:data computed methods...
+
+但 setup可以将其中定义的属性 变量 方法 返回出去.
+
+如果 `setup` 返回一个对象，则可以在组件的模板中可以想props一样访问直接使用该对象的 property：
+
+```vue
+<template>
+  <div>{{ readersNumber }} {{ book.title }}</div>
+</template>
+
+<script>
+  import { ref, reactive } from 'vue'
+
+  export default {
+    setup() {
+      const readersNumber = ref(0)
+      const book = reactive({ title: 'Vue 3 Guide' })
+
+      // expose to template
+      return {
+        readersNumber,
+        book
+      }
+    }
+  }
+</script>
+```
+
+注意，从 `setup` 返回的 [refs](https://v3.cn.vuejs.org/api/refs-api.html#ref) 在模板中访问时是[被自动浅解包](https://v3.cn.vuejs.org/guide/reactivity-fundamentals.html#ref-解包)的，因此不应在模板中使用 `.value`。
+
+关于this:
+
+**在 `setup()` 内部，`this` 不会是该活跃实例的引用**，因为 `setup()` 是在解析其它组件选项之前被调用的，所以 `setup()` 内部的 `this` 的行为与其它选项中的 `this` 完全不同。这在和其它选项式 API 一起使用 `setup()` 时可能会导致混淆。
+
+##### 	总结
+
+​	1.Vue3 的一大特性函数 ---- setup
+
+​	2.setup函数是 Composition API（组合API）的入口
+
+​	3.在setup函数中定义的变量和方法最后都是需要 return 出去的 不然无法在模板中使用
+
 
 
 ## SpringBoot Result对象
@@ -6443,3 +6754,4 @@ Nuxt.js推荐使用<nuxt-link>进行路由跳转,而不是使用<a>标签.
 在Nuxt下404页面可以自定义设置.
 
 在其layout文件夹下新建error.vue文件,即为自定义404页面
+
