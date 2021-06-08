@@ -242,6 +242,83 @@ git commit -m [信息]
 
 
 
+### 保存点
+
+在进行合并分支操作时,一般都会出现代码冲突,为了安全起见,一般可以使用设置保存点方式来进行合并测试.
+
+方式步骤:
+
+1. 确保你在正确的分支上并且你有一个干净的工作状态(暂存区)。
+
+   ```bash
+   git status
+   ```
+
+   ```bash
+   # On branch master
+   nothing to commit (working directory clean)
+   ```
+
+   
+
+2. 创建一个新的分支作为保存点,但不要切换到它.
+
+   ```bash
+   git branch savepoint
+   ```
+
+   
+
+3. 进行合并操作等
+
+   ```bash
+   git merge spiffy_new_feature
+   ```
+
+4. **切换到您的可视化工具并预测刷新时其视图将如何变化。**
+
+5. 对结果满意吗？
+
+   如果满意,删除保存点
+
+   ```bash
+   git branch -d savepoint
+   ```
+
+   如果不满意,将分支重置到保存点
+
+   ```bash
+   git reset --hard savepoint
+   ```
+
+   如果要清理，现在可以使用`git branch -d savepoint`
+
+### cherry-pick
+
+对于多分支的代码库，将代码从一个分支转移到另一个分支是常见需求。
+
+这时分两种情况。一种情况是，你需要另一个分支的所有代码变动，那么就采用合并（`git merge`）。
+
+另一种情况是，你只需要部分代码提交的变动（某几个提交），这时可以采用 `Cherry-pick`命令。
+
+<img src="F:\MyLeaning_doc\picture\reachability-example.png" style="zoom:130%;" />
+
+如果您目前在此图中的 H提交点,并输入了`git cherry-pick E[SHA]`,你将获取E提交点到H后面
+
+<img src="F:\MyLeaning_doc\picture\cherry-pick-example-1.png" style="zoom:130%;" />
+
+同理,你可以连续获取并合并多个提交点,你输入类似`git cherry-pick C D E`，你会在完成后得到这个：
+
+<img src="F:\MyLeaning_doc\picture\cherry-pick-example-2.png" style="zoom:130%;" />
+
+但其中C D E 必须是按由前到后的先后顺序来的,否则会合并会报错.
+
+
+
+
+
+
+
 ------
 
 ## MYSQL详解
