@@ -6832,3 +6832,565 @@ Nuxt.js推荐使用<nuxt-link>进行路由跳转,而不是使用<a>标签.
 
 在其layout文件夹下新建error.vue文件,即为自定义404页面
 
+<hr>
+
+
+
+## Front-End 前端设计
+
+元素居中,页面锁定大小
+
+```css
+html {
+  block-size: 100%;
+  inline-size: 100%;
+}
+
+body {
+  min-block-size: 100%;
+  min-inline-size: 100%;
+  margin: 0;
+  display: grid;
+  place-content: center;
+  font-family: system-ui, sans-serif;
+}
+```
+
+### position(定位)
+
+position 属性规定应用于元素的定位方法的类型。
+
+有五个不同的位置值：
+
+- static
+
+- relative
+
+- fixed
+
+- absolute
+
+- sticky
+
+ 元素其实是使用 top、bottom、left 和 right 属性定位的。但是，除非首先设置了 position 属性，否则这些属性将不起作用。
+
+根据不同的 position 值，它们的工作方式也不同。
+
+
+
+#### static:静态定位
+
+HTML 元素默认情况下的定位方式为 static（静态）。
+
+静态定位的元素不受 top、bottom、left 和 right 属性的影响。
+
+
+
+#### relative:相对定位
+
+使用relative定位的元素相对于其正常位置进行定位。
+
+顾名思义,相对定位就是相对于一个状态定位,其结果就会是相反,`如一个元素 使用left:5px,那么 这个元素就会向右移动5个像素.`
+
+设置相对定位的元素的 top、right、bottom 和 left 属性将导致其偏离其正常位置进行调整。
+
+**不会对其余内容进行覆盖,会自动适应元素留下的任何空间。**
+
+
+
+#### fixed:固定定位
+
+相对于视口(浏览器)定位的，这意味着即使滚动页面，它也始终位于同一位置。
+
+使用 top、right、bottom 和 left 属性用于定位此元素。
+
+固定定位的元素不会在页面中通常应放置的位置上留出空隙。
+
+由于特性,通常用在固定顶部的导航栏上等.
+
+
+
+#### absolute:绝对定位
+
+相对于最近的定位祖先元素进行定位（而不是相对于视口定位，如 fixed）。
+
+​	直接指定固定位置进行定位.会覆盖其他元素,不会实现自适应.
+
+然而，如果绝对定位的元素没有祖先，它将使用文档主体（body），并随页面滚动一起移动。
+
+**注意：**“被定位的”元素是其位置除 **static** 以外的任何元素。
+
+<img src="F:\MyLeaning_doc\picture\absolute.png" style="zoom: 150%;" />
+
+
+
+#### sticky:粘性定位
+
+元素根据用户的滚动位置进行定位。
+
+粘性元素根据滚动位置在相对（relative）和固定（fixed）之间切换。起先它会被相对定位，直到在视口中遇到给定的偏移位置为止 - 然后将其“粘贴”在适当的位置（比如 position:fixed）。
+
+**注：**IE/Edge 15 以及更早的版本不支持粘性定位。Safari 需要 -webkit- 前缀（请参见下面的实例）。您还必须至少指定 **top**、**right**、**bottom** 或 **left** 之一，以便粘性定位起作用。
+
+```css
+div.sticky {
+  position: -webkit-sticky; /* Safari */
+  position: sticky;
+  top: 0;
+  background-color: green;
+  border: 2px solid #4CAF50;
+}
+```
+
+通常使用在动态导航栏上等,移动到元素后会自动固定位置并跟随滚动.
+
+
+
+### 重叠元素
+
+在对元素进行定位时，它们可以与其他元素重叠。
+
+`z-index `属性指定元素的堆栈顺序（哪个元素应放置在其他元素的前面或后面）。
+
+元素可以设置正或负的堆叠顺序：
+
+```
+img {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  z-index: -1;
+}
+```
+
+上述表示该元素在最低下.具有较高堆叠顺序的元素始终位于具有较低堆叠顺序的元素之前。
+
+**注意：**如果两个定位的元素重叠而未指定 **z-index**，则位于 HTML 代码中最后的元素将显示在顶部。
+
+
+
+### 浮动和清除
+
+#### float 属性
+
+float 属性用于定位和格式化内容，例如让图像向左浮动到容器中的文本那里。
+
+float 属性可以设置以下值之一：
+
+- left - 元素浮动到其容器的左侧
+- right - 元素浮动在其容器的右侧
+- none - 元素不会浮动（将显示在文本中刚出现的位置）。默认值。
+- inherit - 元素继承其父级的 float 值
+
+最简单的用法是，float 属性可实现（报纸上）文字包围图片的效果。
+
+```
+img {
+  float: right;
+}
+```
+
+<img src="F:\MyLeaning_doc\picture\float.png" style="zoom: 80%;" />
+
+
+
+通过使用 float 属性，也可以轻松地并排浮动内容框：
+
+<img src="F:\MyLeaning_doc\picture\float2.png" style="zoom: 90%;" />
+
+```
+* {
+  box-sizing: border-box;
+}
+
+.box {
+  float: left;
+  width: 33.33%; /* 三个框（四框使用 25%，两框使用 50%，以此类推） */
+  padding: 50px; /* 如果需要在图片间增加间距 */
+}
+```
+
+
+
+#### clear 属性
+
+指定哪些元素可以浮动于被清除元素的旁边以及哪一侧。
+
+clear 属性可设置以下值之一：
+
+- none - 允许两侧都有浮动元素。默认值
+- left - 左侧不允许浮动元素
+- right- 右侧不允许浮动元素
+- both - 左侧或右侧均不允许浮动元素
+- inherit - 元素继承其父级的 clear 值
+
+使用 clear 属性的最常见用法是在元素上使用了 float 属性之后。
+
+
+
+如果一个元素比包含它的元素高，并且它是浮动的，它将“溢出”到其容器之外：
+
+然后我们可以向包含元素添加 overflow: auto;，来解决此问题
+
+```
+.clearfix {
+  overflow: auto;
+}
+```
+
+
+
+<img src="F:\MyLeaning_doc\picture\clear.png" style="zoom:80%;" />
+
+只要您能够控制外边距和内边距（否则您可能会看到滚动条），overflow: auto clearfix 就会很好地工作。但是，新的现代 clearfix hack 技术使用起来更安全，以下代码被应用于多数网站：
+
+```
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+```
+
+
+
+#### Flexbox 布局模块
+
+Flexbox是CSS3的新布局.
+
+弹性框布局模块，可以更轻松地设计灵活的响应式布局结构，而无需使用浮动或定位。
+
+它可以自动拉伸框使其与最长的框一样长.
+
+它在 Internet Explorer 10 或更早版本中不起作用。
+
+
+
+定义 Flex 容器:
+
+`弹性布局中必须有一个 *display* 属性设置为 *flex* 的父元素。`
+
+```css
+.flex-container {
+  display: flex;
+  background-color: DodgerBlue;
+}
+```
+
+```html
+<div class="flex-container">
+  <div>1</div>
+  <div>2</div>
+  <div>3</div>  
+</div>
+```
+
+弹性容器的直接子元素会自动成为弹性项目。
+
+<img src="F:\MyLeaning_doc\picture\flexbox.png" style="zoom:90%;" />
+
+
+
+
+
+## TweenMax(GSAP)动画
+
+**TweenLite/TweenMax**是GreenSock 动画平台中的核心动画工具，可用来构建补间动画(tween)。
+
+### 引用/导入
+
+**CDN:**`<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>`
+
+**NPM:**`npm install gsap`
+
+默认（主）文件是**gsap.js**，其中包括大多数**缓动**以及核心插件（如 CSSPlugin、AttrPlugin、SnapPlugin、ModifiersPlugin）以及所有[实用方法（](https://greensock.com/docs/v3/GSAP/UtilityMethods)如 interpolate()、mapRange() 等）
+
+```js
+// typical import
+import gsap from "gsap";
+
+// or get other plugins:
+import Draggable from "gsap/Draggable";
+import ScrollTrigger from "gsap/ScrollTrigger";
+```
+
+### TweenLite和TweenMax区别
+
+我们的API文档大部分以TweenMax为例。如果你使用的是简约版的TweenLite，把TweenMax改为TweenLite即可。
+例如.to() 方法是公用的
+
+
+
+### TweenMax对象.play()
+
+```js
+tween = new TweenMax('.box', 3, {
+    x: 500,
+    paused: true
+});
+playBtn.onclick = function() {
+    tween.play();
+}
+```
+
+执行当前对象动画
+
+
+
+### 动画结构
+
+#### TweenMax.to()
+
+此方法用于创建一个从当前属性到指定目标属性的TweenMax动画对象。
+
+```js
+TweenMax.to('#title',5,{x:300});   //ID为title的对象5秒钟内向右移动300px
+```
+
+接收参数:
+
+| 参数名   | 类型   | 是否必填 | 描述                                  |
+| :------- | :----- | :------- | :------------------------------------ |
+| target   | object | 是       | 需要动画的对象                        |
+| duration | number | 是       | 动画持续时间，一般是秒                |
+| vars     | object | 是       | 动画参数（CSS属性、延迟、重复次数等） |
+
+
+
+#### TweenMax.from()
+
+通过设置动画起始点来初始化一个TweenMax，相当于动画从设置点开始。
+
+```js
+TweenMax.from('#title', 1.5, {opacity:0, delay:2});
+```
+
+接收参数同上
+
+
+
+#### TweenMax.fromTo()
+
+通过设置动画起始点和结束点来初始化一个TweenMax，相当于动画从设置点到结束点。
+
+```js
+TweenMax.fromTo([element1, element2], 1, {x:200}, {x:500});
+```
+
+接收参数:
+
+| 参数名   | 类型   | 是否必填 | 描述                   |
+| :------- | :----- | :------- | :--------------------- |
+| target   | object | 是       | 需要动画的对象         |
+| duration | number | 是       | 动画持续时间，一般是秒 |
+| fromVars | object | 是       | 起始点动画参数         |
+| toVars   | object | 是       | 结束点动画参数         |
+
+
+
+#### TweenMax.staggerTo()
+
+stagger系列方法为多个目标制作一个有间隔的动画序列，相当于多个TweenMax的数组。
+需要设置每个动画的开始间隔。如不设置则为零，同时开始动画。
+
+```js
+var objects = [obj1, obj2, obj3, obj4, obj5];
+TweenMax.staggerTo(objects, 1, {y:"+=150", opacity:0}, 0.2);
+```
+
+接收参数:
+
+| 参数名              | 类型     | 是否必填 | 描述                                               |
+| :------------------ | :------- | :------- | :------------------------------------------------- |
+| targets             | Array    | 是       | 要进行动画的对象，可以有多个，以数组形式传入       |
+| duration            | number   | 是       | 动画持续的秒数（或帧数，如果设置了useFrames:true） |
+| vars                | object   | 是       | 设置动画的一些属性及其他参数                       |
+| stagger             | Number   | 否       | 每个动画的起始间隔，默认是0                        |
+| onCompleteAll       | Function | 否       | 当所有显示对象都完成动画后要调用的函数             |
+| onCompleteAllParams | Array    | 否       | onCompleteAll函数的参数，以数组形式传入            |
+| onCompleteAllScope  |          | 否       | onCompleteAll函数的作用域，this                    |
+
+**注意:stagger系列方法可用于TweenMax、TimelineLite、TimelineMax，不可用于TweenLite。**
+
+
+
+#### TweenMax.staggerFromTo()
+
+通过设定序列动画的起点和终点来初始化一个TweenMax。
+
+```js
+var objects = [obj1, obj2, obj3, obj4, obj5];
+TweenMax.staggerFromTo(objects, 1, {opacity:1}, {opacity:0}, 0.2);
+```
+
+接收参数同上
+
+
+
+#### TweenMax.delayedCall()
+
+提供一种在设定的时间（或帧）后调用函数的简单方法。
+
+```js
+//1秒后执行myFunction并传递两个参数:
+TweenMax.delayedCall(1, myFunction, ["param1 value", "param2 value"],document,true);
+function myFunction(param1, param2) {
+    console.log(param1+param2+this)
+}
+```
+
+接收参数:
+
+| 参数名    | 类型     | 是否必填 | 描述                                                 |
+| :-------- | :------- | :------- | :--------------------------------------------------- |
+| delay     | Number   | 是       | 要延迟的秒数（或帧数，如果设置了useFrames:true）     |
+| callback  | Function | 是       | 要延迟执行的函数                                     |
+| params    | Array    | 否       | 传递给onComplete函数的参数，以数组形式传入           |
+| scope     | *        | 否       | 函数的作用域，this的指向，默认为空                   |
+| useFrames | Boolean  | 否       | 设定延迟的时间模式是基于秒数还是帧数 ，默认false：秒 |
+
+
+
+#### TweenMax.set()
+
+立即设置目标的属性值而不产生过渡动画，相当于0的动画时间。返回TweenMax对象。
+
+```js
+//以下两个设置作用相同
+TweenMax.set(myObject, {x:100});
+TweenMax.to(myObject, 0, {x:100});
+```
+
+接收参数:
+
+| 参数名 | 类型   | 是否必填 | 描述           |
+| :----- | :----- | :------- | :------------- |
+| target | object | 是       | 需要移动的对象 |
+| vars   | object | 是       | 动画参数       |
+
+
+
+#### 3D效果
+
+在平时的动效开发中，为了使动效具有立体的效果，一般会用到CSS3中的3D transform这一属性。在TweenMax中也提供了3D transform功能，支持CSS3D的全部属性，使用起来比CSS3更加方便。
+**perspective**和**transformPerspective**两个属性。它们是TweenMax中运行的基础，使用它们才能使元素具有一个3D空间透视的表现能力。
+
+transformPerspective是针对单个元素使用的.
+
+```js
+TweenMax.set(".nbox",{transformPerspective:300});  //为nbox直接设置3D效果
+```
+
+而perspective则是使用在父级元素上，使用它会使该父级元素下的子元素具有3D空间透视的一个展现形式。所以只需要在父级使用perspective的方法，可以同时使它的子元素都具有3D的展现。
+
+
+
+**transformOrigin** :用来设置元素在做transform位移变换时的原点的。默认值是元素的中心点即("50%,50%")。
+
+transformOrigin有三个值(x,y,z)，z值是一个可选项。也可以使用"top", "left", "right",或者是"bottom"值亦或是百分值
+
+```js
+TweenMax.to(".box", 3, {rotationY:360, transformOrigin:"left top"})
+```
+
+
+
+###   动画参数
+
+#### repeat
+
+动画在第一次完成后应重复的次数。
+
+例如，如果repeat为1，则动画将总共播放两次（初始播放加1次重复）。要无限期重复，请使用-1。repeat应该始终是一个整数。
+
+```js
+TweenMax('.box', 3, {
+    x: 500,
+    repeat: 3,//动画将进行4次
+});
+```
+
+
+
+#### delay
+
+动画开始之前的延迟秒数（以帧为单位时则为帧数）。
+
+```js
+TweenMax('.box', 3, {
+    x: 500,
+    delay: 3 //延迟三秒开始动画
+});
+```
+
+
+
+### 实例属性
+
+#### .timeline
+
+获取动画的父级时间轴对象（只读）。
+
+```js
+mytween = TweenMax.to('.box', 3, {x:500});
+console.log(mytween.timeline);
+```
+
+每个动画都放在时间轴上（默认为根时间轴），并且只能有一个父时间轴。一个实例不能同时存在于多个时间轴中。
+
+
+
+## Locomotive Scroll(视差滚动)
+
+视差滚动简单的认识就是移动滚动条或者滚动鼠标滑轮,dom盒子移动的速度加减的差别造成页面的不同的效果
+
+GitHub项目地址:`https://github.com/locomotivemtl/locomotive-scroll`
+
+### 安装\引用
+
+```bash
+npm install locomotive-scroll
+<!--引用-->
+<script src="https://cdn.jsdelivr.net/npm/locomotive-scroll@3.5.4/dist/locomotive-scroll.min.js"></script>
+```
+
+### 使用
+
+| 属性                                                      | 描述                   |
+| :-------------------------------------------------------- | :--------------------- |
+| data-scroll-container                                     | 定义容器               |
+| data-scroll                                               | 检测是否在视野中       |
+| data-scroll-speed="number"                                | 元素视差速度,负数反转  |
+| data-scroll-target="#xxx"                                 | 目标元素在视图中的位置 |
+| data-scroll-directio n="vertical 垂直 \| horizontal 水平" | 视差的方向             |
+
+```html
+<div data-scroll-container>
+    <div data-scroll-section>
+        <h1 data-scroll>Hey</h1>
+        <p data-scroll>👋</p>
+    </div>
+    <div data-scroll-section>
+        <h2 data-scroll data-scroll-speed="1">What's up?</h2>
+        <p data-scroll data-scroll-speed="2">😬</p>
+    </div>
+</div>
+```
+
+添加Locomotive Scroll Css文件
+
+```
+https://github.com/locomotivemtl/locomotive-scroll/blob/master/dist/locomotive-scroll.css
+```
+
+js:
+
+```js
+import LocomotiveScroll from 'locomotive-scroll';
+
+const scroll = new LocomotiveScroll({
+    el: document.querySelector('[data-scroll-container]'),
+    smooth: true
+});
+```
+
