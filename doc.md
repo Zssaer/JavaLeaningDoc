@@ -4,6 +4,644 @@
 
 [toc]
 
+## 算法设计
+
+算法（Algorithm）是指用来操作数据、解决程序问题的一组方法。对于同一个问题，使用不同的算法，也许最终得到的结果是一样的，但在过程中消耗的资源和时间却会有很大的区别。
+
+如何去衡量不同算法之间的优劣呢？
+
+主要还是从算法所占用的「**时间**」和「**空间**」两个维度去考量。
+
+- 时间维度：是指执行当前算法所消耗的时间，我们通常用「时间复杂度」来描述。
+- 空间维度：是指执行当前算法需要占用多少内存空间，我们通常用「空间复杂度」来描述。
+
+
+
+### 描述算法复杂度
+
+在描述算法复杂度时,经常用到o(1), o(n), o(logn), o(nlogn)来表示对应算法的时间复杂度, 这里进行归纳一下它们代表的含义: 
+这是算法的时空复杂度的表示。不仅仅用于表示时间复杂度，也用于表示空间复杂度。 
+
+**O后面的括号中有一个函数，指明某个算法的耗时/耗空间与数据增长量之间的关系。其中的n代表输入数据的量。** 
+
+
+
+**线性阶O(n)**，就代表数据量增大几倍，耗时也增大几倍。比如常见的遍历算法。 
+
+**平方阶O(n^2)**，就代表数据量增大n倍时，耗时增大n的平方倍，这是比线性更高的时间复杂度。比如冒泡排序，就是典型的O(n^2)的算法，对n个数排序，需要扫描n×n次。 
+
+**对数阶O(logn)**，当数据增大n倍时，耗时增大logn倍（这里的log是以2为底的，比如，当数据增大256倍时，耗时只增大8倍，是比线性还要低的时间复杂度）。二分查找就是O(logn)的算法，每找一次排除一半的可能，256个数据中查找只要找8次就可以找到目标。 
+
+**线性对数阶O(nlogn)**，就是n乘以logn，当数据增大256倍时，耗时增大256*8=2048倍。这个复杂度高于线性低于平方。归并排序就是O(nlogn)的时间复杂度。 
+
+**常数阶O(1)**就是最低的时空复杂度了，也就是耗时/耗空间与输入数据大小无关，无论输入数据增大多少倍，耗时/耗空间都不变。 哈希算法就是典型的O(1)时间复杂度，无论数据规模多大，都可以在一次计算后找到目标（不考虑冲突的话）
+
+
+
+### 常见算法
+
+
+
+1、排序算法：快速排序、归并排序、计数排序
+2、搜索算法：回溯、递归、剪枝
+3、图论：最短路径、最小生成树、网络流建模
+4、动态规划：背包问题、最长子序列、计数问题
+5、基础技巧：分治、倍增、二分法、贪心算法
+
+**数据结构：**
+
+1、数组和链表
+2、栈与队列
+3、树和图
+4、哈希表
+5、大/小跟堆，可并堆
+6、字符串：字典树、后缀树
+
+
+
+### 数组
+
+#### 二分查找
+
+二分查询法就是讲数据进行两份化处理. 左边区域left 右边区域right.再取中间值,进行比较,判断要求数据在哪个区域
+
+大家写二分法经常写乱，主要是因为**对区间的定义没有想清楚，区间的定义就是不变量**。要在二分查找的过程中，保持不变量，就是在while寻找中每一次边界的处理都要坚持根据区间的定义来操作，这就是**循环不变量**规则。
+
+写二分法，区间的定义一般为两种，左闭右闭即[left, right]，或者左闭右开即[left, right)。
+
+
+
+例题:**给定一个 n 个元素有序的（升序）整型数组 nums 和一个目标值 target  ，写一个函数搜索 nums 中的 target，如果目标值存在返回下标，否则返回 -1。**
+
+示例 1:
+
+```
+输入: nums = [-1,0,3,5,9,12], target = 9     
+输出: 4       
+解释: 9 出现在 nums 中并且下标为 4     
+```
+
+示例 2:
+
+```
+输入: nums = [-1,0,3,5,9,12], target = 2     
+输出: -1        
+解释: 2 不存在 nums 中因此返回 -1      
+```
+
+提示：
+
+- 你可以假设 nums 中的所有元素是不重复的。
+- n 将在 [1, 10000]之间。
+- nums 的每个元素都将在 [-9999, 9999]之间。
+
+
+
+假设存在数组：1,2,3,4,7,9,10中查找元素2.
+
+<img src="F:\MyLeaning_doc\picture\erfenfa.png" style="zoom:80%;" />
+
+```java
+public static int twolinkSearch(int[] nums, int target) {
+    //当 target 小于nums[0] 或者nums[nums.length - 1]时返回-1
+    if (target < nums[0] || target > nums[nums.length - 1]) {
+        return -1;
+    }
+    int left = 0;
+    int right = nums.length - 1;
+    while (left <= right) {
+        int mid = left + ((right - left) / 2); // 防止溢出 等同于(left + right)/2
+        if (nums[mid] ==target)
+            return mid;
+        else if (nums[mid] < target) // 中间数小于目标值,则目标值在右半区
+            left=mid+1;
+        else if (nums[mid]>target) // 中间数大于目标值,则目标值在左半区
+            return right=mid-1;
+    }
+    return -1;
+}
+```
+
+#### 移除元素
+
+**要知道数组的元素在内存地址中是连续的，不能单独删除数组中的某个元素，只能覆盖。**
+
+
+
+例题:**给你一个数组 nums 和一个值 val，你需要 原地 移除所有数值等于 val 的元素，并返回移除后数组的新长度。**
+
+提示:不要使用额外的数组空间，你必须仅使用 O(1) 额外空间并**原地**修改输入数组。
+
+示例 1:
+
+ 给定 nums = [3,2,2,3], val = 3, 函数应该返回新的长度 2, 并且 nums 中的前两个元素均为 2。 你不需要考虑数组中超出新长度后面的元素。
+
+示例 2:
+
+ 给定 nums = [0,1,2,2,3,0,4,2], val = 2, 函数应该返回新的长度 5, 并且 nums 中的前五个元素为 0, 1, 3, 0, 4。
+
+
+
+**暴力循环解法**:
+
+<img src="F:\MyLeaning_doc\picture\68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f30303865476d5a456c7931676e747263377839746a673330647530396d316b792e676966.gif" style="zoom: 90%;" />
+
+使用两层for循环，一个for循环遍历数组元素 ，第二个for循环更新数组。
+
+```java
+// 时间复杂度：O(n^2)
+// 空间复杂度：O(1)
+public static int foreachDeleteVar(int[] nums,int target){
+    int length = nums.length;
+    for (int i=0;i<length;i++){
+        if (nums[i]==target){ // 发现需要移除的元素，就将后面数组集体向前移动一位,进行覆盖操作
+            for (int j=i+1;j<length;j++){
+                nums[j-1]=nums[j];
+            }
+            i--;  // 因为下表i以后的数值都向前移动了一位，所以i也向前移动一位
+            length--;  // 此时数组的大小-1
+        }
+    }
+    return length;
+}
+```
+
+
+
+**双指针法:**
+
+双指针法（快慢指针法）： **通过一个快指针和慢指针在一个for循环下完成两个for循环的工作。**
+
+<img src="F:\MyLeaning_doc\picture\2221.gif" style="zoom:90%;" />
+
+**双指针法（快慢指针法）在数组和链表的操作中是非常常见的，很多考察数组、链表、字符串等操作的面试题，都使用双指针法。**
+
+```java
+// 时间复杂度：O(n)
+// 空间复杂度：O(1)
+public static int fastSlowIndexDeleteVar(int[] nums, int target) {
+    int fast = 0;
+    int slow;
+    for (slow = 0; fast < nums.length; fast++) {
+        if (nums[fast] != target) {
+            nums[slow] = nums[fast];
+            slow++;
+        }
+    }
+    return slow;
+}
+```
+
+
+
+#### 滑动窗口法
+
+所谓滑动窗口，**就是不断的调节子序列的起始位置和终止位置，从而得出我们要想的结果**。通常使用在求和的数组上.
+
+滑动窗口也可以理解为双指针法的一种！只不过这种解法更像是一个窗口的移动，所以叫做滑动窗口更适合一些。
+
+
+
+例题:**给定一个含有 n 个正整数的数组和一个正整数 s ，找出该数组中满足其和 ≥ s 的长度最小的 连续 子数组，并返回其长度。如果不存在符合条件的子数组，返回 0。**
+
+示例：
+
+输入：s = 7, nums = [2,3,1,2,4,3] 输出：2 解释：子数组 [4,3] 是该条件下的长度最小的子数组。
+
+使用滑动窗口法:
+
+<img src="F:\MyLeaning_doc\picture\333.gif" style="zoom:90%;" />
+
+本题中实现滑动窗口，主要确定如下三点：
+
+- 窗口内是什么？
+- 如何移动窗口的起始位置？
+- 如何移动窗口的结束位置？
+
+窗口就是 满足其和 ≥ s 的长度最小的 连续 子数组。
+
+窗口的起始位置如何移动：如果当前窗口的值大于s了，窗口就要向前移动了（也就是该缩小了）。
+
+窗口的结束位置如何移动：窗口的结束位置就是遍历数组的指针，窗口的起始位置设置为数组的起始位置就可以了。
+
+```java
+public static int miniSubLen(int[] nums, int target) {
+    int start = 0;
+    int sum = 0;
+    int result = Integer.MAX_VALUE;
+    for (int end = 0;end < nums.length;end++){
+        sum += nums[end];
+        while (sum >= target){  //判断结果是否大于或等于目标值
+            result = Math.min(result,end - start + 1);  //判断结果的数组长度,如果更小则替代原结果
+            sum -= nums[start++];  //减掉开始指针的值,并将开始指针向前移动
+        }
+    }
+    return result == Integer.MAX_VALUE ? 0 : result;
+}
+```
+
+
+
+
+
+### 链表
+
+链表是一种通过指针串联在一起的线性结构，每一个节点是又两部分组成，一个是数据域一个是指针域（存放指向下一个节点的指针）
+
+最后一个节点的指针域指向null（空指针的意思）。
+
+链接的入口点称为列表的头结点也就是head。
+
+<img src="F:\MyLeaning_doc\picture\list1.png" style="zoom:95%;" />
+
+#### 
+
+#### 链表的类型
+
+1.单链表 同上图,单链表中的节点只能指向节点的下一个节点。
+
+2.双链表:每一个节点有两个指针域，一个指向下一个节点，一个指向上一个节点。所以双链表 既可以向前查询也可以向后查询。
+
+<img src="F:\MyLeaning_doc\picture\list2.png" style="zoom:95%;" />
+
+3.循环链表:顾名思义，就是链表首尾相连。循环链表可以用来解决约瑟夫环问题。
+
+<img src="F:\MyLeaning_doc\picture\list3.png" style="zoom:95%;" />
+
+#### 链表存储方式
+
+数组是在内存中是连续分布的，但是链表在内存中可不是连续分布的。
+
+链表是通过指针域的指针链接在内存中各个节点。
+
+所以**链表中的节点在内存中不是连续分布的 ，而是散乱分布在内存中的某地址上**，分配机制取决于操作系统的内存管理。
+
+
+
+#### 删除节点
+
+只要将节点的next指针 指向删除的节点后的下一个节点就可以了。
+
+Java、Python，就有自己的内存回收机制，就不用自己手动内存释放了。但C++里最好是再手动释放这个删除的节点，释放这块内存。
+
+删除最后一个节点时,需要**从头节点查找到第四个节点通过next指针进行删除操作**，查找的时间复杂度是O(n)。
+
+
+
+#### 性能分析
+
+<img src="F:\MyLeaning_doc\picture\list4.png" style="zoom:95%;" />
+
+
+
+数组在定义的时候，长度就是固定的，如果想改动数组的长度，就需要重新定义一个新的数组。
+
+链表的长度可以是不固定的，并且可以动态增删， 适合数据量不固定，频繁增删，较少查询的场景。
+
+
+
+#### 移除链表元素问题
+
+例题：**删除链表中等于给定值 val 的所有节点。**
+
+示例 1：
+输入：head = [1,2,6,3,4,5,6], val = 6
+输出：[1,2,3,4,5]
+
+示例 2：
+输入：head = [], val = 1
+输出：[]
+
+示例 3：
+输入：head = [7,7,7,7], val = 7
+输出：[]
+
+移除操作，就是让节点next指针直接指向下下一个节点就可以了.
+
+但如果删除的是头结点的话:
+
+- **直接使用原来的链表来进行删除操作。**
+
+移除头结点和移除其他节点的操作是不一样的，因为链表的其他节点都是通过前一个节点来移除当前节点，而头结点没有前一个节点。
+
+所以头结点移除，**只要将头结点向后移动一位就可以**，这样就从链表中移除了一个头结点。
+
+```java
+public ListNode removeElements(ListNode head, int val) {
+    while (head != null && head.val == val) {
+        head = head.next;
+    }
+    // 已经为null，提前退出
+    if (head == null) {
+        return head;
+    }
+    // 已确定当前head.val != val
+    ListNode pre = head;
+    ListNode cur = head.next;
+    while (cur != null) {
+        if (cur.val == val) {
+            pre.next = cur.next;
+        } else {
+            pre = cur;
+        }
+        cur = cur.next;
+    }
+    return head;
+}
+```
+
+- **设置一个虚拟头结点在进行删除操作。**
+
+<img src="F:\MyLeaning_doc\picture\list5.png" style="zoom:95%;" />
+
+
+
+
+
+```java
+public ListNode removeElements(ListNode head, int val) {
+    if (head == null) {
+        return head;
+    }
+    // 因为删除可能涉及到头节点，所以设置dummy节点，统一操作
+    ListNode dummy = new ListNode(-1, head);
+    ListNode pre = dummy;
+    ListNode cur = head;
+    while (cur != null) {
+        if (cur.val == val) {
+            pre.next = cur.next;
+        } else {
+            pre = cur;
+        }
+        cur = cur.next;
+    }
+    return dummy.next;
+}
+```
+
+
+
+#### 设计链表
+
+例题:
+
+**在链表类中实现这些功能**：
+
+- get(index)：获取链表中第 index 个节点的值。如果索引无效，则返回-1。
+- addAtHead(val)：在链表的第一个元素之前添加一个值为 val 的节点。插入后，新节点将成为链表的第一个节点。
+- addAtTail(val)：将值为 val 的节点追加到链表的最后一个元素。
+- addAtIndex(index,val)：在链表中的第 index 个节点之前添加值为 val 的节点。如果 index 等于链表的长度，则该节点将附加到链表的末尾。如果 index 大于链表长度，则不会插入节点。如果index小于0，则在头部插入节点。
+- deleteAtIndex(index)：如果索引 index 有效，则删除链表中的第 index 个节点。
+
+<img src="F:\MyLeaning_doc\picture\list6.png" style="zoom:95%;" />
+
+
+
+分析:这道题目设计链表的五个接口：
+
+- 获取链表第index个节点的数值
+- 在链表的最前面插入一个节点
+- 在链表的最后面插入一个节点
+- 在链表第index个节点前面插入一个节点
+- 删除链表的第index个节点
+
+**链表操作的两种方式：**
+
+1. 直接使用原来的链表来进行操作。
+2. 设置一个虚拟头结点在进行操作。
+
+为了方便,采用的设置一个虚拟头结点更好.
+
+
+
+**实现**
+
+单链表:
+
+```java
+/**
+ * @description: 单链表
+ * @author: Zhaotianyi
+ * @time: 2021/6/16 15:47
+ */
+public class Node {
+    private String data;
+    private Node next;
+
+    public Node(String data) {
+        this.data = data;
+    }
+
+    public Node getNext() {
+        return next;
+    }
+
+    public void setNext(Node next) {
+        this.next = next;
+    }
+
+    public String getData() {
+        return data;
+    }
+}
+
+/**
+ * @description: TODO
+ * @author: Zhaotianyi
+ * @time: 2021/6/16 16:10
+ */
+public class LinkList {
+    int size;  //链表长度
+    Node head;  //虚拟头结点
+
+    /**
+     * 初始化链表
+     */
+    public LinkList(){
+        size=0;
+        head = new Node("null data");
+    }
+
+    /**
+     * 获取指定位置节点数值
+     * @param index
+     * @return
+     */
+    public String get(int index){
+        // Index非法返回
+        if (index < 0 || index >= size){
+            return "Failed Index";
+        }
+        Node currentNode =head;  //查询从头部节点开始
+        //包含一个虚拟头节点，所以查找第 index+1 个节点
+        for (int i = 0; i <= index; i++) {
+            currentNode = currentNode.getNext();
+        }
+        return currentNode.getData();
+    }
+
+    /**
+     * 向指定位置添加相关数据节点
+     * @param index
+     * @param val
+     */
+    public void addAtIndex(int index,String val){
+        if (index > size){
+            return;
+        }
+        if (index < 0){
+            index = 0;
+        }
+        size++;  //添加后链表数量自增
+        //找到要添加节点的前一个节点
+        Node pred = head;  //查询从头部节点开始
+        for (int i = 0;i < index;i++){
+            pred = head.getNext();
+        }
+        Node addNode = new Node(val);
+        addNode.setNext(pred.getNext());  //新增节点的指针指向前节点的指针
+        pred.setNext(addNode);  //前节点指针改为新增指针 实现插入节点
+    }
+
+    /**
+     * 向链表头部插入数据节点
+     * @param val
+     */
+    public void addAtHead(String val){
+        addAtIndex(0,val);
+    }
+
+    /**
+     * 向链表尾部插入数据节点
+     * @param val
+     */
+    public void addAtTail(String val){
+        addAtIndex(size,val);
+    }
+
+    /**
+     * 删除指定位置节点
+     * @param index
+     */
+    public void deleteAtIndex(int index){
+        if (index >= size || index < 0){
+            return;
+        }
+        size--;  //删除后链表数量自减
+        Node pred =head;
+        for (int i = 0; i < index; i++) {
+            pred = pred.getNext();
+        }
+        pred.setNext(pred.getNext().getNext());
+    }
+}
+```
+
+双链表:
+
+```java
+/**
+ * 多链表
+ * @description: TODO
+ * @author: Zhaotianyi
+ * @time: 2021/6/16 16:43
+ */
+public class MyLinkedList {
+    class ListNode {
+        int val;
+        ListNode next,prev;
+        ListNode(int x) {val = x;}
+    }
+
+    int size;  //链表长度
+    ListNode head,tail;  //哨兵节点 [头部节点,尾部节点]
+
+    /** Initialize your data structure here. */
+    public MyLinkedList() {
+        size = 0;
+        head = new ListNode(0);
+        tail = new ListNode(0);
+        head.next = tail;
+        tail.prev = head;
+    }
+
+    /** Get the value of the index-th node in the linked list. If the index is invalid, return -1. */
+    public int get(int index) {
+        if(index < 0 || index >= size){return -1;}
+        ListNode cur = head;
+
+        // 通过判断 index < (size - 1) / 2 来决定是从头结点还是尾节点遍历，提高效率
+        if(index < (size - 1) / 2){
+            for(int i = 0; i <= index; i++){
+                cur = cur.next;
+            }
+        }else{
+            cur = tail;
+            for(int i = 0; i <= size - index - 1; i++){
+                cur = cur.prev;
+            }
+        }
+        return cur.val;
+    }
+
+    /** Add a node of value val before the first element of the linked list. After the insertion, the new node will be the first node of the linked list. */
+    public void addAtHead(int val) {
+        ListNode cur = head;
+        ListNode newNode = new ListNode(val);
+        newNode.next = cur.next;
+        cur.next.prev = newNode;
+        cur.next = newNode;
+        newNode.prev = cur;
+        size++;
+    }
+
+    /** Append a node of value val to the last element of the linked list. */
+    public void addAtTail(int val) {
+        ListNode cur = tail;
+        ListNode newNode = new ListNode(val);
+        newNode.next = tail;
+        newNode.prev = cur.prev;
+        cur.prev.next = newNode;
+        cur.prev = newNode;
+        size++;
+    }
+
+    /** Add a node of value val before the index-th node in the linked list. If index equals to the length of linked list, the node will be appended to the end of linked list. If index is greater than the length, the node will not be inserted. */
+    public void addAtIndex(int index, int val) {
+        if(index > size){return;}
+        if(index < 0){index = 0;}
+        ListNode cur = head;
+        for(int i = 0; i < index; i++){
+            cur = cur.next;
+        }
+        ListNode newNode = new ListNode(val);
+        newNode.next = cur.next;
+        cur.next.prev = newNode;
+        newNode.prev = cur;
+        cur.next = newNode;
+        size++;
+    }
+
+    /** Delete the index-th node in the linked list, if the index is valid. */
+    public void deleteAtIndex(int index) {
+        if(index >= size || index < 0){return;}
+        ListNode cur = head;
+        for(int i = 0; i < index; i++){
+            cur = cur.next;
+        }
+        cur.next.next.prev = cur;
+        cur.next = cur.next.next;
+        size--;
+    }
+}
+```
+
+
+
+
+
+
+
 ## 1.获取验证码 easy-captcha
 
 ### Maven依赖
