@@ -244,6 +244,44 @@ public static int miniSubLen(int[] nums, int target) {
 
 
 
+#### 排序
+
+进行数列排序算法:
+
+**插入排序**
+
+<img src="F:\MyLeaning_doc\picture\array1.gif" style="zoom:90%;" />
+
+每次将一个数字插入一个有序的数组里，成为一个长度更长的有序数组，有限次操作以后，数组整体有序。
+
+```java
+/**
+* 时间复杂度：O(N^2)
+* 空间复杂度：O(1)
+*/
+public int[] sortArray(int[] nums) {
+        int len = nums.length;
+        // 循环不变量：将 nums[i] 插入到区间 [0, i) 使之成为有序数组
+        for (int i = 1; i < len; i++) {
+            int temp = nums[i]; // 提前将其当前指针的值存储
+            int j = i;  //用作遍历当前指针前的元素的指针
+            //判断前一个数是否大于当前数, 注意边界 j > 0 
+            while (j > 0 && nums[j - 1] > temp) {
+                nums[j] = nums[j - 1];
+                j--;
+            }
+            nums[j] = temp;
+        }
+        return nums;
+}
+```
+
+**在小区间内执行排序任务的时候，可以转向使用「插入排序」**。
+
+
+
+
+
 ### 链表
 
 链表是一种通过指针串联在一起的线性结构，每一个节点是又两部分组成，一个是数据域一个是指针域（存放指向下一个节点的指针）
@@ -327,26 +365,25 @@ Java、Python，就有自己的内存回收机制，就不用自己手动内存�
 所以头结点移除，**只要将头结点向后移动一位就可以**，这样就从链表中移除了一个头结点。
 
 ```java
-public ListNode removeElements(ListNode head, int val) {
-    while (head != null && head.val == val) {
-        head = head.next;
-    }
-    // 已经为null，提前退出
-    if (head == null) {
-        return head;
-    }
-    // 已确定当前head.val != val
-    ListNode pre = head;
-    ListNode cur = head.next;
-    while (cur != null) {
-        if (cur.val == val) {
-            pre.next = cur.next;
-        } else {
-            pre = cur;
+public void removeVal(String val) {
+        if (head != null && val.equals(head.getData())) {
+            head = head.getNext();
         }
-        cur = cur.next;
-    }
-    return head;
+        if (head == null) {
+            return;
+        }
+
+        Node pre = head;
+        Node cur = head.getNext();
+        while (cur != null) {
+            if (val.equals(cur.getData())) {
+                pre.setNext(cur.getNext());
+                size--;
+            } else {
+                pre = cur;
+            }
+            cur = cur.getNext();
+        }
 }
 ```
 
@@ -635,6 +672,195 @@ public class MyLinkedList {
     }
 }
 ```
+
+#### 反转链表
+
+题意：**反转一个单链表。**
+
+如果再定义一个新的链表，实现链表元素的反转，其实这是对内存空间的浪费。
+
+其实只需要改变链表的next指针的指向，直接将链表反转 ，而不用重新定义一个新的链表.
+
+<img src="F:\MyLeaning_doc\picture\list7.gif" style="zoom:95%;" />
+
+使用双指针方法.
+
+首先定义一个cur指针，指向头结点，再定义一个pre指针，初始化为null。
+
+反转前将cur中节点原指向节点进行备份,然后进行替换操作,最后将备份节点作为cur进行指向下一个节点,循环操作. prev则为新的反转后的链表.
+
+```java
+/**
+ * 反转链表
+ */
+public void reverseList() {
+    Node prev = null;
+    Node cur = head;
+    Node temp = null;
+    while (cur != null) {
+        temp = cur.getNext();  //临时保存下一个节点
+        cur.setNext(prev);
+        prev = cur;
+        cur = temp;
+    }
+    head = prev;
+}
+```
+
+
+
+### 哈希表
+
+哈希表是根据关键码的值而直接进行访问的数据结构。
+
+直白来讲其实数组就是一张哈希表。哈希表中关键码就是数组的索引下表，然后通过下表直接访问数组中的元素.
+
+使用环境:**一般哈希表都是用来快速判断一个元素是否出现集合里。**
+
+哈希表的检索时间复杂度为O(1).
+
+#### 常见的三种哈希结构
+
+- 数组
+- set （集合）
+- map(映射)
+
+其中JAVA中 
+
+HashMap:底层采用哈希表,无序,不可重复
+
+HashSet:底层采用哈希表,无序,不可重复 存储时，会采用链式结构进行存储。
+
+TreeSet:底层采用红黑树,有序,不可重复  存储时，会采用链式结构进行存储。
+
+**当我们遇到了要快速判断一个元素是否出现集合里的时候，就要考虑哈希法**。
+
+但是哈希法也是**牺牲了空间换取了时间**，因为我们要使用额外的数组，set或者是map来存放数据，才能实现快速的查找。
+
+#### 两个数组的交集(SET)
+
+利用set的不可重复存储的特性,适合计算交集;
+
+遍历数组,将其值添加至set中,然后在下一个数组中遍历选择相同的属性
+
+```java
+/**
+ * 返回两数值交集
+ *
+ * @param nums1
+ * @param nums2
+ * @return
+ */
+public static int[] interScection(int[] nums1, int[] nums2) {
+    if (nums1 == null || nums2 == null || nums1.length == 0 || nums2.length == 0) {
+        return new int[0];
+    }
+    Set<Integer> set1 = new TreeSet<>();
+    Set<Integer> set2 = new TreeSet<>();
+    for (int n : nums1) {
+        set1.add(n);
+    }
+    for (int n : nums2) {
+        if (set1.contains(n)) {
+            set2.add(n);
+        }
+    }
+    int[] ints = new int[set2.size()];
+    int index = 0;
+    for (int n : set2) {
+        ints[index++] = n;
+    }
+    return ints;
+}
+```
+
+
+
+#### 两数之和的下标(MAP)
+
+**给定一个整数数组 nums 和一个目标值 target，请你在该数组中找出和为目标值的那 两个 整数，并返回他们的数组下标。**你可以假设每种输入只会对应一个答案。但是，数组中同一个元素不能使用两遍。
+
+**示例:**
+
+给定 nums = [2, 7, 11, 15], target = 9
+
+因为 nums[0] + nums[1] = 2 + 7 = 9
+
+所以返回 [0, 1]
+
+
+
+暴力的解法是两层for循环查找，时间复杂度是O(n^2)。
+
+map是一种key value的存储结构，可以用key保存数值，用value在保存数值所在的下标。
+
+<img src="F:\MyLeaning_doc\picture\hash1.png" style="zoom:95%;" />
+
+```java
+public static int[] twoSum(int[] nums, int val) {
+    int[] ints = new int[2];
+    if (nums == null || nums.length == 0) {
+        return ints;
+    }
+    HashMap<Integer, Integer> map = new HashMap<>();
+    for (int i = 0; i < nums.length; i++) {
+        int temp = val - nums[i];
+        if (map.containsKey(temp)) {
+            ints[0] = i;
+            ints[1] = map.get(temp);  //获取满足值的下标位置
+            break;
+        }
+        map.put(nums[i], i);  //将key设为值,value设为下标位置
+    }
+    return ints;
+}
+```
+
+
+
+#### 四数组相加
+
+**给定四个包含整数的数组列表 A , B , C , D ,计算有多少个元组 (i, j, k, l) ，使得 A[i] + B[j] + C[k] + D[l] = 0。**
+
+**例如:**
+
+输入: A = [ 1, 2] B = [-2,-1] C = [-1, 2] D = [ 0, 2] 输出: 2 **解释:** 两个元组如下:
+
+1. (0, 0, 0, 1) -> A[0] + B[0] + C[0] + D[1] = 1 + (-2) + (-1) + 2 = 0
+2. (1, 1, 0, 0) -> A[1] + B[1] + C[0] + D[0] = 2 + (-1) + (-1) + 0 = 0
+
+```java
+public static int fourSumConunt(int[] nums1, int[] nums2, int[] nums3, int[] nums4) {
+    HashMap<Integer, Integer> map = new HashMap<>();
+    int temp;
+    int res = 0;
+    //统计两个数组中的元素之和，同时统计出现的次数，放入map
+    for (int i : nums1) {
+        for (int j : nums2) {
+            temp = i + j;  // 相加的值进行存储
+            if (map.containsKey(temp)) {
+                map.put(temp, map.get(temp) + 1);  //相同的值的话,计数加一
+            } else {
+                map.put(temp, 1);  //第一次出现的值记录
+            }
+        }
+    }
+    //统计剩余的两个元素的和，在map中找是否存在相加为0的情况，同时记录次数
+    for (int i : nums3) {
+        for (int j : nums4) {
+            temp = i + j;
+            if (map.containsKey(-temp)){  //判断是否存在有其相反的值, 与其相加为0
+                res += map.get(-temp);  //出现计数累加
+            }
+        }
+    }
+    return res;
+}
+```
+
+
+
+
 
 
 
@@ -1066,7 +1292,7 @@ TRUNCATE删除所有数据不会影响事务.
 
 **DQL:Data query language -数据查询语言**
 
-<img src="C:\Users\Zssaer\Desktop\MyLeaning_doc\picture\xs.jpg" style="zoom: 41%;" />
+<img src="picture\xs.jpg" style="zoom: 41%;" />
 
 ```mysql
 SELECT * FROM 表名; -- 查询表中所有字段数据
@@ -1128,7 +1354,7 @@ ON r.subjectNO=sub.subjectNO
 
 自己的表和自己的表连接, **核心:一张表拆为两条一样的表** 
 
-<img src="C:\Users\Zssaer\Desktop\MyLeaning_doc\picture\3.jpg" style="zoom:50%;" />
+<img src="picture\3.jpg" style="zoom:50%;" />
 
 ```MySQL
 -- 把一张表看出两张一模一样的表
@@ -1137,7 +1363,7 @@ FROM category AS a,category AS b
 WHERE a.categoryid=b.pid
 ```
 
-<img src="C:\Users\Zssaer\Desktop\MyLeaning_doc\picture\124.jpg" style="zoom:50%;" />
+<img src="picture\124.jpg" style="zoom:50%;" />
 
 
 
@@ -1257,7 +1483,7 @@ SET autocommit = 1 /* 开启(默认) */
 
 手动处理事务
 
-<img src="C:\Users\Zssaer\Desktop\MyLeaning_doc\picture\transaction.jpg" style="zoom: 33%;" />
+<img src="picture\transaction.jpg" style="zoom: 33%;" />
 
 ​		0.关闭事务自动提交
 
