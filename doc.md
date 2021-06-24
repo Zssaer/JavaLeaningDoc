@@ -57,6 +57,140 @@
 5、大/小跟堆，可并堆
 6、字符串：字典树、后缀树
 
+### 栈
+
+**栈（stack）是限制插入和删除只能在一个位置上进行的表**，该位置是表的末端叫做栈的顶（top），对栈的基本操作有**push(进栈)**和**pop(出栈)**,前者相当于插入，后者则是删除最后插入的元素。
+
+一般的模型是，存在某个元素位于栈顶，而该元素是唯一可见元素。
+
+<img src="picture\stack1.png" style="zoom:150%;" />
+
+#### 栈的实现
+
+因为栈是一个表，因此能够实现表的方法都可以实现栈，ArrayList和LinkedList都可以支持栈操作。
+
+```java
+Stack<TreeNode> stack = new Stack<TreeNode>();
+```
+
+#### 栈的应用
+
+栈在现实中应用场景很多，大家在刷题时就可以注意到，很多题目都可以用栈来解决的。
+
+比较常用的情景，数字表达式的求值。
+
+##### 后缀表达式
+
+又被称之为逆波兰表示.
+
+普通四则运算中括号也是其中的一部分，先乘除后加减使运算变的复杂.使用后缀表达式则可以无需考虑括号.
+
+将中缀表达式(普通)转为后缀表达式:
+
+> 中缀:9 + ( 3 - 1 ) * 3 + 10 / 2
+>
+> 后缀:9 3 1 - 3 * + 10 2 / +
+
+转换规则:
+
+1.从左到右遍历中缀表达式的每个数字和符号，若是数字就输出（直接成为后缀表达式的一部分，不进入栈）
+
+2.若是符合则判断其与栈顶符号的优先级，是右括号 或 重复出现且低于栈顶的元素，则栈顶元素依次出栈并输出，直到重复元素出栈完毕，当前再元素入栈。
+
+3.遵循以上两条直到输出后缀表达式为止。
+
+<img src="picture\stack2.gif" style="zoom:150%;" />
+
+计算规则:
+
+中缀:9 + ( 3 - 1 ) * 3 + 10 / 2=20
+
+后缀:9 3 1 - 3 * + 10 2 / +
+
+1.从左到右遍历表达式的每个数字和符号，如果是数字就进栈
+
+2.如果是符号就将栈顶的两个数字出栈，用**下位元素与栈顶元素进行计算**,并将结果入栈，一直到获得最终结果。
+
+<img src="picture\stack3.gif" style="zoom:150%;" />
+
+
+
+### 队列
+
+像栈一样，队列（queue）也是表。
+
+然而使用队列时插入在一端进行而删除在另一端进行，遵守先进先出的规则。所以队列的另一个名字是（FIFO）。
+
+<img src="picture\queue1.png" style="zoom:150%;" />
+
+#### 队列的实现
+
+队列我们在树的层次遍历时经常使用，后面我们写到树的时候会给大家整理框架。队列同样也可以由数组和LinkedList实现，刷题时比较常用的方法是
+
+```java
+Queue<TreeNode> queue = new LinkedList<TreeNode>();
+```
+
+#### 队列假溢出
+
+数组长度为5，我们放入了[1,2,3,4,5],我们将1，2出队，此时如果继续加入6时，因为数组末尾元素已经被占用，再向后加则会溢出，但是我们的下标0，和下标1还是空闲的。所以我们把这种现象叫做“假溢出”。
+
+例如，我们在学校里面排队洗澡一人一个格，当你来到澡堂发现前面还有两个格，但是后面已经满了，你是去前面洗，还是等后面格子的哥们洗完再洗？肯定是去前面的格子洗。除非澡堂的所有格子都满了。我们才会等。
+
+使用循环队列可以解决假溢出问题.
+
+#### 循环队列
+
+用来解决假溢出的方法就是后面满，就再从头开始，也就是头尾相接的循环，我们把队列的这种头尾相接的顺序存储结构成为循环队列。
+
+<img src="picture\queue2.gif" style="zoom:150%;" />
+
+队列为空时front == rear，队列满时也是front == rear，区分满和空:
+
+当队列为空时，front==rear,当队列满是我们保留一个元素空间，也就是说，队列满时，数组内还有一个空间。再根据以下公式则能够判断队列满没满了。
+
+(rear+1)%queuesize==front
+
+其中queuesize,代表队列的长度，上图为5。我们来判断上面两张图是否满。（4+1）%5==0，（1+1）%5==3 所以两种情况都是满的。
+
+<img src="picture\queue3.png" style="zoom:150%;" />
+
+
+
+### 递归
+
+递归，在计算机科学中是指一种通过重复将问题分解为同类的子问题而解决问题的方法。简单来说，递归表现为函数调用函数本身。
+
+> 递归最恰当的比喻，就是查词典。我们使用的词典，本身就是递归，为了解释一个词，需要使用更多的词。当你查一个词，发现这个词的解释中某个词仍然不懂，于是你开始查这第二个词，可惜，第二个词里仍然有不懂的词，于是查第三个词，这样查下去，直到有一个词的解释是你完全能看懂的，那么递归走到了尽头，然后你开始后退，逐个明白之前查过的每一个词，最终，你明白了最开始那个词的意思。
+
+简单的代码说明:
+
+```java
+public int sum(int n) {
+    //终止条件
+    if (n <= 1) {
+        return 1;
+    } 
+    //自身调用
+    return sum(n - 1) + n; 
+}
+```
+
+#### 递归的特点
+
+递归有两个显著的特征,终止条件和自身调用:
+
+- 自身调用：原问题可以分解为子问题，子问题和原问题的求解方法是一致的，即都是调用自身的同一个函数。
+- 终止条件：递归必须有一个终止的条件，即不能无限循环地调用本身。
+
+#### 递归与栈的关系
+
+<img src="picture\640.webp" style="zoom:150%;" />
+
+<img src="picture\640.png" style="zoom:150%;" />
+
+
+
 
 
 ### 数组
@@ -99,7 +233,7 @@
 
 假设存在数组：1,2,3,4,7,9,10中查找元素2.
 
-<img src="F:\MyLeaning_doc\picture\erfenfa.png" style="zoom:80%;" />
+<img src="picture\erfenfa.png" style="zoom:80%;" />
 
 ```java
 public static int twolinkSearch(int[] nums, int target) {
@@ -144,7 +278,7 @@ public static int twolinkSearch(int[] nums, int target) {
 
 **暴力循环解法**:
 
-<img src="F:\MyLeaning_doc\picture\68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f30303865476d5a456c7931676e747263377839746a673330647530396d316b792e676966.gif" style="zoom: 90%;" />
+<img src="picture\68747470733a2f2f747661312e73696e61696d672e636e2f6c617267652f30303865476d5a456c7931676e747263377839746a673330647530396d316b792e676966.gif" style="zoom: 90%;" />
 
 使用两层for循环，一个for循环遍历数组元素 ，第二个for循环更新数组。
 
@@ -172,7 +306,7 @@ public static int foreachDeleteVar(int[] nums,int target){
 
 双指针法（快慢指针法）： **通过一个快指针和慢指针在一个for循环下完成两个for循环的工作。**
 
-<img src="F:\MyLeaning_doc\picture\2221.gif" style="zoom:90%;" />
+<img src="picture\2221.gif" style="zoom:90%;" />
 
 **双指针法（快慢指针法）在数组和链表的操作中是非常常见的，很多考察数组、链表、字符串等操作的面试题，都使用双指针法。**
 
@@ -210,7 +344,7 @@ public static int fastSlowIndexDeleteVar(int[] nums, int target) {
 
 使用滑动窗口法:
 
-<img src="F:\MyLeaning_doc\picture\333.gif" style="zoom:90%;" />
+<img src="picture\333.gif" style="zoom:90%;" />
 
 本题中实现滑动窗口，主要确定如下三点：
 
@@ -244,13 +378,13 @@ public static int miniSubLen(int[] nums, int target) {
 
 
 
-#### 排序
+#### 数列排序算法
 
 进行数列排序算法:
 
-**插入排序**
+##### **插入排序**
 
-<img src="F:\MyLeaning_doc\picture\array1.gif" style="zoom:90%;" />
+<img src="picture\array1.gif" style="zoom:90%;" />
 
 每次将一个数字插入一个有序的数组里，成为一个长度更长的有序数组，有限次操作以后，数组整体有序。
 
@@ -280,6 +414,227 @@ public int[] sortArray(int[] nums) {
 
 
 
+##### **归并排序**
+
+归并这个词语的含义就是合并，并入的意思.
+
+归并排序使用的就是分治思想。顾名思义就是分而治之，将一个大问题分解成若干个小的子问题来解决。
+
+**将原数组分区域,分别排序**,借助额外空间，合并分区域的有序数组，得到更长的有序数组.
+
+<img src="picture\mergeSort.png" style="zoom:110%;" />
+
+而其中的归并主要实现思想为:
+
+<img src="picture\me.png" style="zoom:110%;" />
+
+通过双指针从左自右比较两个指针指向的值,将较小的一方存入大集合中,存入之后较小一方的指针向前移动,并继续比较，直到某一小集合的元素全部都存到大集合中。
+
+<img src="picture\me2.png" style="zoom:110%;" />
+
+当某一小集合元素全部放入大集合中(指针到尾部无法继续后)，则需将另一小集合中剩余的所有元素存到大集合中.
+
+
+
+```java
+	/**
+     * 对数组 nums 的子区间 [left, right] 进行归并排序
+     * @param nums
+     * @param left
+     * @param right
+     * @param temp
+     */
+    private void mergeSort(int[] nums, int left, int right, int[] temp) {
+        // 对小区域的数组进行插入排序
+        if (right - left <= INSERTION_SORT_THRESHOLD) {
+            insertionSort(nums, left, right);
+            return;
+        }
+        int mid = left + (right - left) / 2;
+        // 分成两部分进行继续归并排序
+        mergeSort(nums, left, mid, temp);
+        mergeSort(nums, mid + 1, right, temp);
+        // 如果第一部分的尾部 小于或等于 第二部分的头部 则无需合并排序
+        if (nums[mid] <= nums[mid + 1]) {
+            return;
+        }
+        //合并小区域数组排序
+        mergeOfTwoSortedArray(nums, left, mid, right, temp);
+    }
+    
+	/**
+     * 合并两个有序数组：先把值复制到临时数组，再合并回去
+     * @param nums
+     * @param left
+     * @param mid
+     * @param right
+     * @param temp
+     */
+    public void mergeOfTwoSortedArray(int nums[], int left, int mid, int right, int[] temp) {
+        System.arraycopy(nums, left, temp, left, right + 1 - left);  // 备份原数组至temp数组
+        int i = left; //指针i从已排序第一部分头部开始
+        int j = mid + 1;  //指针i从已排序第二部分头部开始
+        for (int k = left; k <= right; k++) {
+            if (i == mid + 1) {  //指针i到达已排序第一部分尾部
+                nums[k] = temp[j];
+                j++;
+            } else if (j == right + 1) {  //指针i到达已排序第二部分尾部
+                nums[k] = temp[i];
+                i++;
+            }else if (temp[i]<=temp[j]){
+                // 注意写成 < 就丢失了稳定性（相同元素原来靠前的排序以后依然靠前）
+                nums[k]=temp[i];
+                i++;
+            }else {
+                // temp[i] > temp[j]
+                nums[k] = temp[j];
+                j++;
+            }
+        }
+    }
+```
+
+| 算法名称 | 最好时间复杂度 | 最坏时间复杂度 | 平均时间复杂度 | 空间复杂度 | 是否稳定 |
+| -------- | -------------- | -------------- | -------------- | ---------- | -------- |
+| 归并排序 | O(nlogn)       | O(nlogn)       | O(nlogn)       | O(n)       | 稳定     |
+
+
+
+##### **快速排序**
+
+快速排序也是一种分治的排序算法.它将数组通过切分(partition)分成两个子数组,将两部分独立地排序.快速排序和归并排序是互补的.
+
+
+
+快速排序基本思想:
+
+1.先从数组中找一个基准数
+
+2.让其他比它大的元素移动到数列一边，比他小的元素移动到数列另一边，从而把数组拆解成两个部分。
+
+3.再对左右区间重复第二步，直到各区间只有一个数。
+
+
+
+在快速排序中,首先随机打乱数组排序.然后取出切分元素,它把数组大于小于它的进行划分.
+
+<img src="picture\fastSort.png" style="zoom: 200%;" />
+
+然后分别将左右部分循环进行快速排序,
+
+<img src="picture\fastSort1.png" style="zoom: 150%;" />
+
+一边循环到只有大小一为止,排序到最后直接合并即可(不需要像归并排序最后还需要合并排序).
+
+- 版本 1：基本版本：把等于切分元素的所有元素分到了数组的同一侧，但可能会造成递归树倾斜；
+
+```java
+/**
+ * 快速排列
+ * @param nums
+ * @param left
+ * @param right
+ */
+public void quickSort(int[] nums, int left, int right) {
+    // 判断是否 长度是否为0 ,为0则为排序完毕的元素
+    if (right - left + 1 <= 0){
+        return;
+    }
+    //获取切点元素位置
+    int pIndex = partition(nums, left, right);
+    quickSort(nums, left, pIndex - 1);  //左侧
+    quickSort(nums, pIndex + 1, right);  //右侧
+}
+
+/**
+ * 切分数组
+ *
+ * @param nums
+ * @param left
+ * @param right
+ */
+private int partition(int[] nums, int left, int right) {
+    //获取随机下标数(切分元素)
+    int randomIndex = new Random().nextInt(right - left + 1) + left;
+    swap(nums, left, randomIndex);  //将头部与切分元素进行交换
+
+    // 切分元素值
+    int pivot = nums[left];
+    // 切分元素下标位置
+    int less = left;
+    for (int i = left + 1; i <= right; i++) {
+        if (nums[i] < pivot) { //指针的值小于切分值
+            less++;
+            swap(nums, i, less); //切分值与其互换位置
+        }
+    }
+    swap(nums, left, less);
+    return less;
+}
+
+/**
+ * 交换两个值位置
+ */
+private void swap(int[] nums, int index1, int index2) {
+    int temp = nums[index1];
+    nums[index1] = nums[index2];
+    nums[index2] = temp;
+}
+```
+
+版本2:双指针法 - 把等于切分元素的所有元素**等概率**地分到了数组的两侧，避免了递归树倾斜，递归树相对平衡；
+
+```java
+	/**
+     * 快速排列
+     *
+     * @param nums
+     * @param left
+     * @param right
+     */
+    public void quickSort(int[] nums, int left, int right) {
+        if (left < right) {
+            int pIndex  =partition(nums,left,right);
+            quickSort(nums,left,pIndex-1);
+            quickSort(nums,pIndex+1,right);
+        }
+    }
+
+    public int partition(int[] nums, int left, int right) {
+        int randomIndex = left + new Random().nextInt(right - left + 1);
+        swap(nums, randomIndex, left);
+
+        int pivot = nums[left];
+        // 两个指针:一个从前到后,一个从后向前
+        int less = left + 1;
+        int greater = right;
+        while (true){
+            while (less<=right&&nums[less]<pivot){
+                less++;
+            }
+            while (greater>left&& nums[greater]>pivot){
+                greater--;
+            }
+            // 当小指针大于或等于大指针退出循环
+            if (less>=greater){
+                break;
+            }
+            // 当less指针大于等于 且greater指针小于等于时,同时双指针移动
+            swap(nums,less,greater);
+            less++;
+            greater--;
+        }
+        swap(nums,left,greater);
+        return greater;
+    }
+
+    public void swap(int[] nums, int index1, int index2) {
+        int temp = nums[index1];
+        nums[index1] = nums[index2];
+        nums[index2] = temp;
+    }
+```
+
 
 
 ### 链表
@@ -290,7 +645,7 @@ public int[] sortArray(int[] nums) {
 
 链接的入口点称为列表的头结点也就是head。
 
-<img src="F:\MyLeaning_doc\picture\list1.png" style="zoom:95%;" />
+<img src="picture\list1.png" style="zoom:95%;" />
 
 #### 
 
@@ -300,11 +655,11 @@ public int[] sortArray(int[] nums) {
 
 2.双链表:每一个节点有两个指针域，一个指向下一个节点，一个指向上一个节点。所以双链表 既可以向前查询也可以向后查询。
 
-<img src="F:\MyLeaning_doc\picture\list2.png" style="zoom:95%;" />
+<img src="picture\list2.png" style="zoom:95%;" />
 
 3.循环链表:顾名思义，就是链表首尾相连。循环链表可以用来解决约瑟夫环问题。
 
-<img src="F:\MyLeaning_doc\picture\list3.png" style="zoom:95%;" />
+<img src="picture\list3.png" style="zoom:95%;" />
 
 #### 链表存储方式
 
@@ -328,7 +683,7 @@ Java、Python，就有自己的内存回收机制，就不用自己手动内存�
 
 #### 性能分析
 
-<img src="F:\MyLeaning_doc\picture\list4.png" style="zoom:95%;" />
+<img src="picture\list4.png" style="zoom:95%;" />
 
 
 
@@ -389,7 +744,7 @@ public void removeVal(String val) {
 
 - **设置一个虚拟头结点在进行删除操作。**
 
-<img src="F:\MyLeaning_doc\picture\list5.png" style="zoom:95%;" />
+<img src="picture\list5.png" style="zoom:95%;" />
 
 
 
@@ -430,7 +785,7 @@ public ListNode removeElements(ListNode head, int val) {
 - addAtIndex(index,val)：在链表中的第 index 个节点之前添加值为 val 的节点。如果 index 等于链表的长度，则该节点将附加到链表的末尾。如果 index 大于链表长度，则不会插入节点。如果index小于0，则在头部插入节点。
 - deleteAtIndex(index)：如果索引 index 有效，则删除链表中的第 index 个节点。
 
-<img src="F:\MyLeaning_doc\picture\list6.png" style="zoom:95%;" />
+<img src="picture\list6.png" style="zoom:95%;" />
 
 
 
@@ -681,7 +1036,7 @@ public class MyLinkedList {
 
 其实只需要改变链表的next指针的指向，直接将链表反转 ，而不用重新定义一个新的链表.
 
-<img src="F:\MyLeaning_doc\picture\list7.gif" style="zoom:95%;" />
+<img src="picture\list7.gif" style="zoom:95%;" />
 
 使用双指针方法.
 
@@ -794,7 +1149,7 @@ public static int[] interScection(int[] nums1, int[] nums2) {
 
 map是一种key value的存储结构，可以用key保存数值，用value在保存数值所在的下标。
 
-<img src="F:\MyLeaning_doc\picture\hash1.png" style="zoom:95%;" />
+<img src="picture\hash1.png" style="zoom:95%;" />
 
 ```java
 public static int[] twoSum(int[] nums, int val) {
@@ -868,7 +1223,7 @@ public static int fourSumConunt(int[] nums1, int[] nums2, int[] nums3, int[] num
 
 
 
-## 1.获取验证码 easy-captcha
+## 获取验证码 easy-captcha
 
 ### Maven依赖
 
