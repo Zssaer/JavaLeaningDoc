@@ -1,4 +1,4 @@
-# <font color=red>	我的学习日志</font>
+# <font color=red>	ZSSAER学习日志</font>
 
 ## **目录**
 
@@ -8796,6 +8796,208 @@ public class EhcacheComponent {
 
 
 
+## 阿里云对象存储服务-OSS
+
+对象存储服务是一种海量、安全、低成本、高可靠的云存储服务，适合存放任意类型的文件。容量和处理能力弹性扩展，多种存储类型供选择，全面优化存储成本。
+
+阿里云对象存储服务称为OSS,而华为对象存储服务称为OBS,腾讯云对象存储服务称为COS,尽管每家公司的缩写名称不一样,但其实都是一种服务.
+
+这里主要讲述其阿里云对象存储服务OSS的JAVA API使用方法.
+
+### 基本概念
+
+OSS有如下几个产品参数概念:
+
+-  Region（地域）
+
+  Region表示OSS的数据中心所在物理位置。一般来说，距离用户更近的Region访问速度更快。
+
+-  Endpoint（访问域名）
+
+  Endpoint表示OSS对外服务的访问域名。OSS以HTTP RESTful API的形式对外提供服务，当访问不同的Region的时候，需要不同的域名。通过内网和外网访问同一个Region所需要的Endpoint也是不同的。
+  
+-  AccessKey（访问密钥）
+
+  AccessKey简称AK，指的是访问身份验证中用到的AccessKeyId和AccessKeySecret,AccessKeyId用于标识用户；AccessKeySecret是用户用于加密签名字符串和OSS用来验证签名字符串的密钥，必须保密。
+
+- Bucket（存储空间）
+
+  存储空间是用户用于存储对象（Object）的容器，所有的对象都必须隶属于某个存储空间。存储空间具有各种配置属性，包括地域、访问权限、存储类型等。
+
+-  对象（Object）
+
+  对象是OSS存储数据的基本单元，也被称为OSS的文件。和传统的文件系统不同，对象没有文件目录层级结构的关系。对象由元信息（Object Meta），用户数据（Data）和文件名（Key）组成，并且由存储空间内部唯一的Key来标识。
+
+### OSS与文件系统的对比
+
+| 对比项   | OSS                                                          | 文件系统                                                     |
+| :------- | :----------------------------------------------------------- | :----------------------------------------------------------- |
+| 数据模型 | OSS是一个分布式的对象存储服务，提供的是一个Key-Value对形式的对象存储服务。 | 文件系统是一种典型的树状索引结构。                           |
+| 数据获取 | 根据Object的名称（Key）唯一的获取该Object的内容。虽然用户可以使用类似test1/test.jpg的名字，但是这并不表示用户的Object是保存在test1目录下面的。对于OSS来说，test1/test.jpg仅仅只是一个字符串，和a.jpg这种并没有本质的区别。因此不同名称的Object之间的访问消耗的资源是类似的。 | 一个名为test1/test.jpg的文件，访问过程需要先访问到test1这个目录，然后再在该目录下查找名为test.jpg的文件。 |
+| 优势     | 支持海量的用户并发访问。                                     | 支持文件的修改，比如修改指定偏移位置的内容、截断文件尾部等。也支持文件夹的操作，比如重命名目录、删除目录、移动目录等非常容易。 |
+
+由上可见,OSS服务获取数据类似Nosql读取方式(Map方式),本质是从各个存储表(Bucket)中进行存储.
+
+### Java API使用
+
+Maven导入
+
+```xml
+<dependency>
+    <groupId>com.aliyun.oss</groupId>
+    <artifactId>aliyun-sdk-oss</artifactId>
+    <version>3.10.2</version>
+</dependency>
+```
+
+如果使用的是Java 9及以上的版本，则需要添加jaxb相关依赖。添加jaxb相关依赖示例代码如下：
+
+```xml
+<dependency>
+    <groupId>javax.xml.bind</groupId>
+    <artifactId>jaxb-api</artifactId>
+    <version>2.3.1</version>
+</dependency>
+<dependency>
+    <groupId>javax.activation</groupId>
+    <artifactId>activation</artifactId>
+    <version>1.1.1</version>
+</dependency>
+<!-- no more than 2.3.3-->
+<dependency>
+    <groupId>org.glassfish.jaxb</groupId>
+    <artifactId>jaxb-runtime</artifactId>
+    <version>2.3.3</version>
+</dependency>
+```
+
+创建SysConfigOss DTO类,用作Springboot配置信息注入
+
+```java
+@Component
+//自动配置文件属性名
+@ConfigurationProperties(prefix = "sysConfig.oss")
+public class SysConfigOss {
+    private String domain;
+    private String endpoint;
+    private String accessKeyId;
+    private String accessKeySecret;
+    private String bucketName;
+    private String diskImage;
+    private String diskSource;
+    private boolean personal;
+    
+    ...setting and getting methods...
+}
+```
+
+在application.properties 或者application.yaml文件下配置相关OSS服务信息
+
+```yaml
+sysConfig:
+	oss:
+		domain: XXX
+		endpoint: XXX
+		accessKeyId: XXX
+		accessKeySecret: XXX
+		bucketName: XXX
+		diskImage: XXX
+		diskSource: XXX
+		personal: XXX
+```
+
+配置OssComponent组件
+
+```java
+@Component
+public class OssComponent {
+    @Autowired
+    private SysConfigOss sysConfigOss;
+    @Autowired
+    private PathComponent pathComponent;
+	/**
+     * 初始化OSS实体类
+     * @return
+     */
+    private OSS init() {
+        return new OSSClientBuilder().build(sysConfigOss.getEndpoint(), sysConfigOss.getAccessKeyId(), 	sysConfigOss.getAccessKeySecret());
+    }
+
+    /**
+     * OSS对象存储
+     *
+     * @param inputStream
+     * @param diskName
+     * @param fileName
+     * @return
+     */
+    private String uploadObject2OSS(InputStream inputStream, String diskName, String fileName) {
+        String resultStr = null;
+        OSS ossClient = init();
+        PutObjectResult putObjectResult = ossClient.putObject(sysConfigOss.getBucketName(), diskName + "/" + fileName, inputStream);
+        ossClient.shutdown();
+        return putObjectResult.getETag();
+    }
+
+    private String generateStorageName(String fileName) {
+        return DateUtil.today()+"/"+System.currentTimeMillis() + "_" + fileName;
+    }
+
+    /**
+     * 存储图片文件 返回数据库文件名
+     *
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    public String storeImage(MultipartFile file) throws IOException {
+        String fileName = ValidateUtil.isEmpty(file.getOriginalFilename()) ? "auto" : file.getOriginalFilename();
+        String storageName = generateStorageName(fileName);
+        uploadObject2OSS(file.getInputStream(), sysConfigOss.getDiskImage(), storageName);
+        return pathComponent.getImgDbFileName(storageName);
+    }
+
+    /**
+     * 存储素材文件 返回数据库文件名
+     *
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    public String storeSource(MultipartFile file) throws IOException {
+        String fileName = ValidateUtil.isEmpty(file.getOriginalFilename()) ? "auto" : file.getOriginalFilename();
+        String storageName = generateStorageName(fileName);
+        uploadObject2OSS(file.getInputStream(), sysConfigOss.getDiskSource(), storageName);
+        return pathComponent.getSourceDbFileName(storageName);
+    }
+    
+    /**
+     * 获取私有链接,用于文件/图片回显等
+     * @param dbFileName
+     * @return
+     */
+    public String getPrivateAccessUrl(String dbFileName) {
+    	OSS ossClient = init();
+    	Date expiration = new Date(new Date().getTime() + 3600 * 1000);
+        GeneratePresignedUrlRequest generatePresignedUrlRequest ;
+        generatePresignedUrlRequest =new GeneratePresignedUrlRequest(sysConfigOss.getBucketName(), dbFileName);
+        generatePresignedUrlRequest.setExpiration(expiration);
+        URL url = ossClient.generatePresignedUrl(generatePresignedUrlRequest);
+        return url.toString();
+    }
+}
+```
+
+- 通过使用OSS.putObject方法,存储对象.
+- 对于私有的OSS服务,通过使用创建GeneratePresignedUrlRequest对象再调用OSS.generatePresignedUrl方法获取私有链接,来获取存储的对象.
+- 对于公开读取的OSS服务,直接使用配置的domain+文件位置+文件名即可获取存储对象
+
+
+
+
+
+
+
 ## Docker
 
 <img src="F:\MyLeaning_doc\picture\docker.png" style="zoom:110%;" />
@@ -9580,4 +9782,205 @@ const scroll = new LocomotiveScroll({
 ```
 
 
+
+
+
+
+
+
+
+## ECharts -可视化图表库
+
+Apache ECharts 是一个基于JavaScript的开源可视化图表库,可以流畅的运行在 PC 和移动设备上，兼容当前绝大部分浏览器（IE9/10/11，Chrome，Firefox，Safari等），底层依赖矢量图形库 ZRender，提供直观，交互丰富，可高度个性化定制的数据可视化图表。
+
+ECharts 提供了常规的[折线图](https://echarts.apache.org/zh/option.html#series-line)、[柱状图](https://echarts.apache.org/zh/option.html#series-bar)、[散点图](https://echarts.apache.org/zh/option.html#series-scatter)、[饼图](https://echarts.apache.org/zh/option.html#series-pie)、[K线图](https://echarts.apache.org/zh/option.html#series-candlestick)，用于统计的[盒形图](https://echarts.apache.org/zh/option.html#series-boxplot)，用于地理数据可视化的[地图](https://echarts.apache.org/zh/option.html#series-map)、[热力图](https://echarts.apache.org/zh/option.html#series-heatmap)、[线图](https://echarts.apache.org/zh/option.html#series-lines)，用于关系数据可视化的[关系图](https://echarts.apache.org/zh/option.html#series-graph)、[treemap](https://echarts.apache.org/zh/option.html#series-treemap)、[旭日图](https://echarts.apache.org/zh/option.html#series-sunburst)，多维数据可视化的[平行坐标](https://echarts.apache.org/zh/option.html#series-parallel)，还有用于 BI 的[漏斗图](https://echarts.apache.org/zh/option.html#series-funnel)，[仪表盘](https://echarts.apache.org/zh/option.html#series-gauge)，并且支持图与图之间的混搭。
+
+ECharts 内置的 dataset 属性（4.0+）支持直接传入包括二维表，key-value 等多种格式的数据源，通过简单的设置 encode 属性就可以完成从数据到图形的映射，这种方式更符合可视化的直觉，省去了大部分场景下数据转换的步骤，而且多个组件能够共享一份数据而不用克隆。
+
+ECharts 支持以 Canvas、SVG（4.0+）、VML 的形式渲染图表。VML 可以兼容低版本 IE，SVG 使得移动端不再为内存担忧，Canvas 可以轻松应对大数据量和特效的展现。不同的渲染方式提供了更多选择，使得 ECharts 在各种场景下都有更好的表现。
+
+### 安装
+
+```bash
+npm install echarts --save
+```
+
+### Vue组件引用
+
+```js
+<template>
+    <div id="chartId" :style="{ width: '500px', height: '250px' }"></div>
+</template>
+
+import * as echarts from 'echarts'
+...
+setup() {
+	let Chart = echarts.init(document.getElementById('chartId'));
+    onMounted(() => {
+      // 绘制图表
+      Chart.setOption({
+        	title: {
+                text: 'ECharts 入门示例'
+            },
+            tooltip: {},
+            legend: {
+                data:['销量']
+            },
+            xAxis: {
+                data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
+            },
+            yAxis: {},
+            series: [{
+                name: '销量',
+                type: 'bar',
+                data: [5, 20, 36, 10, 10, 20]
+            }]
+      });
+}
+```
+
+一个网页中可以创建多个 `echarts 实例`。每个 `echarts 实例` 中可以创建多个图表和坐标系等等（用 `option` 来描述）。准备一个 DOM 节点（作为 echarts 的渲染容器），就可以在上面创建一个 echarts 实例。每个 echarts 实例独占一个 DOM 节点。
+
+**注意:在父组件复用多个ECharts组件,其id就会被重复使用, 这时将id代替为使用ref来引用即可.**
+
+### ECharts 主要属性组成
+
+ECharts 图像由option来进行设置渲染的, 在其`Echarts.setOption`下有这些主要组成属性,
+
+#### 系列（series）
+
+在 echarts 里，series 表示其系列:一组数值以及他们映射成的图。“系列”这个词原本可能来源于“一系列的数据”，而在 echarts 中取其扩展的概念，不仅表示数据，也表示数据映射成为的图。
+
+在series中必须包含: 
+
+- 一组数值( 渲染的指标数据)
+
+- 图表类型（`series.type`) : line（折线图）、bar（柱状图）、pie（饼图）、scatter（散点图）、graph（关系图）、tree（树图）、...
+
+  如下图.
+
+- 以及其他的关于这些数据如何映射成图的参数。
+
+一个Echarts实例可以包含多个Series系列,也就是说可以同时渲染多个数据图(如下图).
+
+<img src="picture\series-all-a.jpg" style="zoom:80%;" />
+
+同理其中的data数据也可以从dataset中对应的取:
+
+<img src="picture\series-all-b.jpg" style="zoom:80%;" />
+
+#### 组件（component）
+
+在系列之上，echarts 中各种内容，被抽象为“组件”。
+
+例如，echarts 中至少有这些组件：[xAxis](https://echarts.apache.org/zh/option.html#xAxis)（直角坐标系 X 轴）、[yAxis](https://echarts.apache.org/zh/option.html#yAxis)（直角坐标系 Y 轴）、[grid](https://echarts.apache.org/zh/option.html#grid)（直角坐标系底板）、[angleAxis](https://echarts.apache.org/zh/option.html#angleAxis)（极坐标系角度轴）、[radiusAxis](https://echarts.apache.org/zh/option.html#radiusAxis)（极坐标系半径轴）、[polar](https://echarts.apache.org/zh/option.html#polar)（极坐标系底板）、[geo](https://echarts.apache.org/zh/option.html#geo)（地理坐标系）、[dataZoom](https://echarts.apache.org/zh/option.html#dataZoom)（数据区缩放组件）、[visualMap](https://echarts.apache.org/zh/option.html#visualMap)（视觉映射组件）、[tooltip](https://echarts.apache.org/zh/option.html#tooltip)（提示框组件）、[toolbox](https://echarts.apache.org/zh/option.html#toolbox)（工具栏组件）、[series](https://echarts.apache.org/zh/option.html#series)（系列）、...
+
+<img src="picture\components.jpg" style="zoom:80%;" />
+
+
+
+### Vue3组件复用
+
+但在Vue3中ECharts是不被ref所接收的, 所有采用动态id赋值来 使用多个Echarts组件.
+
+```vue
+<!-- ECharts组件 -->
+<template>
+	<!-- 使用v-bind:id 来进行动态获取id -->
+    <div :id="chartId" :style="{ width: '500px', height: '250px' }"></div>
+</template>
+...
+props: {
+    // props使用小驼峰法
+    chartId:{
+      type:String,
+      default:"main"
+    }
+},
+setup(props) {
+	const {chartId} = toRefs(props);
+	let Chart = echarts.init(document.getElementById(chartId));
+	...
+}
+```
+
+```vue
+<!-- 父组件 -->
+<template>
+	<!-- 在模块中使用短横线命名法 -->
+	<echars :chart-id="new1"/>
+    <echars :chart-id="new2"/>    
+</template>
+...
+setup(props) {
+	const new1 = "new1";
+	const new2 = "new2";
+	...
+	return{
+		new1,new2
+	}
+}
+```
+
+### 使用dataset来管理数据
+
+ECharts 4 开始支持了 `dataset` 组件用于单独的数据集声明，从而数据可以单独管理，被多个组件复用，并且可以基于数据指定数据到视觉的映射。这在不少场景下能带来使用上的方便。
+
+ `数据集`（`dataset`）组件来单独声明数据，它带来了这些效果：
+
+- 能够贴近这样的数据可视化常见思维方式：(I) 提供数据，(II) 指定数据到视觉的映射，从而形成图表。
+- 数据和其他配置可以被分离开来。数据常变，其他配置常不变。分开易于分别管理。
+- 数据可以被多个系列或者组件复用，对于大数据量的场景，不必为每个系列创建一份数据。
+- 支持更多的数据的常用格式，例如二维数组、对象数组等，一定程度上避免使用者为了数据格式而进行转换
+
+
+
+使用方法:
+
+​		存储:在option下设定dataset对象,提供一份数据,默认使用source来封装.
+
+​		调用:在xAxis上声明属性,标记dataset中的哪列为 维度 . 默认情况下，类目轴对应到 dataset 第一列。
+
+​				在series中设定属性,声明多个 bar 系列，默认情况下，每个系列会自动对应到 dataset 的每一列。
+
+入门例子:
+
+```
+option = {
+    legend: {},
+    tooltip: {},
+    dataset: {
+        // 提供一份数据。
+        source: [
+            ['product', '2015', '2016', '2017'],
+            ['Matcha Latte', 43.3, 85.8, 93.7],
+            ['Milk Tea', 83.1, 73.4, 55.1],
+            ['Cheese Cocoa', 86.4, 65.2, 82.5],
+            ['Walnut Brownie', 72.4, 53.9, 39.1]
+        ]
+    },
+    // 声明一个 X 轴，类目轴（category）。默认情况下，类目轴对应到 dataset 第一列。
+    xAxis: {type: 'category'},
+    // 声明一个 Y 轴，数值轴。
+    yAxis: {},
+    // 声明多个 bar 系列，默认情况下，每个系列会自动对应到 dataset 的每一列。
+    series: [
+        {type: 'bar'},
+        {type: 'bar'},
+        {type: 'bar'}
+    ]
+}
+```
+
+<img src="F:\MyLeaning_doc\picture\Echarts-demo.png" style="zoom:67%;" />
+
+#### 维度（dimension）
+
+介绍 `encode` 之前，首先要了解“维度（dimension）”的概念。
+
+常用图表所描述的数据大部分是“二维表”结构，上述的例子中，我们都使用二维数组来容纳二维表。
+
+现在，当我们把系列（series）对应到“列”的时候，那么每一列就称为一个“维度（dimension）.
+
+而每一行称为数据项（item）。反之，如果我们把系列（series）对应到表行，那么每一行就是“维度（dimension）”，每一列就是数据项（item）。
 
