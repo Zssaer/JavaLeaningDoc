@@ -5358,7 +5358,7 @@ public class ShiroConfig {
 map.put("/set","perms[user:set]");   //只限定拥有‘user:set’权限的用户访问
 ```
 
-#### ShiroSession类
+#### ShiroSessionManager类
 
 ```java
 /**
@@ -5414,7 +5414,15 @@ public class ShiroSession extends DefaultWebSessionManager {
 
 shiro认证是通过SessionId来进行判断是否认证.
 
-这个Session类是用作跨域访问时要求前台传递一个 token (内容为SessionId) 来认证其是否 认证通过.
+在用户登录成功时获取SecurityUtils的Session **ID**(不是值)用作autoToken:	
+
+```java
+            Subject Usersubject = SecurityUtils.getSubject();
+            // shiro的sessionID
+            String authToken = (String) Usersubject.getSession().getId();
+```
+
+这个Session管理类是用作跨域访问时要求 前台request请求头部传递一个 token (内容为SessionId) 来认证其是否 认证通过.
 
 #### Controller类
 
@@ -7928,7 +7936,74 @@ function (slotProps) {
 
 ##### 具名插槽的缩写
 
+跟 `v-on` 和 `v-bind` 一样，`v-slot` 也有缩写，即把参数之前的所有内容 (`v-slot:`) 替换为字符 `#`。例如 `v-slot:header` 可以被重写为 `#header`：
 
+```html
+<base-layout>
+  <template #header>
+    <h1>Here might be a page title</h1>
+  </template>
+
+  <template #default>
+    <p>A paragraph for the main content.</p>
+    <p>And another one.</p>
+  </template>
+
+  <template #footer>
+    <p>Here's some contact info</p>
+  </template>
+</base-layout>
+```
+
+然而，和其它指令一样，该缩写只在其有参数的时候才可用。这意味着以下语法是无效的.如果你希望使用缩写的话，你必须始终以明确插槽名取而代之
+
+```html
+<todo-list #default="{ item }">
+  <i class="fas fa-check"></i>
+  <span class="green">{{ item }}</span>
+</todo-list>
+```
+
+
+
+#### 模板引用
+
+不同于Vue2.x的Options-API,Vue3.x采用的Composition-API,在setup()中无法调用`this`关键字.所以将不能使用this.$refs.XXX来直接获取模板对象实例.
+
+Vue3为了获得对模板内元素或组件实例的引用，我们可以像往常一样声明 ref 并从 [setup()](https://v3.cn.vuejs.org/guide/composition-api-setup.html) 返回：
+
+```vue
+<template> 
+  <div ref="root">This is a root element</div>
+</template>
+
+<script>
+  import { ref, onMounted } from 'vue'
+
+  export default {
+    setup() {
+      const root = ref(null)
+
+      onMounted(() => {
+        // DOM 元素将在初始渲染后分配给 ref
+        console.log(root.value) // <div>This is a root element</div>
+      })
+
+      return {
+        root
+      }
+    }
+  }
+</script>
+```
+
+使用ref(null)来获取模板实例,渲染上下文中暴露 `root`，并通过 `ref="root"`，将其绑定到 div 作为其 ref。
+
+这里的获取实例的常量名称必须是其模板ref调用的值.
+
+分配过程是在虚拟 DOM 挂载/打补丁中执行的，因此模板引用只会在初始渲染之后获得赋值。
+
+作为模板使用的 ref 的行为与任何其他 ref 一样：它们是响应式的，可以传递到 (或从中返回) 复合函数中。
 
 
 
