@@ -1,6 +1,4 @@
-# <font color=red>	ZSSAER学习日志</font>
-
-## **目录**
+# <font color=red>ZSSAER学习日志</font>
 
 [toc]
 
@@ -9873,6 +9871,8 @@ ECharts 提供了常规的[折线图](https://echarts.apache.org/zh/option.html#
 ECharts 内置的 dataset 属性（4.0+）支持直接传入包括二维表，key-value 等多种格式的数据源，通过简单的设置 encode 属性就可以完成从数据到图形的映射，这种方式更符合可视化的直觉，省去了大部分场景下数据转换的步骤，而且多个组件能够共享一份数据而不用克隆。
 
 ECharts 支持以 Canvas、SVG（4.0+）、VML 的形式渲染图表。VML 可以兼容低版本 IE，SVG 使得移动端不再为内存担忧，Canvas 可以轻松应对大数据量和特效的展现。不同的渲染方式提供了更多选择，使得 ECharts 在各种场景下都有更好的表现。
+
+
 
 ### 安装
 
