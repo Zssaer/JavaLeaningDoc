@@ -118,7 +118,7 @@
       }
 
       #write {
-        margin:0 auto;
+        margin: 0 auto;
         padding-left: 20px;
         padding-right: 20px;
       }
@@ -2561,7 +2561,14 @@
             data-ref="n16525"><a class="md-toc-inner" href="#vue3组件复用">Vue3组件复用</a></span><span role="listitem"
             class="md-toc-item md-toc-h3" data-ref="n16529"><a class="md-toc-inner"
               href="#使用dataset来管理数据">使用dataset来管理数据</a></span><span role="listitem" class="md-toc-item md-toc-h4"
-            data-ref="n16549"><a class="md-toc-inner" href="#维度dimension）">维度（dimension）</a></span></p>
+            data-ref="n16549"><a class="md-toc-inner" href="#维度dimension）">维度（dimension）</a></span>
+          <span role="listitem" class="md-toc-item md-toc-h2" data-ref="n2833"><a class="md-toc-inner"
+              href="#tinymce富文本编辑器">TinyMCE富文本编辑器</a></span><span role="listitem" class="md-toc-item md-toc-h3"
+            data-ref="n2870"><a class="md-toc-inner" href="#tinymce是否收费">TinyMCE是否收费</a></span><span role="listitem"
+            class="md-toc-item md-toc-h3" data-ref="n2876"><a class="md-toc-inner"
+              href="#vue下快速使用">Vue下快速使用</a></span><span role="listitem" class="md-toc-item md-toc-h3"
+            data-ref="n3106"><a class="md-toc-inner" href="#更多插件">更多插件</a></span>
+        </p>
       </div>
       <h2 id='算法设计'><span>算法设计</span></h2>
       <p><span>算法（Algorithm）是指用来操作数据、解决程序问题的一组方法。对于同一个问题，使用不同的算法，也许最终得到的结果是一样的，但在过程中消耗的资源和时间却会有很大的区别。</span></p>
@@ -22206,7 +22213,8 @@
     <span>默认（主）文件是</span><strong><span>gsap.js</span></strong><span>，其中包括大多数</span><strong><span>缓动</span></strong><span>以及核心插件（如
       CSSPlugin、AttrPlugin、SnapPlugin、ModifiersPlugin）以及所有</span><a
       href='https://greensock.com/docs/v3/GSAP/UtilityMethods'><span>实用方法（</span></a><span>如 interpolate()、mapRange()
-      等）</span></p>
+      等）</span>
+  </p>
   <pre class="md-fences md-end-block ty-contain-cm modeLoaded" spellcheck="false"
     lang="js"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="js"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre>
   </div>
@@ -23362,30 +23370,757 @@
   <p><span>现在，当我们把系列（series）对应到“列”的时候，那么每一列就称为一个“维度（dimension）.</span></p>
   <p><span>而每一行称为数据项（item）。反之，如果我们把系列（series）对应到表行，那么每一行就是“维度（dimension）”，每一列就是数据项（item）。</span></p>
   <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p><span>未完待续</span></p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <h2 id='tinymce富文本编辑器'><span>TinyMCE富文本编辑器</span></h2>
+  <p>
+    <span>TinyMCE是一款易用、且功能强大的所见即所得的可跨平台富文本编辑器。同类程序有：UEditor、Kindeditor、Simditor、CKEditor、wangEditor、Suneditor、froala等等。</span>
+  </p>
+  <p><span>TinyMCE的优势：</span></p>
+  <ul>
+    <li><span>开源可商用，基于LGPL2.1</span></li>
+    <li><span>插件丰富，自带插件基本涵盖日常所需功能（示例看下面的Demo-2）</span></li>
+    <li><span>接口丰富，可扩展性强，有能力可以无限拓展功能</span></li>
+    <li><span>界面好看，符合现代审美</span></li>
+    <li><span>提供经典、内联、沉浸无干扰三种模式（详见“介绍与入门”）</span></li>
+    <li><span>对标准支持优秀（自v5开始）</span></li>
+    <li><span>多语言支持，官网可下载几十种语言。</span></li>
+  </ul>
+  <p><span>官网及文档：</span><a href='https://www.tiny.cloud/'><span>www.tiny.cloud</span></a></p>
+  <p><span>官网下载：</span><a
+      href='https://www.tiny.cloud/get-tiny/self-hosted/'><span>www.tiny.cloud/get-tiny/self-hosted/</span></a></p>
+  <p><span>Github：</span><a href='https://github.com/tinymce/'><span>github.com/tinymce</span></a></p>
+  <p><img src="picture/tinyMCE.png" referrerpolicy="no-referrer"></p>
+  <h3 id='tinymce是否收费'><span>TinyMCE是否收费</span></h3>
+  <blockquote>
+    <p><span>tinymce主程序及自带的大部分插件均提供社区开源版，可免费使用且可商用。tinymce的主要盈利模式为【付费插件及拓展服务】，有关付费项目的列表，请参考：</span><a
+        href='https://www.tiny.cloud/pricing' target='_blank' class='url'>https://www.tiny.cloud/pricing</a></p>
+  </blockquote>
+  <p>&nbsp;</p>
+  <h3 id='vue下快速使用'><span>Vue下快速使用</span></h3>
+  <ol>
+    <li>
+      <p><span>安装TinyMCE相关依赖包</span></p>
+      <p><span>根据使用的js包管理工具,进行导入依赖</span></p>
+      <pre class="md-fences md-end-block ty-contain-cm modeLoaded" spellcheck="false"
+        lang="bash"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="bash"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre>
+      </div>
+      <div class="CodeMirror-measure"></div>
+      <div style="position: relative; z-index: 1;"></div>
+      <div class="CodeMirror-code" role="presentation">
+        <div class="CodeMirror-activeline" style="position: relative;">
+          <div class="CodeMirror-activeline-background CodeMirror-linebackground"></div>
+          <div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div>
+          <pre class=" CodeMirror-line "
+            role="presentation"><span role="presentation" style="padding-right: 0.1px;">yarn add tinymce  || &nbsp;<span class="cm-builtin">npm</span> install tinymce <span class="cm-attribute">-S</span></span></pre>
+        </div>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;">yarn add @tinymce/tinymce-vue  || &nbsp;<span class="cm-builtin">npm</span> install @tinymce/tinymce-vue <span class="cm-attribute">-S</span></span></pre>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      <div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 69px;"></div>
+      <div class="CodeMirror-gutters" style="display: none; height: 69px;"></div>
+      </div>
+      </div>
+      </pre>
+    </li>
+    <li>
+      <p><span>汉化编辑器</span></p>
+      <p><span>TinyMCE是国外的插件,所以自然默认为英文版本,需要使用中文的话,要去官网下载汉化包:</span></p>
+      <p><span> </span><a href='https://www.tiny.cloud/get-tiny/language-packages/' target='_blank'
+          class='url'>https://www.tiny.cloud/get-tiny/language-packages/</a></p>
+      <p><img src="picture/tinyMCE-CN.png" referrerpolicy="no-referrer"></p>
+    </li>
+    <li>
+      <p><span>在项目public文件夹下新建tinymce文件夹，将下载后的汉化压缩包解压至此文件夹下</span></p>
+      <p><span>再将node_modules/tinymce/skins文件夹也复制到public/tinymce文件夹下(最终如下图所示)</span></p>
+      <p><img src="picture/tinyMCE-lib.png" referrerpolicy="no-referrer"></p>
+    </li>
+    <li>
+      <p><span>导入Emoji表情插件 (可跳过)</span></p>
+      <p><span>将node_modules/tinymce/plugins/emoticons文件夹复制到public/tinymce里</span></p>
+      <p><span>最后将其添加到组件的plugins和toolbar下(第6步组件以及加入无需重复加入).</span></p>
+    </li>
+    <li>
+      <p><span> 添加首行缩进功能 (可跳过)</span></p>
+      <p><span>前往插件文档里下载intent2em插件:</span><a href='http://tinymce.ax-z.cn/more-plugins/indent2em.php' target='_blank'
+          class='url'>http://tinymce.ax-z.cn/more-plugins/indent2em.php</a></p>
+      <p><span>将解压后的首行缩进插件intent2em复制到node_modules/tinymce/plugins文件夹下.</span></p>
+      <p><span>在其intent2em文件夹中创建index.js并写入以下代码</span></p>
+      <pre class="md-fences md-end-block ty-contain-cm modeLoaded" spellcheck="false"
+        lang="js"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="js"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre>
+      </div>
+      <div class="CodeMirror-measure"></div>
+      <div style="position: relative; z-index: 1;"></div>
+      <div class="CodeMirror-code" role="presentation" style="">
+        <div class="CodeMirror-activeline" style="position: relative;">
+          <div class="CodeMirror-activeline-background CodeMirror-linebackground"></div>
+          <div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div>
+          <pre class=" CodeMirror-line "
+            role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">// Exports the "indent2em" plugin for usage with module loaders</span></span></pre>
+        </div>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">// Usage:</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">// &nbsp; CommonJS:</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">// &nbsp; &nbsp; require('tinymce/plugins/indent2em')</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">// &nbsp; ES2015:</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">// &nbsp; &nbsp; import 'tinymce/plugins/indent2em'</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-variable">require</span>(<span class="cm-string">'./plugin.js'</span>);</span></pre>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      <div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 161px;"></div>
+      <div class="CodeMirror-gutters" style="display: none; height: 161px;"></div>
+      </div>
+      </div>
+      </pre>
+      <p><span>最后复写plugins.js</span></p>
+      <pre class="md-fences md-end-block ty-contain-cm modeLoaded" spellcheck="false" lang="js"
+        style="break-inside: unset;"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="js"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre>
+      </div>
+      <div class="CodeMirror-measure"></div>
+      <div style="position: relative; z-index: 1;"></div>
+      <div class="CodeMirror-code" role="presentation" style="">
+        <div class="CodeMirror-activeline" style="position: relative;">
+          <div class="CodeMirror-activeline-background CodeMirror-linebackground"></div>
+          <div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div>
+          <pre class=" CodeMirror-line "
+            role="presentation"><span role="presentation" style="padding-right: 0.1px;">(<span class="cm-keyword">function</span> () {</span></pre>
+        </div>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">'use strict'</span>;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">global</span> <span class="cm-operator">=</span> <span class="cm-variable">tinymce</span>.<span class="cm-property">util</span>.<span class="cm-property">Tools</span>.<span class="cm-property">resolve</span>(<span class="cm-string">'tinymce.PluginManager'</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">global$1</span> <span class="cm-operator">=</span> <span class="cm-variable">tinymce</span>.<span class="cm-property">util</span>.<span class="cm-property">Tools</span>.<span class="cm-property">resolve</span>(<span class="cm-string">'tinymce.util.Tools'</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">doAct</span> <span class="cm-operator">=</span> <span class="cm-keyword">function</span> (<span class="cm-def">editor</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">dom</span> <span class="cm-operator">=</span> <span class="cm-variable-2">editor</span>.<span class="cm-property">dom</span>;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">blocks</span> <span class="cm-operator">=</span> <span class="cm-variable-2">editor</span>.<span class="cm-property">selection</span>.<span class="cm-property">getSelectedBlocks</span>();</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">act</span> <span class="cm-operator">=</span> <span class="cm-string">''</span>;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">indent2em_val</span> <span class="cm-operator">=</span> <span class="cm-variable-2">editor</span>.<span class="cm-property">getParam</span>(<span class="cm-string">'indent2em_val'</span>, <span class="cm-string">'2em'</span>)</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">global$1</span>.<span class="cm-property">each</span>(<span class="cm-variable-2">blocks</span>, <span class="cm-keyword">function</span> (<span class="cm-def">block</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">if</span>(<span class="cm-variable-2">act</span><span class="cm-operator">==</span><span class="cm-string">''</span>){</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">act</span> <span class="cm-operator">=</span> <span class="cm-variable-2">dom</span>.<span class="cm-property">getStyle</span>(<span class="cm-variable-2">block</span>,<span class="cm-string">'text-indent'</span>)<span class="cm-operator">==</span> <span class="cm-variable-2">indent2em_val</span> <span class="cm-operator">?</span> <span class="cm-string">'remove'</span> : <span class="cm-string">'add'</span>;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  }</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">if</span>( <span class="cm-variable-2">act</span><span class="cm-operator">==</span><span class="cm-string">'add'</span> ){</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">dom</span>.<span class="cm-property">setStyle</span>(<span class="cm-variable-2">block</span>, <span class="cm-string">'text-indent'</span>, <span class="cm-variable-2">indent2em_val</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  }<span class="cm-keyword">else</span>{</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">style</span><span class="cm-operator">=</span><span class="cm-variable-2">dom</span>.<span class="cm-property">getAttrib</span>(<span class="cm-variable-2">block</span>,<span class="cm-string">'style'</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">style</span> <span class="cm-operator">=</span> <span class="cm-variable-2">style</span>.<span class="cm-property">replace</span>(<span class="cm-string-2">/text-indent:[\s]*2em;/ig</span>,<span class="cm-string">''</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">dom</span>.<span class="cm-property">setAttrib</span>(<span class="cm-variable-2">block</span>,<span class="cm-string">'style'</span>,<span class="cm-variable-2">style</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  }</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;  });</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;  };</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">var</span> <span class="cm-def">register</span> <span class="cm-operator">=</span> <span class="cm-keyword">function</span> (<span class="cm-def">editor</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">editor</span>.<span class="cm-property">ui</span>.<span class="cm-property">registry</span>.<span class="cm-property">getAll</span>().<span class="cm-property">icons</span>.<span class="cm-property">indent2em</span> <span class="cm-operator">||</span> <span class="cm-variable-2">editor</span>.<span class="cm-property">ui</span>.<span class="cm-property">registry</span>.<span class="cm-property">addIcon</span>(<span class="cm-string">'indent2em'</span>,<span class="cm-string">'&lt;svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="24" height="24"&gt;&lt;path d="M170.666667 563.2v-102.4H887.466667v102.4zM170.666667 836.266667v-102.4H887.466667v102.4zM512 290.133333v-102.4H887.466667v102.4zM238.933333 341.333333V136.533333l204.8 102.4z" fill="#2c2c2c" p-id="5210"&gt;&lt;/path&gt;&lt;/svg&gt;'</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">editor</span>.<span class="cm-property">ui</span>.<span class="cm-property">registry</span>.<span class="cm-property">addButton</span>(<span class="cm-string">'indent2em'</span>, {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">tooltip</span>: <span class="cm-string">'首行缩进'</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">icon</span>: <span class="cm-string">'indent2em'</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">onAction</span>: <span class="cm-keyword">function</span> () {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">doAct</span>(<span class="cm-variable-2">editor</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  }</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;  });</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">editor</span>.<span class="cm-property">ui</span>.<span class="cm-property">registry</span>.<span class="cm-property">addMenuItem</span>(<span class="cm-string">'indent2em'</span>, {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">text</span>: <span class="cm-string">'首行缩进'</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">icon</span>: <span class="cm-string">'indent2em'</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">onAction</span>: <span class="cm-keyword">function</span> () {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">doAct</span>(<span class="cm-variable-2">editor</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  }</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;  });</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;  };</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">global</span>.<span class="cm-property">add</span>(<span class="cm-string">'indent2em'</span>, <span class="cm-keyword">function</span> (<span class="cm-def">editor</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">register</span>(<span class="cm-variable-2">editor</span>)</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;  });</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">function</span> <span class="cm-def">Plugin</span> () {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;  }</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">return</span> <span class="cm-variable-2">Plugin</span>;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  })();</span></pre>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      <div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 1311px;">
+      </div>
+      <div class="CodeMirror-gutters" style="display: none; height: 1311px;"></div>
+      </div>
+      </div>
+      </pre>
+      <p><span>最后将其添加到组件的plugins和toolbar下(第6步组件以及加入无需重复加入).</span></p>
+      <p>&nbsp;</p>
+    </li>
+    <li>
+      <p><span>配置TinyMCE组件</span></p>
+      <p><span>在src/components下新建TEditor.vue，并写入如下代码:</span></p>
+      <pre class="md-fences md-end-block ty-contain-cm modeLoaded" spellcheck="false" lang="vue"
+        style="break-inside: unset;"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="vue"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre>
+      </div>
+      <div class="CodeMirror-measure"></div>
+      <div style="position: relative; z-index: 1;"></div>
+      <div class="CodeMirror-code" role="presentation" style="">
+        <div class="CodeMirror-activeline" style="position: relative;">
+          <div class="CodeMirror-activeline-background CodeMirror-linebackground"></div>
+          <div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div>
+          <pre class=" CodeMirror-line "
+            role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">template</span><span class="cm-tag cm-bracket">&gt;</span></span></pre>
+        </div>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">div</span> <span class="cm-attribute">class</span>=<span class="cm-string">"tinymce-box"</span><span class="cm-tag cm-bracket">&gt;</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">Editor</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-attribute">v-model</span>=<span class="cm-string">"contentValue"</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-attribute">:init</span>=<span class="cm-string">"init"</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-attribute">:disabled</span>=<span class="cm-string">"disabled"</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-attribute">@onClick</span>=<span class="cm-string">"onClick"</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-attribute">toolbar_mode</span>=<span class="cm-string">'floating'</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-tag cm-bracket">/&gt;</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">div</span><span class="cm-tag cm-bracket">&gt;</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">template</span><span class="cm-tag cm-bracket">&gt;</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> {<span class="cm-def">baseUrl</span>} <span class="cm-keyword">from</span> <span class="cm-string">"../api/api.js"</span>;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-def">axios</span> <span class="cm-keyword">from</span> <span class="cm-string">'axios'</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">//引入tinymce编辑器</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-def">Editor</span> <span class="cm-keyword">from</span> <span class="cm-string">"@tinymce/tinymce-vue"</span>;</span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">//引入node_modules里的tinymce相关文件文件</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-def">tinymce</span> <span class="cm-keyword">from</span> <span class="cm-string">"tinymce/tinymce"</span>; <span class="cm-comment">//tinymce默认hidden，不引入则不显示编辑器</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/themes/silver"</span>; <span class="cm-comment">//编辑器主题，不引入则报错</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/icons/default"</span>; <span class="cm-comment">//引入编辑器图标icon，不引入则不显示对应图标</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">// 引入编辑器插件（基本免费插件都在这儿了）</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/advlist"</span>; <span class="cm-comment">//高级列表</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/anchor"</span>; <span class="cm-comment">//锚点</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/autolink"</span>; <span class="cm-comment">//自动链接</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/autoresize"</span>; <span class="cm-comment">//编辑器高度自适应,注：plugins里引入此插件时，Init里设置的height将失效</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/autosave"</span>; <span class="cm-comment">//自动存稿</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/charmap"</span>; <span class="cm-comment">//特殊字符</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/code"</span>; <span class="cm-comment">//编辑源码</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/codesample"</span>; <span class="cm-comment">//代码示例</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/directionality"</span>; <span class="cm-comment">//文字方向</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/emoticons"</span>; <span class="cm-comment">//表情</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/fullpage"</span>; <span class="cm-comment">//文档属性</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/fullscreen"</span>; <span class="cm-comment">//全屏</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/help"</span>; <span class="cm-comment">//帮助</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/hr"</span>; <span class="cm-comment">//水平分割线</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/image"</span>; <span class="cm-comment">//插入编辑图片</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/importcss"</span>; <span class="cm-comment">//引入css</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/insertdatetime"</span>; <span class="cm-comment">//插入日期时间</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/link"</span>; <span class="cm-comment">//超链接</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/lists"</span>; <span class="cm-comment">//列表插件</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/media"</span>; <span class="cm-comment">//插入编辑媒体</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/nonbreaking"</span>; <span class="cm-comment">//插入不间断空格</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/pagebreak"</span>; <span class="cm-comment">//插入分页符</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/paste"</span>; <span class="cm-comment">//粘贴插件</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/preview"</span>; <span class="cm-comment">//预览</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/print"</span>; <span class="cm-comment">//打印</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/quickbars"</span>; <span class="cm-comment">//快速工具栏</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/save"</span>; <span class="cm-comment">//保存</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/searchreplace"</span>; <span class="cm-comment">//查找替换</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-comment">// import 'tinymce/plugins/spellchecker'  //拼写检查，暂未加入汉化，不建议使用</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/tabfocus"</span>; <span class="cm-comment">//切入切出，按tab键切出编辑器，切入页面其他输入框中</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/table"</span>; <span class="cm-comment">//表格</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/template"</span>; <span class="cm-comment">//内容模板</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/textcolor"</span>; <span class="cm-comment">//文字颜色</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/textpattern"</span>; <span class="cm-comment">//快速排版</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/toc"</span>; <span class="cm-comment">//目录生成器</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/visualblocks"</span>; <span class="cm-comment">//显示元素范围</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/visualchars"</span>; <span class="cm-comment">//显示不可见字符</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins/wordcount"</span>; <span class="cm-comment">//字数统计</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">"tinymce/plugins//indent2em"</span> &nbsp;<span class="cm-comment">//首行缩进(创建)</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">export</span> <span class="cm-keyword">default</span> {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-property">name</span>: <span class="cm-string">"TEditor"</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-property">components</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">Editor</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;">  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-property">props</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">modelValue</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">type</span>: <span class="cm-variable">String</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">default</span>: <span class="cm-string">""</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">disabled</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">type</span>: <span class="cm-variable">Boolean</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">default</span>: <span class="cm-atom">false</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">plugins</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">type</span>: [<span class="cm-variable">String</span>, <span class="cm-variable">Array</span>],</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">default</span>:</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"print preview searchreplace autolink directionality emoticons indent2em visualblocks visualchars fullscreen image link media template code codesample table charmap hr pagebreak nonbreaking anchor insertdatetime advlist lists wordcount textpattern autosave "</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">toolbar</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">type</span>: [<span class="cm-variable">String</span>, <span class="cm-variable">Array</span>],</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">default</span>:</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"fullscreen undo redo restoredraft | cut copy paste pastetext | forecolor backcolor bold indent2em italic underline strikethrough link anchor | alignleft aligncenter alignright alignjustify outdent indent | \</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">styleselect formatselect fontselect fontsizeselect | bullist numlist | blockquote subscript superscript removeformat | \</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">table image media charmap emoticons hr pagebreak insertdatetime print preview | code selectall searchreplace visualblocks | indent2em lineheight formatpainter axupimgs"</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;">  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-property">data</span>() {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-keyword">return</span> {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">init</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">language_url</span>: <span class="cm-string">"/tinymce/langs/zh_CN.js"</span>, <span class="cm-comment">//引入语言包文件</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">language</span>: <span class="cm-string">"zh_CN"</span>, <span class="cm-comment">//语言类型</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">skin_url</span>: <span class="cm-string">"/tinymce/skins/ui/oxide"</span>, <span class="cm-comment">//皮肤：浅色</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-comment">// skin_url: '/tinymce/skins/ui/oxide-dark',//皮肤：暗色</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">emoticons_database_url</span>:<span class="cm-string">'/tinymce/emoticons/js/emojis.js'</span>, <span class="cm-comment">//表情路径引入</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">toolbar_mode</span>: <span class="cm-string">'sliding'</span>, <span class="cm-comment">// 设置工具栏更多工具 显示模式{false:全部展示,floating:悬浮显示,sliding:滑动显示}</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">plugins</span>: <span class="cm-keyword">this</span>.<span class="cm-property">plugins</span>, <span class="cm-comment">//插件配置</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">toolbar</span>: <span class="cm-keyword">this</span>.<span class="cm-property">toolbar</span>, <span class="cm-comment">//工具栏配置，设为false则隐藏</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-comment">//menubar: 'file edit',  //菜单栏配置，设为false则隐藏，不配置则默认显示全部菜单，也可自定义配置--查看 http://tinymce.ax-z.cn/configure/editor-appearance.php --搜索“自定义菜单”</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">fontsize_formats</span>:</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"12px 14px 16px 18px 20px 22px 24px 28px 32px 36px 48px 56px 72px"</span>, <span class="cm-comment">//字体大小</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">font_formats</span>:</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string">"微软雅黑=Microsoft YaHei,Helvetica Neue,PingFang SC,sans-serif;苹果苹方=PingFang SC,Microsoft YaHei,sans-serif;宋体=simsun,serif;仿宋体=FangSong,serif;黑体=SimHei,sans-serif;Arial=arial,helvetica,sans-serif;Arial Black=arial black,avant garde;Book Antiqua=book antiqua,palatino;"</span>, <span class="cm-comment">//字体样式</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">lineheight_formats</span>: <span class="cm-string">"0.5 0.8 1 1.2 1.5 1.75 2 2.5 3 4 5"</span>, <span class="cm-comment">//行高配置，也可配置成"12px 14px 16px 20px"这种形式</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">height</span>: <span class="cm-number">400</span>, <span class="cm-comment">//注：引入autoresize插件时，此属性失效</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">placeholder</span>: <span class="cm-string">"在这里输入文字"</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">branding</span>: <span class="cm-atom">false</span>, <span class="cm-comment">//tiny技术支持信息是否显示</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">resize</span>: <span class="cm-atom">false</span>, <span class="cm-comment">//编辑器宽高是否可变，false-否,true-高可变，'both'-宽高均可，注意引号</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">statusbar</span>: <span class="cm-atom">false</span>, &nbsp;<span class="cm-comment">//最下方的元素路径和字数统计那一栏是否显示</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">elementpath</span>: <span class="cm-atom">false</span>, <span class="cm-comment">//元素路径是否显示</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">content_style</span>: <span class="cm-string">"img {max-width:100%;}"</span>, <span class="cm-comment">//直接自定义可编辑区域的css样式</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-comment">// content_css: '/tinycontent.css',  //以css文件方式自定义可编辑区域的css样式，css文件需自己创建并引入</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-comment">// images_upload_url: '/apib/api-upload/uploadimg',  //后端处理程序的url，建议直接自定义上传函数image_upload_handler，这个就可以不用了</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-comment">// images_upload_base_path: '/demo',  //相对基本路径--关于图片上传建议查看--http://tinymce.ax-z.cn/general/upload-images.php</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">paste_data_images</span>: <span class="cm-atom">true</span>, <span class="cm-comment">//图片是否可粘贴</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">images_upload_handler</span>: (<span class="cm-def">blobInfo</span>, <span class="cm-def">success</span>, <span class="cm-def">failure</span>) <span class="cm-operator">=&gt;</span> {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">if</span> (<span class="cm-variable-2">blobInfo</span>.<span class="cm-property">blob</span>().<span class="cm-property">size</span> <span class="cm-operator">/</span> <span class="cm-number">1024</span> <span class="cm-operator">/</span> <span class="cm-number">1024</span> <span class="cm-operator">&gt;</span> <span class="cm-number">5</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">failure</span>(<span class="cm-string">"上传失败，图片大小请控制在 5M 以内"</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;  } <span class="cm-keyword">else</span> {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">let</span> <span class="cm-def">params</span> <span class="cm-operator">=</span> <span class="cm-keyword">new</span> <span class="cm-variable">FormData</span>();</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">params</span>.<span class="cm-property">append</span>(<span class="cm-string">"file"</span>, <span class="cm-variable-2">blobInfo</span>.<span class="cm-property">blob</span>());</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">let</span> <span class="cm-def">config</span> <span class="cm-operator">=</span> {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-property">headers</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-string cm-property">"Content-Type"</span>: <span class="cm-string">"multipart/form-data"</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  };</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable">axios</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  .<span class="cm-property">post</span>(<span class="cm-variable">baseUrl</span><span class="cm-operator">+</span><span class="cm-string-2">`/uploadEditorPic`</span>, <span class="cm-variable-2">params</span>, <span class="cm-variable-2">config</span>)</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  .<span class="cm-property">then</span>((<span class="cm-def">res</span>) <span class="cm-operator">=&gt;</span> {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable">console</span>.<span class="cm-property">log</span>(<span class="cm-variable-2">res</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-keyword">if</span> (<span class="cm-variable-2">res</span>.<span class="cm-property">data</span>.<span class="cm-property">code</span> <span class="cm-operator">==</span> <span class="cm-number">200</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">success</span>(<span class="cm-variable-2">res</span>.<span class="cm-property">data</span>.<span class="cm-property">data</span>.<span class="cm-property">accessUrl</span>); <span class="cm-comment">//上传成功，在成功函数里填入图片路径</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  } <span class="cm-keyword">else</span> {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">failure</span>(<span class="cm-string">"上传失败"</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  }</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  })</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  .<span class="cm-property">catch</span>(() <span class="cm-operator">=&gt;</span> {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span class="cm-variable-2">failure</span>(<span class="cm-string">"上传出错，服务器开小差了呢"</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  });</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp; &nbsp;  }</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-property">contentValue</span>: <span class="cm-keyword">this</span>.<span class="cm-property">modelValue</span>,</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  };</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;">  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-property">watch</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">modelValue</span>(<span class="cm-def">newValue</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-keyword">this</span>.<span class="cm-property">contentValue</span> <span class="cm-operator">=</span> <span class="cm-variable-2">newValue</span>;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">contentValue</span>(<span class="cm-def">newValue</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-keyword">this</span>.<span class="cm-property">$emit</span>(<span class="cm-string">"update:modelValue"</span>, <span class="cm-variable-2">newValue</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;">  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-property">created</span>() {},</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-property">mounted</span>() {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-variable">tinymce</span>.<span class="cm-property">init</span>({});</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;">  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;<span class="cm-property">methods</span>: {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-comment">// 添加相关的事件，可用的事件参照文档=&gt; https://github.com/tinymce/tinymce-vue =&gt; All available events</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">onClick</span>(<span class="cm-def">e</span>) {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-keyword">this</span>.<span class="cm-property">$emit</span>(<span class="cm-string">"onClick"</span>, <span class="cm-variable-2">e</span>, <span class="cm-variable">tinymce</span>);</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-comment">//清空内容</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp;<span class="cm-property">clear</span>() {</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp; &nbsp; &nbsp;<span class="cm-keyword">this</span>.<span class="cm-property">contentValue</span> <span class="cm-operator">=</span> <span class="cm-string">""</span>;</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"> &nbsp;  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;">  },</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;">};</span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">script</span><span class="cm-tag cm-bracket">&gt;</span></span></pre>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">style</span> <span class="cm-attribute">lang</span>=<span class="cm-string">"less"</span><span class="cm-tag cm-bracket">&gt;</span></span></pre>
+        <pre class=" CodeMirror-line "
+          role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-tag cm-bracket">&lt;/</span><span class="cm-tag">style</span><span class="cm-tag cm-bracket">&gt;</span></span></pre>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      <div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 4462px;">
+      </div>
+      <div class="CodeMirror-gutters" style="display: none; height: 4462px;"></div>
+      </div>
+      </div>
+      </pre>
+      <p><span>以上为vue3的v-model默认绑定值, 如vue2.x使用,需要修改其v-model的默认绑定值.(modelValue =&gt; value &amp;&amp; update:modelValue
+          =&gt; input)</span></p>
+      <p><span>其中引入baseUrl为后端Api地址,主要用作图片上传.</span></p>
+    </li>
+    <li>
+      <p><span>调用组件</span></p>
+      <pre class="md-fences md-end-block ty-contain-cm modeLoaded" spellcheck="false"
+        lang="vue"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="vue"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre>
+      </div>
+      <div class="CodeMirror-measure"></div>
+      <div style="position: relative; z-index: 1;"></div>
+      <div class="CodeMirror-code" role="presentation">
+        <div class="CodeMirror-activeline" style="position: relative;">
+          <div class="CodeMirror-activeline-background CodeMirror-linebackground"></div>
+          <div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div>
+          <pre class=" CodeMirror-line "
+            role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-tag cm-bracket">&lt;</span><span class="cm-tag">TEditor</span> <span class="cm-attribute">ref</span>=<span class="cm-string">"editor"</span> <span class="cm-attribute">v-model</span>=<span class="cm-string">"subform.value"</span> <span class="cm-tag cm-bracket">/&gt;</span></span></pre>
+        </div>
+        <pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span cm-text="" cm-zwsp="">
+</span></span></pre>
+        <div class="" style="position: relative;">
+          <pre class=" CodeMirror-line "
+            role="presentation"><span role="presentation" style="padding-right: 0.1px;">import TEditor from '@/components/TEditor.vue'</span></pre>
+        </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      <div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 69px;"></div>
+      <div class="CodeMirror-gutters" style="display: none; height: 69px;"></div>
+      </div>
+      </div>
+      </pre>
+    </li>
+  </ol>
+  <h3 id='更多插件'><span>更多插件</span></h3>
+  <p><a href='https://github.com/Five-great/tinymce-plugins' target='_blank'
+      class='url'>https://github.com/Five-great/tinymce-plugins</a></p>
+  <p><span>该项目有多个TinyMCE插件.by </span><a
+      href='https://github.com/Five-great/tinymce-plugins/commits?author=Five-great'><span>Five-great</span></a><span>
+    </span></p>
+  <ul>
+    <li><span> imagetools [增强优化]： 图片编辑工具插件， 对图片进行处理。优化跨域，功能更丰富；</span></li>
+    <li><span> table [增强优化]：表格插件，处理表格。 增强优化表格控制，增加表格转图片功能，便捷布局按钮；</span></li>
+    <li><span> indent2em[增强优化]：首行缩进插件。提供中文段落排版的首行缩进2个字符的功能。增强优化 加入字间距非默认情况，也能实现准确首行缩进2字符；</span></li>
+    <li><span> letterspacing：设置间距插件。可以设置文档中的文字间距；</span></li>
+    <li><span> layout： 一键布局插件。可以给文档段落进行一键快速排版布局；</span></li>
+    <li><span> importword： 导入word插件。可以直接导入word ,并且保证word中图片不会丢失，自动转为base64;</span></li>
+    <li><span> upfile： 文件上传。可以点击导入文件，可自定义编辑文件名;</span></li>
+    <li><span> bdmap： 百度地图。 支持更改尺寸，自定义标签，开启导航功能,支持vue;</span></li>
+    <li><span> axupimgs: 多图上传。可同时上传多组图片，支持vue;</span></li>
+    <li><span> attachment: 附件上传。拥有附件类型对应图标，支持vue;</span></li>
+  </ul>
+  <p><span>使用方法:</span></p>
+  <p><span>按需求将其插件文件夹复制到node_modules/tinymce/plugins文件夹下,再到组件中引用,如</span></p>
+  <pre lang="js" spellcheck="false"
+    class="md-fences md-end-block ty-contain-cm modeLoaded"><div class="CodeMirror cm-s-inner cm-s-null-scroll CodeMirror-wrap" lang="js"><div style="overflow: hidden; position: relative; width: 3px; height: 0px; top: 9.5px; left: 8px;"><textarea autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" style="position: absolute; bottom: -1em; padding: 0px; width: 1000px; height: 1em; outline: none;"></textarea></div><div class="CodeMirror-scrollbar-filler" cm-not-content="true"></div><div class="CodeMirror-gutter-filler" cm-not-content="true"></div><div class="CodeMirror-scroll" tabindex="-1"><div class="CodeMirror-sizer" style="margin-left: 0px; margin-bottom: 0px; border-right-width: 0px; padding-right: 0px; padding-bottom: 0px;"><div style="position: relative; top: 0px;"><div class="CodeMirror-lines" role="presentation"><div role="presentation" style="position: relative; outline: none;"><div class="CodeMirror-measure"></div><div class="CodeMirror-measure"></div><div style="position: relative; z-index: 1;"></div><div class="CodeMirror-code" role="presentation" style=""><div class="CodeMirror-activeline" style="position: relative;"><div class="CodeMirror-activeline-background CodeMirror-linebackground"></div><div class="CodeMirror-gutter-background CodeMirror-activeline-gutter" style="left: 0px; width: 0px;"></div><pre class=" CodeMirror-line " role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">'@npkg/tinymce-plugins/importword'</span> </span></pre>
+  </div>
+  <pre class=" CodeMirror-line "
+    role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">'@npkg/tinymce-plugins/lineheight'</span> </span></pre>
+  <pre class=" CodeMirror-line "
+    role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-keyword">import</span> <span class="cm-string">'@npkg/tinymce-plugins/layout'</span> </span></pre>
+  <pre class=" CodeMirror-line "
+    role="presentation"><span role="presentation" style="padding-right: 0.1px;"><span class="cm-meta">...</span></span></pre>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  <div style="position: absolute; height: 0px; width: 1px; border-bottom: 0px solid transparent; top: 92px;"></div>
+  <div class="CodeMirror-gutters" style="display: none; height: 92px;"></div>
+  </div>
+  </div>
+  </pre>
+  <p>&nbsp;</p>
+  </div>
   </div>
   </div>
 
   <style>
-    div .md-toc{
-      position:fixed;
+    div .md-toc {
+      position: fixed;
       left: 1%;
       top: 0%;
-      overflow:scroll; 
+      overflow: scroll;
       width: 320px;
-      height:100%;
+      height: 100%;
     }
-    @media screen and (max-width: 500px){
-      div .md-toc{
-        display:none;
+
+    @media screen and (max-width: 500px) {
+      div .md-toc {
+        display: none;
       }
     }
-    @media only screen and (max-device-width : 1024px){
-      div .md-toc{
-        display:none;
+
+    @media only screen and (max-device-width : 1024px) {
+      div .md-toc {
+        display: none;
       }
     }
   </style>
-  
+
 </body>
 
 </html>
