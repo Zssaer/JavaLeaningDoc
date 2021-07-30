@@ -1476,15 +1476,37 @@ function refreshcode(obj)
 
 ## Git版本管理
 
+### 前言
+
+早期的项目开发,复杂繁琐,程序员与程序员之间联系困难,项目分工最后合并都要单独上传到服务器,最后拷贝下来.整个过程非常繁琐且枯燥,而且多人代码之间合并还容易出错.
+
+然而为了解决这些困难,便出现分布式版本控制系统.项目与项目之间可以实现无缝对接,最重要的是可以实现版本回滚,一些设置造成了运行的错误,回滚就如同穿越时空,防止代码出错.
+
+分布式版本控制系统有很多,如SVN,Git,BitKeeper等等, 而在众多分布式版本控制系统中Git是目前最流行且方便的.而且它是开源的,使用不需要付费.
+
+![](picture/git.png)
+
 Git 是一个开源的分布式版本控制系统，用于敏捷高效地处理任何或小或大的项目,适合单人,多人合作开发。
 
-Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个开放源码的版本控制软件。
+一些人初学Git时,肯定会想到大名鼎鼎的GitHub,并且将其挂接在一起,其实这是错误的.
 
-无论是国外的GitHub.GitLab,还是国内的Gitee都是Git项目代码管理网站.
+![](picture/gitIsNotGitHub.png)
+
+Git是一种开源的代码版本控制**系统**,但它并不是版本控制**系统**的创始作,而创始人是Linus Torvalds(也就是Linux之父),他写Git的原因只是不满BitKeeper(当时流行的版本控制系统)的收费和闭源.要知道Linux系统的就是为开源而存在的,BitKeeper不开源自然Linux就不得放弃使用它,而这时为了解决Linux系统上的代码版本控制,Linus便自己写了一款开源的控制系统(不得不说,大神牛逼,全部自研!)
+
+因为Git在Linux上的出色,便随后推出了Windows和Mac版本.而这时当年的BitKeeper眼睁睁看着自己的领域被流失,最后在Git诞生11年也只好被迫开源了,但那时也为时已晚.(不得不说一句,开源必将成功),如今我们站在上帝视角去指责bitkeeper其实不太合适，其实bitkeeper当年的选择也没什么错，在那个时代，通过闭源软件获取利润无疑是最稳妥的做法，就像微软公司一样，何况他还免费授权给Linus使用，只是可惜他碰到了天才的Linus。只能说，bitkeeper就像诺基亚一样，没有做错什么，但就是输了。
+
+而GitHub是一个面向开源及私有软件项目的托管平台，因为只支持Git作为唯一的版本库格式进行托管(Git开源,免费使用)，故名GitHub,它只是一个集中管理的云项目网站.用户可以把本地的Git项目放置在他们的网站上实现云存储管理功能。
+
+所以GitHub只是一个使用Git功能的云存储管理网站,热度非常高,它与Git没有直接的关系.当然还有国外的GitLab,国内Gitee都是相同网站.
+
+所以,学习Git就等于学习了GitHub等等这类网站的使用方法,非常重要.
+
+
 
 ### Git 与 SVN 区别
 
-Git和SVN都是项目版本控制软件,但一些区别:
+Git和SVN都是项目版本控制软件,在一些企业中都有使用,但一些区别:
 
 **Git 是分布式的，SVN 不是**：这是 Git 和其它非分布式的版本控制系统，例如 SVN，CVS 等，最核心的区别。
 
@@ -3223,7 +3245,7 @@ TK.Mybatis的基础类提供了生成插件,可以配合MBG生成,再结合freem
 
 <center>普通MBG生成的XML文件,SQL内容非常多,不容易后续扩展</center>
 
-![](picture/TKXML.png)
+![](https://zssaer-img.oss-cn-chengdu.aliyuncs.com/TKXML.png)
 
 <center>MBG配合TK生成的XML文件,非常简洁</center>
 
@@ -6301,11 +6323,11 @@ Swagger 是一个规范和完整的框架，用于生成、描述、调用和可
     <version>2.9.2</version>
 </dependency>
 <!-- https://mvnrepository.com/artifact/io.springfox/springfox-swagger2 -->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>2.9.2</version>
-        </dependency>
+<dependency>
+     <groupId>io.springfox</groupId>
+     <artifactId>springfox-swagger2</artifactId>
+     <version>2.9.2</version>
+</dependency>
 ```
 
 3.编写一个Hello工程
@@ -10454,12 +10476,22 @@ ECharts 内置的 dataset 属性（4.0+）支持直接传入包括二维表，ke
 
 ECharts 支持以 Canvas、SVG（4.0+）、VML 的形式渲染图表。VML 可以兼容低版本 IE，SVG 使得移动端不再为内存担忧，Canvas 可以轻松应对大数据量和特效的展现。不同的渲染方式提供了更多选择，使得 ECharts 在各种场景下都有更好的表现。
 
-
-
 ### 安装
 
 ```bash
 npm install echarts --save
+```
+
+### vue安装
+
+```sh
+npm install echarts vue-echarts
+```
+
+要在 Vue 2 下使用 `vue-echarts`，需要确保 `@vue/composition-api` 已经安装
+
+```sh
+npm i -D @vue/composition-api
 ```
 
 ### Vue组件引用
