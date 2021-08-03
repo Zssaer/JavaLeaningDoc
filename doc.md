@@ -1474,6 +1474,481 @@ function refreshcode(obj)
 
 
 
+## SpringBoot配置
+
+Springboot是Spring的扩展,它等同实现了Spring所有功能,极大简化了Spring的注入和配置过程.
+
+但在一些情况下,Springboot依然有需要手动配置的地方,比如静态资源映射,连接池配置等等.
+
+下面是一些常见的Springboot配置:
+
+### 热部署
+
+默认情况下Springboot静态资源支持热部署,Java框架不能支持热部署.开发过程中经常会改动代码，此时若想看下效果，就不得不停掉项目然后重启。虽然小型Springboot项目启动时间非常快,但对于中大型Springboot项目,特别是含有大量不规范的写法,就会启动非常缓慢.
+
+通过 spring-boot-devtools 就可以项目热部署实现。
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+</dependency>
+...
+<build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- 热部署 -->
+                    <fork>true</fork>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+```
+
+### actuator 监控
+
+成功运行SpringBoot项目后,不一定就没有项目错误存在,由于Springboot的自动兼容性,一些错误会自动忽略.
+
+但在项目中这些不致命的错误,会影响项目稳定性和性能,不可小视.
+
+为了造成错误,Spring Boot 提供了一个用于监控和管理自身应用信息的模块，它就是 spring-boot-starter-actuator。
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+启动项目我们会发现在控制台运行时输出的内容中增加了一些信息。
+
+![](picture/5-1ZQ91G04JS.gif)
+
+| Http方法 | 路径                     | 描述                        | Http默认暴露 |
+| -------- | ------------------------ | --------------------------- | ------------ |
+| GET      | /actuator/conflgprops    | 查看配置属性，包含默认配置  | false        |
+| GET      | /actuator/beans          | 查看bean及其关系列表        | false        |
+| GET      | /actuator/heapdump       | 打印线程栈                  | false        |
+| GET      | /actuator/env            | 查看所有环境变量            | false        |
+| GET      | /actuator/env/ {name}    | 查看具体变量值              | true         |
+| GET      | /actuator/health         | 查看应用健康指标            | true         |
+| GET      | /actuator/info           | 查看应用信息                | false        |
+| GET      | /actuator/mappings       | 查看所有 URL 映射           | false        |
+| GET      | /actuator/metrics        | 查看应用基本指标            | false        |
+| GET      | /actuator/metrics/{name} | 查看具体指标                | false        |
+| POST     | /actuator/shutdown       | 关闭应用                    | false        |
+| GET      | /actuator/httptrace      | 查看基本追踪信息            | false        |
+| GET      | /actuator/loggers        | 显示应用程序中 loggers 配置 | false        |
+| GET      | /actuator/scheduledtasks | 显示定时任务                | false        |
+
+上面所示的这些信息是 Actuator 模块提供的端点信息，通过访问这些端点我们可以得到很多监控信息,其中http默认暴露的功能是可以直接通过路径访问使用的。
+
+比如,启动项目后,访问 /actuator/health,可以得到关于项目的运行状态信息
+
+```json
+{
+    "status": "UP"
+}
+```
+
+UP 表示当前应用处于健康状态，如果是 DOWN 就表示当前应用不健康,这时控制台就会输出相关原因,以便解决问题。
+
+大部分端点默认都不暴露出来，我们可以手动在Springboot配置文件中配置需要暴露的端点。如果需要暴露多个端点，可以用逗号分隔,如果想全部暴露使用*即可.
+
+```yaml
+management:
+	endpoints:
+		web:
+			exposure:
+				include: configprops,beans
+```
+
+### 自定义 actuator 端点
+
+在很多场景下，我们需要自定义一些规则来判断应用的状态是否健康，可以采用自定义端点的方式来满足多样性的需求。
+
+比如查看当前登录的用户信息的端点。自定义全新的端点很简单，通过 @Endpoint 注解就可以实现。代码如下所示。
+
+```java
+@Component
+@Endpoint(id = "user")
+public class UserEndpoint {
+    @ReadOperation
+    public List<Map<String, Object>> health() {
+        List<Map<String, Object>> list = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("userId", 1001);
+        map.put("userName", "zhangsan");
+        list.add(map);
+        return list;
+    }
+}
+```
+
+访问 /actuator/user 可以看到返回的用户信息如下：
+
+```json
+[
+    {
+        "userName": "zhangsan",
+        "userId": 1001
+    }
+]
+```
+
+### 统一异常处理
+
+普通情况下抛出异常,项目外端会出现不可见问题,而错误信息只会在后台控制台输出.
+
+在使用统一项目抛出错误处理后,就可以实现自定义输出,以便运行解决异常方法,或者以明文方法告知用户.
+
+```java
+@RestControllerAdvice
+public class ExceptionHandleController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandleController.class);
+    /**
+     * 权限不足报错拦截
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public Result handleShiroExceptionHandle(Exception ex) {
+        return ResultBuilder.failResult("当前权限不足!请联系管理员.");
+    }
+
+    /**
+     * 业务层报错拦截
+     */
+    @ExceptionHandler(ServiceException.class)
+    public Result serviceExceptionHandle(ServiceException ex) {
+        return ResultBuilder.failResult(ex.getMessage());
+    }
+
+    /**
+     * 普通权限报错拦截
+     * @param ex
+     * @return
+     */
+    @ExceptionHandler(Exception.class)
+    public Result exceptionHandle(Exception ex) {
+        return ResultBuilder.failResult(ex.getMessage());
+    }
+
+    /**
+     * 数据库超时报错拦截
+     * @param ex
+     * @return
+     */
+    @ExceptionHandler(QueryTimeoutException.class)
+    public Result TimeoutHandle(Exception ex) {
+        return ResultBuilder.failResult("数据库服务连接超时,请确保相关数据库服务已开启!");
+    }
+
+    /**
+     * 数据库超时报错拦截
+     * @param ex
+     * @return
+     */
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    public Result RedisFailHandle(Exception ex) {
+        return ResultBuilder.failResult("Redis服务连接错误,请确保Redis服务已开启!");
+    }
+
+    /**
+     * 404 NotFind
+     * @param ex
+     * @return
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public Result notFindHandle(Exception ex) {
+        return ResultBuilder.failResult("API调用地址错误");
+    }
+    
+    ...
+}
+```
+
+**注意**:使用NoHandlerFoundException异常处理,必须配置Springboot配置文件
+
+```yaml
+spring: 
+	mvc:
+		#404情况下抛出错误
+		throw-exception-if-no-handler-found=: true
+		#静态路径配置(404情况下默认会跳转静态链接,修改后便取消跳转)
+    	static-path-pattern: /statics/**
+```
+
+### 异步执行
+
+异步调用就是不用等待结果的返回就执行后面的逻辑；同步调用则需要等待结果再执行后面的逻辑。
+
+Java和Spring框架默认都是同步调用,前者代码执行结束后才会继续向后运行.
+
+在同步情况下,如果前者代码运行缓慢,甚至是死循环的情况下,项目就会卡死在原地而不跳过运行.这对于用户使用是非常不友好的设计.所以在进行读取操作等时可以使用异步执行方法.
+
+在默认Java下,使用异步调用时都会创建一个线程执行一段逻辑,然后把这个线程丢在线程池中执行.
+
+```java
+ExecutorService executorService = Executors.newFixedThreadPool(10);
+executorService.execute(() -> {
+    try {
+        // 业务逻辑
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+    }
+});
+```
+
+这种方式尽管使用了 Java 的 Lambda，但依旧繁琐.但在 Spring 中有一种更简单的方式来执行异步操作，只需要一个 @Async 注解在要执行异步调用的方法即可.
+
+```java
+@Async
+public void saveLog() {
+    System.err.println(Thread.currentThread().getName());
+}
+```
+
+对于含有返回值的方法,使用Future类(其为一个接口,具体的结果类型为AsyncResult)来返回数据.
+
+```java
+@Async
+public Future<String> asyncMethodWithReturnType() {
+    System.out.println("Execute method asynchronously - "
+      + Thread.currentThread().getName());
+    try {
+        Thread.sleep(5000);
+        return new AsyncResult<String>("hello world !!!!");
+    } catch (InterruptedException e) {
+        //
+    }
+
+    return null;
+}
+```
+
+调用返回结果可以反复通过判断isDone来等待是否执行完毕,最后使用get方法获取值.
+
+```java
+public void testAsyncAnnotationForMethodsWithReturnType()
+   throws InterruptedException, ExecutionException {
+    Future<String> future = asyncAnnotationExample.asyncMethodWithReturnType();
+
+    while (true) {  ///这里使用了循环判断，等待获取结果信息
+        if (future.isDone()) {  //判断是否执行完毕
+            System.out.println("Result from asynchronous process - " + future.get());
+            break;
+        }
+        System.out.println("Continue doing something else. ");
+        Thread.sleep(1000);
+    }
+}
+```
+
+最后在SpringBootApplication启动类添加@EnableAsync即可开启异步调用功能.
+
+
+
+另外，关于执行异步任务的线程池我们也可以自定义，首先我们定义一个线程池的配置类，用来配置一些参数，具体代码如下所示。
+
+```java
+@Configuration
+@ConfigurationProperties(prefix = "spring.task.pool")
+public class TaskThreadPoolConfig {
+    // 核心线程数
+    private int corePoolSize = 5;
+    // 最大线程数
+    private int maxPoolSize = 50;
+    // 线程池维护线程所允许的空闲时间
+    private int keepAliveSeconds = 60;
+    // 队列长度
+    private int queueCapacity = 10000;
+    // 线程名称前缀
+    private String threadNamePrefix = "FSH-AsyncTask-";
+    // get set ...
+}
+```
+
+可以使用其默认值,也可以通过Springboot配置文件修改,具体这儿不讲.
+
+然后我们重新定义线程池的配置，创建一个AsyncTaskExecutePool配置文件来引用配置,代码如下所示。
+
+```java
+@Configuration
+public class AsyncTaskExecutePool implements AsyncConfigurer {
+    private Logger logger = LoggerFactory.getLogger(AsyncTaskExecutePool.class);
+    @Autowired
+    private TaskThreadPoolConfig config;
+
+    @Override
+    public Executor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(config.getCorePoolSize());
+        executor.setMaxPoolSize(config.getMaxPoolSize());
+        executor.setQueueCapacity(config.getQueueCapacity());
+        executor.setKeepAliveSeconds(config.getKeepAliveSeconds());
+        executor.setThreadNamePrefix(config.getThreadNamePrefix());
+        // 设置线程拒绝策略
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initia lize();
+        return executor;
+    }
+
+    @Override
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+        // 异步任务中异常处理
+        return new AsyncUncaughtExceptionHandler() {
+            @Override
+            public void handleUncaughtException(Throwable arg0, Method arg1, Object... arg2) {
+
+                logger.error("==========================" + arg0.getMessage() + "=======================", arg0);
+                logger.error("exception method:" + arg1.getName());
+            }
+        };
+    }
+}
+```
+
+当我们的线程数量高于线程池的处理速度时，任务会被缓存到本地的队列中。队列也是有大小的，如果超过了这个大小，就需要有拒绝的策略，不然就会出现内存溢出。目前支持两种拒绝策略：
+
+- AbortPolicy：直接抛出 java.util.concurrent.RejectedExecutionException 异常。
+- CallerRunsPolicy：主线程直接执行该任务，执行完之后尝试添加下一个任务到线程池中，这样可以有效降低向线程池内添加任务的速度。
+
+所以建议大家用 CallerRunsPolicy 策略，因为当队列中的任务满了之后，如果直接抛异常，那么这个任务就会被丢弃。如果是 CallerRunsPolicy 策略，则会用主线程去执行，也就是同步执行，这样操作最起码任务不会被丢弃。
+
+### 随机端口
+
+在开发过程中，每个项目的端口都是定好的，通过 server.port 可以指定端口。
+
+当一个服务想要启动多个实例时，就需要改变端口，特别是在我们进行Spring Cloud的时候，服务都会注册到注册中心里去，为了能够让服务随时都可以扩容，在服务启动的时候能随机生成一个可以使用的端口是最好不过的。
+
+在 Spring Boot 中，可以通过 ${random} 来生成随机数字，所以可以这样使用：
+
+```yaml
+server:
+	port: ${random.int[2000,8000]}
+```
+
+通过 random.int 方法，指定随机数的访问，生成一个在 2000 到 8000 之间的数字，这样每次启动的端口就都不一样了。
+
+其实上面的方法虽然能够达到预期的效果，但是也会存在一些问题：**如果运气倒霉,这个端口已经在使用了，那么启动就会报错。**
+
+所以我们可以通过代码的方式来随机生成一个端口，然后检测是否被使用，这样就能生成一个没有被使用的端口。
+
+ServerPortUtils.class
+
+```java
+public static int getAvailablePort() {
+    int max = 65535;
+    int min = 2000;
+    Random random = new Random();
+    int port = random.nextInt(max)%(max-min+1) + min;
+    boolean using = NetUtils.isLoclePortUsing(port);
+    if (using) {
+        return getAvailablePort();
+    } else {
+        return port;
+    }
+}
+```
+
+获取可用端口的主要逻辑是指定一个范围，然后生成随机数字，最后通过 NetUtils 来检查端口是否可用。如果获取到可用的端口则直接返回，没有获取到可用的端口则执行回调逻辑，重新获取。
+
+编写一个启动参数设置类，代码如下所示:
+
+```java
+public class StartCommand {
+    private Logger logger = LoggerFactory.getLogger(StartCommand.class);
+
+    public StartCommand(String[] args) {
+        Boolean isServerPort = false;
+        String serverPort = "";
+        if (args != null) {
+            for (String arg : args) {
+                if (StringUtils.hasText(arg) && arg.startsWith("--server.port")) {
+                    isServerPort = true;
+                    serverPort = arg;
+                    break;
+                }
+            }
+        }
+        // 没有指定端口, 则随机生成一个可用的端口
+        if (!isServerPort) {
+            int port = ServerPortUtils.getAvailablePort();
+            logger.info("current server.port=" + port);
+            System.setProperty("server.port", String.valueOf(port));
+        } else {
+            logger.info("current server.port=" + serverPort.split("=")[1]);
+            System.setProperty("server.port", serverPort.split("=")[1]);
+        }
+    }
+}
+```
+
+然后设置到环境变量中。在 application.properties 中通过下面的方式获取端口：
+
+```java
+server.port=${server.port}
+```
+
+最后在启动类中调用端口即可使用.
+
+```java
+public class Application {
+    public static void main(String[] args) {
+        // 启动参数设置, 比如自动生成端口
+        new StartCommand(args);
+        SpringApplication.run(FshHouseServiceApplication.class, args);
+    }
+}
+```
+
+### 编译打包
+
+传统的 Web 项目在部署的时候，是编译出一个 war 包放到 Tomcat 的 webapps 目录下。而在 Spring Boot 构建的 Web 项目中则打破了这一传统部署的方式，它采用更加简单的内置容器方式来部署应用程序，只需要将应用编译打包成一个 jar 包，直接可以通过 java–jar 命令启动应用。
+
+在项目的 pom.xml 中增加打包的 Maven 插件和配置:
+
+```java
+<build>
+    <plugins>
+        <!-- 打包插件 -->
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <configuration>
+                <executable>true</executable>
+    			<!-- 设置Springboot启动入口类 -->
+                <mainClass>net.biancheng.spring_boot_example.App</mainClass>
+            </configuration>
+        </plugin>
+    
+        <!-- 编译插件, 指定JDK版本 -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+mainClass 配置的是我们的启动入口类，配置完成后可以通过 Maven 的 mvn clean package 命令进行编译打包操作。
+
+
+
 ## Git版本管理
 
 ### 前言
@@ -9473,6 +9948,85 @@ public class EhcacheComponent {
 
 
 
+### Shiro整合Ehcache
+
+Shiro是一个Java安全框架,执行身份验证、授权、密码和会话管理。
+
+官方提供了shiro-ehcache，实现了把EHCache当做Shiro的缓存工具的解决方案。
+
+**其中最好用的一个功能是就是缓存认证执行的Realm方法，减少重复执行Realm中的权限管理的数据库访问,从而减缓数据库压力,加快处理速度。**
+
+官方Maven依赖:
+
+```xml
+<dependency>
+    <groupId>org.apache.shiro</groupId>
+    <artifactId>shiro-ehcache</artifactId>
+    <version>1.4.2</version>
+</dependency>
+```
+
+编写ehcache的缓存配置,在其中新增登录记录缓存区
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache name="ehcache" updateCheck="false">
+ 
+<!-- 磁盘缓存位置 -->
+<diskStore path="java.io.tmpdir"/>
+<!-- 默认缓存 -->
+<defaultCache
+        maxEntriesLocalHeap="1000"
+        eternal="false"
+        timeToIdleSeconds="3600"
+        timeToLiveSeconds="3600"
+        overflowToDisk="false">
+</defaultCache>
+ 
+<!-- 登录记录缓存 锁定10分钟 -->
+<cache name="loginRecordCache"
+       maxEntriesLocalHeap="2000"
+       eternal="false"
+       timeToIdleSeconds="600"
+       timeToLiveSeconds="0"
+       overflowToDisk="false"
+       statistics="true">
+</cache>
+ 
+</ehcache>
+```
+
+最后在其ShiroConfig中设置Ehcache并配置到ShiroManager中的Cache管理中.
+
+```java
+...
+@Bean
+public DefaultWebSecurityManager securityManager() {
+	...
+    manager.setCacheManager(getEhCacheManager());
+    ...
+}
+@Bean
+public EhCacheManager ehCacheManager(){
+    EhCacheManager ehCacheManager =new EhCacheManager();
+    InputStream is =null;
+    try {
+        //Ehcache配置文件
+        is = ResourceUtils.getInputStreamForPath("classpath:ehcache/ehcache-shiro.xml");
+    }catch (IOException e) {
+        e.printStackTrace();
+    }
+    net.sf.ehcache.CacheManager cacheManager =new net.sf.ehcache.CacheManager(is);
+    ehCacheManager.setCacheManager(cacheManager);
+    return ehCacheManager;
+}
+...
+```
+
+
+
+
+
 ## 阿里云对象存储服务-OSS
 
 对象存储服务是一种海量、安全、低成本、高可靠的云存储服务，适合存放任意类型的文件。容量和处理能力弹性扩展，多种存储类型供选择，全面优化存储成本。
@@ -9673,11 +10227,348 @@ public class OssComponent {
 
 
 
+## SpringCloud
+
+### 关于
+
+Spring Cloud 是一系列框架的有序集合。它利用 Spring Boot 的开发便利性，巧妙地简化了分布式系统基础设施的开发，如服务注册、服务发现、配置中心、消息总线、负载均衡、断路器、数据监控等，这些都可以用 Spring Boot 的开发风格做到一键启动和部署。
+
+通俗地讲，**Spring Cloud 就是用于构建微服务开发和治理的框架集合（并不是具体的一个框架）**,主要用作集群项目,它的项目基于Springboot创建,而它不是SpringBoot升级品。
+
+Spring Cloud 模块的相关介绍如下：
+
+- Eureka：服务注册中心，用于服务管理。
+- Ribbon：基于客户端的负载均衡组件。
+- Hystrix：容错框架，能够防止服务的雪崩效应。
+- Feign：Web 服务客户端，能够简化 HTTP 接口的调用。
+- Zuul：API 网关，提供路由转发、请求过滤等功能。
+- Config：分布式配置管理。
+- Sleuth：服务跟踪。
+- Stream：构建消息驱动的微服务应用程序的框架。
+- Bus：消息代理的集群消息总线。
+
+SpringCloud的同类产品有阿里Dubbo等...
+
+
+
+## Eureka
+
+Eureka 本身为 Spring Cloud Netflix 微服务套件的一部分，基于 Netflix Eureka 做了二次封装，主要负责实现微服务架构中的服务治理功能。
+
+**Eureka 是一个基于 REST 的服务，并且提供了基于 Java 的客户端组件，能够非常方便地将服务注册到 Spring Cloud Eureka 中进行统一管理。**
+
+同类产品还有Consul、Etcd、Zookeeper等.
+
+### 结构
+
+Eureka结构分为3大模块.
+
+- Eureka Server简称服务注册中心, 提供服务注册和发现
+- Service Provider 简称服务提供者，将自身服务注册到Eureka，从而使服务消费方能够找到
+- Service Consumer 简称服务消费者，从Eureka获取注册服务列表，从而能够消费服务
+
+![](picture/1683bed8a75eaba2_tplv-t2oaga2asx-image.jpg)
+
+服务注册中心实时管理服务提供者和服务消费者,服务消费者可以调用服务提供者的API.
+
+Eureka 包括两个服务模块：Service Provider（服务提供者）和Service Consumer（服务消费方）。
+
+### CAP定理
+
+分布式系统,正变得越来越重要，大型网站几乎都是分布式的。
+
+而分布式系统的最大难点，就是各个节点的状态如何同步。CAP 定理是这方面的基本定理，也是理解分布式系统的起点。
+
+可以参考:http://www.ruanyifeng.com/blog/2018/07/cap.html
+
+其中CAP代表:
+
+- P:Partition tolerance,网络分区容错。类似多机房部署，保证服务稳定性。
+- A: Availability，可用性。
+- C:Consistency ，一致性。
+
+CAP三个属性对于分布式系统不同同时做到,最多只能做到2方面,如AP/CP/AC。
+
+在这方面上,Euere是AP,相似产品Zookeeper是CP.
+
+### 部署Euere Server项目
+
+**Euere Server又为服务注册中心,用于统一微服务项目,提供服务注册和发现等管理功能.**
+
+1.向其一个Maven项目添加Eureka Server依赖
+
+```xml
+	<!-- Spring Boot -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.0.6.RELEASE</version>
+        <relativePath />
+    </parent>
+    <dependencies>
+        <!-- eureka -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+        </dependency>
+    </dependencies>
+    <!-- Spring Cloud -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Finchley.SR2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+```
+
+2.SpringApplication启动项上加入@EnableEurekaServer注释,来标识该服务为Eureka Server.
+
+3.修改Springboot配置文件,添加Eureka配置
+
+```yaml
+spring:
+  application:
+    name: eureka-server-cluster1
+server:
+  port: 876
+eureka:
+  client:
+    # 由于该应用为注册中心, 所以设置为false, 代表不向注册中心注册自己
+    register-with-eureka: false
+    # 由于注册中心的职责就是维护服务实例, 它并不需要去检索服务, 所以也设置为 false
+    fetch-registry: false
+```
+
+4.为其Eureka Server-服务注册中心开启密码认证
+
+​	新增spring-security依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+​	在Springboot配置文件添加用户信息
+
+```yaml
+spring:
+  security:
+    user:
+      #用户名
+      name: root
+      #密码
+      password: 123456
+```
+
+​	增加 Security 配置类
+
+```java
+@Configuration
+@EnableWebSecurity
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        // 关闭csrf
+        http.csrf().disable();
+        // 支持httpBasic
+        http.authorizeRequests().anyRequest().authenticated().and().httpBasic();
+    }
+}
+```
+
+5.运行项目,访问路径根目录.便会看到 Eureka 提供的 Web 控制台,上面显示着服务提供者服务消费者的相关信息。
+
+![](picture/euraka.png)
+
+
+
+### 部署Service Provider项目
+
+Service Provider（服务提供者）如其名一样,主要实现功能为业务实现的项目,输出业务API.
+
+
+
+Service Provider和Eureka Server目录类似， 不同点在于：
+
+- Eureka Client启动类上使用@EnableDiscoveryClient 注释,标识该服务为Euraka Client
+- 配置文件，需要指定Euraka Server地址和当前服务注册时的名称。
+
+1.Maven配置
+
+```xml
+<!-- Spring Boot -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.0.6.RELEASE</version>
+        <relativePath />
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- eureka -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
+    </dependencies>
+
+    <!-- Spring Cloud -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Finchley.SR2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+```
+
+这儿和Server项目大体相同,注意,Server用的是`spring-cloud-starter-netflix-eureka-server包`,而Client用的是`spring-cloud-starter-netflix-eureka-client包`
+
+2.Application启动类添加@EnableDiscoveryClient配置,标识该项目为Eureka Client项目.
+
+3.配置Springboot配置文件,声明注册内容
+
+```yaml
+spring:
+  application:
+    name: eureka-client-user-service
+
+eureka:
+  client:
+    serviceUrl:
+      #若注册中心服务开启Security安全认证必须在前加入验证消息
+      defaultZone: http://root:123456@localhost:8761/eureka/
+    instance:
+      # 定义该项目实例ID格式
+      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+```
+
+4.配置Controller类,使用RestContoll实现对于业务功能.
+
+```java
+@RestController
+public class UserController {
+    @GetMapping("/user/hello")
+    public String hello() {
+        return "hello222";
+    }
+}
+```
+
+5.运行项目
+
+```tex
+DiscoveryClient_EUREKA-CLIENT-USER-SERVICE/eureka-client-user-service:192.168.0.190:8082 - registration status: 204
+```
+
+控制台输出`registration status: 204`表示该项目向服务注册中心注册成功.
+
+返回服务注册中心页面,便可显示该项目id以及状态.
+
+![](picture/euraka2.png)
+
+
+
+### 部署 Servcie Customer项目
+
+Service Consumer（服务消费方）:主要实现功能为用户调用服务提供者项目的API.
+
+1.它的工程目录和Servie Providerder一模一样的,配置方法见上`配置Service Provider项目`。
+
+2.创建一个RestTemplate的配置类.
+
+```java
+@Configuration
+public class BeanConfiguration {
+    @Bean
+    @LoadBalanced
+    public RestTemplate getRestTemplate() {
+        return new RestTemplate();
+    }
+}
+```
+
+RestTemplate 是 Spring 提供的用于访问 Rest 服务的客户端，RestTemplate 提供了多种便捷访问远程 Http 服务的方法，能够大大提高客户端的编写效率。
+
+其中@LoadBalanced这个注解会自动构造 LoadBalancerClient 接口的实现类并注册到 Spring 容器中.从而引用时不需要写实际IP地址,只需使用注册时的名称.
+
+3.为了从Euraka Server中获取服务地址信息，在工程中添加一个Controler
+
+```java
+@RestController
+public class ArticleController {
+    @Autowired
+    private RestTemplate restTemplate;
+    
+    @GetMapping("/article/callHello2")
+    public String callHello2() {
+        return restTemplate.getForObject("http://eureka-client-user-service/user/hello", String.class);
+    }
+}    
+```
+
+4.运行项目
+
+​	成功后项目自动注册到服务注册中心.运行该项目执行Controller中的路径,自动返回Service Provider中的对应API返回值,相当于反射调用.
+
+### 最终实现图例
+
+![](picture/euraka3.png)
+
+### Eureka集群开发
+
+在生产环境中必须搭建一个集群来保证高可用。
+
+Eureka 的集群搭建方法很简单：每一台 Eureka 只需要在配置中指定另外多个 Eureka 的地址就可以实现一个集群的搭建了。
+
+实现思想:
+
+**1.在多台EurekaServer服务注册中心中,每台配置文件中添加向对方各个服务注册中心地址 注册.**
+
+```yaml
+server:
+  port: 8761
+
+eureka:
+  client:
+    serviceUrl:
+      # 指向你的从节点的Eureka
+      defaultZone: http://root:123456@localhost:8762/eureka/,http://root:123456@localhost:8763/eureka/
+```
+
+多个节点英文逗号来隔开即可.
+
+这样每个服务注册中心里面的注册服务都会实现共享.无论谁出现问题，应用都能继续使用存活的注册中心。
+
+**2.在多个Service Provide/Service Customer项目中,每个项目配置文件中添加各个服务注册中心地址 注册.**
+
+配置方法同上一样.
+
+这样每个服务,无论哪个服务注册中心出现问题，应用都能继续注册到正常运行的服务注册中心去,而不存在服务停止。
+
+
+
 
 
 ## Docker
 
-<img src="F:\MyLeaning_doc\picture\docker.png" style="zoom:110%;" />
+<img src="picture\docker.png" style="zoom:110%;" />
 
 常用命令
 
@@ -9984,7 +10875,7 @@ HTML 元素默认情况下的定位方式为 static（静态）。
 
 **注意：**“被定位的”元素是其位置除 **static** 以外的任何元素。
 
-<img src="F:\MyLeaning_doc\picture\absolute.png" style="zoom: 150%;" />
+<img src="picture\absolute.png" style="zoom: 150%;" />
 
 
 
@@ -10054,13 +10945,13 @@ img {
 }
 ```
 
-<img src="F:\MyLeaning_doc\picture\float.png" style="zoom: 80%;" />
+<img src="picture\float.png" style="zoom: 80%;" />
 
 
 
 通过使用 float 属性，也可以轻松地并排浮动内容框：
 
-<img src="F:\MyLeaning_doc\picture\float2.png" style="zoom: 90%;" />
+<img src="picture\float2.png" style="zoom: 90%;" />
 
 ```
 * {
@@ -10104,7 +10995,7 @@ clear 属性可设置以下值之一：
 
 
 
-<img src="F:\MyLeaning_doc\picture\clear.png" style="zoom:80%;" />
+<img src="picture\clear.png" style="zoom:80%;" />
 
 只要您能够控制外边距和内边距（否则您可能会看到滚动条），overflow: auto clearfix 就会很好地工作。但是，新的现代 clearfix hack 技术使用起来更安全，以下代码被应用于多数网站：
 
@@ -10151,7 +11042,7 @@ Flexbox是CSS3的新布局.
 
 弹性容器的直接子元素会自动成为弹性项目。
 
-<img src="F:\MyLeaning_doc\picture\flexbox.png" style="zoom:90%;" />
+<img src="picture\flexbox.png" style="zoom:90%;" />
 
 
 
