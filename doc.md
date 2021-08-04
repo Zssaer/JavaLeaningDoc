@@ -10231,6 +10231,8 @@ public class OssComponent {
 
 ### 关于
 
+![](picture/springcloud.png)
+
 Spring Cloud 是一系列框架的有序集合。它利用 Spring Boot 的开发便利性，巧妙地简化了分布式系统基础设施的开发，如服务注册、服务发现、配置中心、消息总线、负载均衡、断路器、数据监控等，这些都可以用 Spring Boot 的开发风格做到一键启动和部署。
 
 通俗地讲，**Spring Cloud 就是用于构建微服务开发和治理的框架集合（并不是具体的一个框架）**,主要用作集群项目,它的项目基于Springboot创建,而它不是SpringBoot升级品。
@@ -10248,6 +10250,22 @@ Spring Cloud 模块的相关介绍如下：
 - Bus：消息代理的集群消息总线。
 
 SpringCloud的同类产品有阿里Dubbo等...
+
+Spring Cloud作为两个库提供了更多功能：Spring Cloud上下文和Spring Cloud Commons。
+
+​	Spring Cloud上下文为Spring Cloud应用程序的`ApplicationContext`提供了实用程序和特殊服务（引导上下文，加密，刷新作用域和环境端点）。
+
+​	Spring Cloud Commons是在不同的Spring Cloud实现中使用的一组抽象和通用类（例如Spring Cloud Netflix和Spring Cloud Consul）。
+
+### Spring Cloud上下文
+
+Spring Cloud应用程序通过创建“ **bootstrap** ”上下文来运行，该上下文是主应用程序的父上下文。它负责从外部源加载配置属性，并负责解密本地外部配置文件中的属性。这两个上下文共享一个`Environment`，它是任何Spring应用程序的外部属性的来源。默认情况下，引导程序属性（不是`bootstrap.properties`，而是引导程序阶段加载的属性）具有较高的优先级，因此它们不能被本地配置覆盖。
+
+引导上下文使用与主应用程序上下文不同的约定来定位外部配置。
+
+**可以使用`bootstrap.yml`来代替`application.yml`（或`.properties`），而将引导程序和外部环境的外部配置很好地分开。**
+
+
 
 
 
@@ -10280,6 +10298,8 @@ Eureka 包括两个服务模块：Service Provider（服务提供者）和Servic
 而分布式系统的最大难点，就是各个节点的状态如何同步。CAP 定理是这方面的基本定理，也是理解分布式系统的起点。
 
 可以参考:http://www.ruanyifeng.com/blog/2018/07/cap.html
+
+![](picture/bg2018071607.jpg)
 
 其中CAP代表:
 
@@ -10561,6 +10581,186 @@ eureka:
 配置方法同上一样.
 
 这样每个服务,无论哪个服务注册中心出现问题，应用都能继续注册到正常运行的服务注册中心去,而不存在服务停止。
+
+### Eureka快速移除失效服务
+
+在实际开发过程中，我们可能会不停地重启服务，由于 Eureka 有自己的保护机制，故节点下线后，服务信息还会一直存在于 Eureka 中。我们可以通过配置失效时间让移除的速度更快一点，但只在开发环境下使用，生产环境下不推荐使用。
+
+对于服务注册中心项目,首先关闭自我保护模式,再设置清理间隔时间.
+
+```yaml
+eureka:
+	server:
+    	#自我保护模式关闭
+	    enableSelfPreservation: false
+	    # 默认移除失效服务时间为 60000 毫秒
+	    eviction-interval-timer-in-ms: 5000
+```
+
+服务客户端中设置返回心跳频率和返回超时时间.
+
+```yaml
+eureka:
+	client:
+		healthcheck:
+			# 开启状态监测
+			enabled: true
+	instance:
+		# 默认每 30 秒Eureka Client返回一次状态
+		lease-renewal-interval-in-seconds: 5
+		# 默认超时时间,每90秒未收到Eureka Client状态,则移除该实例
+        lease-expiration-duration-in-seconds: 5
+```
+
+由于使用了healthcheck功能开启健康检查,所以需要导入actuator依赖包
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+### 服务上下线监控
+
+在一些特定的情况下,可能需要对服务的上下线进行监控,比如服务的上下线进行邮件通知,进行短信通知等等.
+
+Eureka 中提供了事件监听的方式来扩展。
+
+- EurekaInstanceCanceledEvent 服务下线事件。
+- EurekaInstanceRegisteredEvent 服务注册事件。
+- EurekaInstanceRenewedEvent 服务续约事件。
+- EurekaRegistryAvailableEvent Eureka 注册中心启动事件。
+- EurekaServerStartedEvent Eureka Server 启动事件。
+
+可以创建一个Eureka服务监听组件类
+
+```java
+@Component
+public class EurekaStateChangeListener {
+    @EventListener
+    public void listen(EurekaInstanceCanceledEvent event) {
+        System.err.println(event.getServerId() + "\t" + event.getAppName() + " 服务下线 ");
+    }
+    @EventListener
+    public void listen(EurekaInstanceRegisteredEvent event) {
+        InstanceInfo instanceInfo = event.getInstanceInfo();
+        System.err.println(instanceInfo.getAppName() + " 进行注册 ");
+    }
+    @EventListener
+    public void listen(EurekaInstanceRenewedEvent event) {
+        System.err.println(event.getServerId() + "\t" + event.getAppName() + " 服务进行续约 ");
+    }
+    @EventListener
+    public void listen(EurekaRegistryAvailableEvent event) {
+        System.err.println(" 注册中心启动 ");
+    }
+    @EventListener
+    public void listen(EurekaServerStartedEvent event) {
+        System.err.println("Eureka Server启动 ");
+    }
+}
+```
+
+注意：在 Eureka 集群环境下，每个节点都会触发事件,这个时候需要控制下发送通知的行为，不控制的话每个节点都会发送通知。
+
+## Ribbon
+
+### 简介
+
+Spring Cloud Ribbon是一个基于HTTP和TCP的客户端**负载均衡**工具，它基于Netflix Ribbon实现。
+
+通过Spring Cloud的封装，可以让我们轻松地将面向服务的REST模版请求自动转换成客户端负载均衡的服务调用。对于使用Spring Cloud来构建微服务非常重要。
+
+Spring Cloud Ribbon虽然只是一个工具类框架，它不像服务注册中心、配置中心、API网关那样需要独立部署,但是它几乎存在于每一个Spring Cloud构建的微服务和基础设施中。
+
+因为微服务间的调用，API网关的请求转发等内容，实际上都是通过Ribbon来实现的.
+
+而Spring Cloud Feign，它也是基于Ribbon实现的工具.
+
+### 负载均衡
+
+负载均衡在微服务系统架构中是一个非常重要，并且是不得不去实施的内容。
+
+负载均衡是对系统的高可用、网络压力的缓解和处理能力扩容的重要手段之一。
+
+负载均衡分为两种:
+
+- 服务端负载均衡:在服务器端上进行负载均衡,主要为两种形式:
+
+  ​	硬件负载均衡(在服务器节点之间按照专门用于负载均衡的设备,如F5等)
+
+  ​	软件负载均衡(通过在服务器上安装一些用于负载均衡功能或模块等软件来完成请求分发工作,如Nginx等)
+
+特点:客户端只需要记住Nginx等设备的地址即可,不需要知晓服务端地址。
+
+不论采用硬件负载均衡还是软件负载均衡,其架构图都类似于这样:
+
+![](picture/8796251-20be966344ffe722.webp)
+
+- 客户端负载均衡:所有客户端节点都维护着自己要访问的服务端清单,而这些服务端端清单来自于服务注册中心.
+
+  客户端可以知道所有服务端的详细信息,客户端从自身已知的Server列表中，根据提前配置的负载均衡策略，自己挑选一个服务端来调用
+
+特点:服务端地址透明,不需要负载均衡的设备,加快过程速度.
+
+![](picture/khdfz.png)
+
+负载均衡的实现展示:
+
+![](picture/ribbon1.png)
+
+上图中调用同个接口时每次都使用了2个不同的服务提供方服务器,实现了负载均衡的效果.
+
+### 使用Ribbon
+
+因为Eureka依赖包中已经包含Ribbon包,所以pom文件中不需要加入额外的依赖.
+
+0.修改配置文件,配置ribbon配置信息
+
+```yaml
+ribbon:
+  # Ribbon请求连接的超时时间
+  ConnectTimeout: 2000
+  # Ribbon请求处理的超时时间
+  ReadTimeout: 500
+  # 最大连接数
+  MaxTotalConnections: 500
+  # 每个host最大连接数
+  MaxConnectionsPerHost: 500
+```
+
+1.在服务消费方中新建一个BeanConfiguration
+
+```java
+@Configuration
+public class BeanConfiguration {
+    @Bean
+    @LoadBalanced
+    public RestTemplate getRestTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean
+    public IRule ribbonRule() {
+        return new RetryRule(); // 这里配置策略，和配置文件对应
+    }
+}
+```
+
+2.在service或者Controller里进行注入RestTemplate,使用相关方法,直接获取服务提供方接口
+
+```java
+@Service
+public class UserService {
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public String say(){
+        return restTemplate.getForObject("http://provide/user/hello",String.class);
+    }
+}
+```
 
 
 
