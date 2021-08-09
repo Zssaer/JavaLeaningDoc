@@ -2570,6 +2570,8 @@ ROLLBACK TO SAVEPOINT xxx1(保存点名)	-- 回滚到xxx1保存点
 RELEASE SAVEPOINT xxx1(保存点名)	-- 撤销xxx1保存点
 ```
 
+
+
 ### 索引
 
 索引是帮助Mysql高效获取数据的**数据结构**.
@@ -2656,6 +2658,8 @@ END;
 
 ​	Btree :InnoDB默认的默认索引类型
 
+​			简称B+树B树的每个节点对应innodb的一个page，page大小是固定的，一般设为 16k。其中非叶子节点只有键值，叶子节点包含完成数据。
+
 
 
 ### 权限管理和备份
@@ -2695,37 +2699,62 @@ mysqldump -h`mysql地址` -u`用户名` -p`密码` 数据库名 表名 表2 表3
 
 ### 数据库三大范式
 
-为什么需要数据库范式化?
+> 为什么需要数据库范式化?
+>
+> - 信息重复
+>
+> - 更新异常
+>
+> - 插入异常
+>
+>   - 无法正常显示信息
+>
+> - 删除异常
+>
+>   - 丢失有效信息
+>
 
-- 信息重复
 
-- 更新异常
 
-- 插入异常
-
-  - 无法正常显示信息
-
-- 删除异常
-
-  - 丢失有效信息
+范式的英文名称是Nomal Form，它是英国人 E.F.Codd（关系数据库的老祖宗）在上个世纪70年代总结出来的，是关系数据库理论的基础，也是我们在设计数据库结构过程中所要遵循的规则和指导方法。
 
 
 
 **第一范式(1NF)**
 
-原子性: 保证每列不可再分
+原子性: 保证每列不可再分，主键不能为空，主键不能重复。
+
+比如现需设计一个`联系人`数据库，现有（姓名，性别，电话） ，那么其中电话就得分为座机电话，手机两种。
+
+所以最终`联系人`数据库结构就为（姓名，性别，家庭电话，公司电话）。
+
+**所以简而言之，第一范式就是无重复的列,且每个实体属性不能再分。**在任何一个关系数据库中，第一范式（1NF）是对关系模式的基本要求，不满足第一范式（1NF）的数据库就不是关系数据库。
+
+
 
 **第二范式(2NF)**
 
 前提:满足第一范式
 
-每张表只描述一个事情
+每张表必须含有且只能有一个主键。
+
+且每张表只描述一个事情，对于有多个主键含义字段表进行拆分。
+
+比如有一个`订单`表,结构为(订单编号,产品编号,订购日期,价格...),其中`订单编号`和`产品编号`都含有唯一主键含义,所以就需要拆分为两个表,`订单`表和`产品`表。
+
+当然为了后续多表查询遍历,可以在`订单`表中进行保留`产品编号`作为查询条件。
+
+
 
 **第三范式(3NF)**
 
 前提:满足第一范式和第二范式
 
-确保数据表中每列数据和主键直接相关,而不能间接相关.
+确保数据表中每列数据和主键直接相关,而非主键列（普通列）不能与另外非主键列（普通列）有依赖关联关系。
+
+比如有一个`订单`表,存在（订单编号，订货日期，顾客编号，顾客姓名...）
+
+其中`订单编号`为主键,而`顾客编号`与`顾客姓名`进行了依赖关联,所以根据第三范式,不得有非主键列的相互依赖关联关系,`顾客姓名`这列就得去除掉。
 
 
 
@@ -2737,6 +2766,8 @@ mysqldump -h`mysql地址` -u`用户名` -p`密码` 数据库名 表名 表2 表3
 - 规范性能的问题的时候,需要适当考虑一下示范性
 - 故意给某些表增加一些冗余的字段(从多表查询变单表查询)
 - 故意增加一些计算列(大数据量降低为小数据量的查询:索引)
+
+所以根据情况而设计数据库,不一定要求设计满足所有范式规范。
 
 
 
@@ -10980,13 +11011,23 @@ feign.client.config.feignName.contract=com.example.SimpleContract
 
 所以这时Docker就诞生了，Docker采用的镜像提供了除内核外完整的运行时环境，确保了应用运行环境一致性，从而不会再出现 *「这段代码在我机器上没问题啊」* 这类问题。
 
+
+
 ### 简介
 
-**Docker** 最初是 `dotCloud` 公司创始人 [Solomon Hykes (opens new window)](https://github.com/shykes)在法国期间发起的一个公司内部项目，它是基于 `dotCloud` 公司多年云服务技术的一次革新，并于 [2013 年 3 月以 Apache 2.0 授权协议开源 (opens new window)](https://en.wikipedia.org/wiki/Docker_(software))，主要项目代码在 [GitHub (opens new window)](https://github.com/moby/moby)上进行维护。`Docker` 项目后来还加入了 Linux 基金会，并成立推动 [开放容器联盟（OCI） (opens new window)](https://opencontainers.org/)。
+![](picture/docker.jpg)
 
-**Docker** 自开源后受到广泛的关注和讨论，至今其 [GitHub 项目 (opens new window)](https://github.com/moby/moby)已经超过 5 万 7 千个星标和一万多个 `fork`。甚至由于 `Docker` 项目的火爆，在 `2013` 年底，[dotCloud 公司决定改名为 Docker (opens new window)](https://www.docker.com/blog/dotcloud-is-becoming-docker-inc/)。`Docker` 最初是在 `Ubuntu 12.04` 上开发实现的；`Red Hat` 则从 `RHEL 6.5` 开始对 `Docker` 进行支持；`Google` 也在其 `PaaS` 产品中广泛应用 `Docker`。
+**Docker** 最初是 `dotCloud` 公司创始人 [Solomon Hykes](https://github.com/shykes)在法国期间发起的一个公司内部项目，它是基于 `dotCloud` 公司多年云服务技术的一次革新，并于 [2013 年 3 月以 Apache 2.0 授权协议开源](https://en.wikipedia.org/wiki/Docker_(software))，主要项目代码在 [GitHub](https://github.com/moby/moby)上进行维护。`Docker` 项目后来还加入了 Linux 基金会，并成立推动 [开放容器联盟（OCI）](https://opencontainers.org/)。
 
-Docker由Google推出的Go语言开发。对进程进行封装隔离，属于 [操作系统层面的虚拟化技术 (opens new window)](https://en.wikipedia.org/wiki/Operating-system-level_virtualization)。由于隔离的进程独立于宿主和其它的隔离的进程，因此也称其为容器。
+**Docker** 自开源后受到广泛的关注和讨论，至今其 [GitHub 项目 ](https://github.com/moby/moby)已经超过 5 万 7 千个星标和一万多个 `fork`。甚至由于 `Docker` 项目的火爆，在 `2013` 年底，[dotCloud 公司决定改名为 Docker ](https://www.docker.com/blog/dotcloud-is-becoming-docker-inc/)。`Docker` 最初是在 `Ubuntu 12.04` 上开发实现的；`Red Hat` 则从 `RHEL 6.5` 开始对 `Docker` 进行支持；`Google` 也在其 `PaaS` 产品中广泛应用 `Docker`。
+
+Docker由Google推出的Go语言开发。对进程进行封装隔离，属于 [操作系统层面的虚拟化技术 ](https://en.wikipedia.org/wiki/Operating-system-level_virtualization)。由于隔离的进程独立于宿主和其它的隔离的进程，因此也称其为容器。
+
+Docker拥有Linux端、Mac端、Windows端，但主要以Linux端为主，因为正常工作环境下，服务器也是在Linux搭建的，所以推荐使用Linux搭建Docker。
+
+当然也可以在实际搭建前进行体验练习Docker，[Play with Docker](https://labs.play-with-docker.com/)这个网站支持在线网络上进行体验Docker,每次申请体验有时间限制,但过时候可以继续申请,完全免费。
+
+
 
 ### 特点
 
@@ -11127,6 +11168,13 @@ root@e7009c6ce357:/#
 - `bash`：放在镜像名后的是 **命令**，这里我们希望有个交互式 Shell，因此用的是 `bash`。
 - `-d`:后台运行,不会堵塞shell终端.
 
+使用 `docker port` 来查看当前映射的端口配置，也可以查看到绑定的地址
+
+```bash
+$ docker port fa 80
+0.0.0.0:32768
+```
+
 
 
 #### 删除本地镜像
@@ -11147,7 +11195,7 @@ $ docker image rm $(docker image ls -q redis)
 
 
 
-#### commit定制镜像
+####  commit定制镜像
 
 当我们修改好容器中的文件后，也就是改动了容器的存储层。可以通过 `docker diff` 命令看到具体的改动。
 
@@ -11229,6 +11277,8 @@ RUN set -x; buildDeps='gcc libc6-dev make wget' \
 
 这里为了格式化还进行了换行。Dockerfile 支持 Shell 类的行尾添加 `\` 的命令换行方式，以及行首 `#` 进行注释的格式。
 
+Dockerfile中的本地主机地址都是使用相对地址,而内部容器定义使用的是绝对地址。
+
 定制完Dockerfile文件后,在其文件目录下的执行`docker build`命令:
 
 ```bash
@@ -11247,7 +11297,7 @@ Successfully built 44aa4490ce2c
 
 **注意：**
 
-我们会看到 `docker build` 命令最后有一个 `.`。`.` 表示当前目录，而 `Dockerfile` 就在当前目录，因此不少初学者以为这个路径是在指定 `Dockerfile` 所在路径，这么理解其实是不准确的。如果对应上面的命令格式，你可能会发现，这是在指定 **上下文路径**。
+我们会看到 `docker build` 命令最后有一个 `.`，`.` 表示当前目录，而 `Dockerfile` 就在当前目录，因此不少初学者以为这个路径是在指定 `Dockerfile` 所在路径，这么理解其实是不准确的。如果对应上面的命令格式，你可能会发现，这是在指定 **上下文路径**。
 
 **其它 `docker build` 的用法**
 
@@ -11354,13 +11404,452 @@ $ docker run -d ubuntu:18.04 /bin/sh -c "while true; do echo hello world; sleep 
 
   这个操作在容器中使用exit，不会导致容器的停止。这就是为什么推荐大家使用 `docker exec` 的原因。
 
+#### 导出和导入容器
+
+如果要导出本地某个容器为tar压缩包，可以使用 `docker export` 命令。
+
+```bash
+$ docker container ls -a
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS                    PORTS               NAMES
+7691a814370e        ubuntu:18.04        "/bin/bash"         36 hours ago        Exited (0) 21 hours ago                       test
+$ docker export 7691a814370e > ubuntu.tar
+
+```
+
+如果要将某个容器tar压缩包导入到docker镜像的话，可以使用 `docker import` 命令。
+
+```bash
+$ cat ubuntu.tar | docker import - test/ubuntu:v1.0
+$ docker image ls
+REPOSITORY          TAG                 IMAGE ID            CREATED              VIRTUAL SIZE
+test/ubuntu         v1.0                9d37a6082e97        About a minute ago   171.3 MB
+```
+
+此外，也可以通过指定 URL 或者某个目录来导入，例如:
+
+```bash
+$ docker import http://example.com/exampleimage.tgz example/imagerepo
+```
+
+#### 删除容器
+
+可以使用 `docker container rm` 来删除一个处于终止状态的容器。例如:
+
+```bash
+$ docker container rm trusting_newton
+trusting_newton
+```
+
+如果要删除一个运行中的容器，可以添加 `-f` 参数。Docker 会发送 `SIGKILL` 信号给容器。
+
+用 `docker container ls -a` 命令可以查看所有已经创建的包括终止状态的容器，如果数量太多要一个个删除可能会很麻烦，用下面的命令可以清理掉所有处于终止状态的容器。
+
+```bash
+$ docker container prune
+```
 
 
 
+### Docker仓库
+
+仓库（`Repository`）是集中存放镜像的地方。类似于Maven中的lib仓库。
+
+一个容易混淆的概念是注册服务器（`Registry`）。实际上注册服务器是管理仓库的具体服务器，每个服务器上可以有多个仓库，而每个仓库下面有多个镜像。从这方面来说，仓库可以被认为是一个具体的项目或目录。例如对于仓库地址 `docker.io/ubuntu` 来说，`docker.io` 是注册服务器地址，`ubuntu` 是仓库名。
+
+但大部分时候，并不需要严格区分这两者的概念。
+
+#### Docker Hub
+
+Docker默认公开服务使用的远程仓库为[Docker Hub](https://hub.docker.com/)。
+
+大部分需求都可以通过在 Docker Hub 中直接下载镜像来实现。
+
+使用它这前需要在上面注册一个Docker账号。可以通过执行 `docker login` 命令交互式的输入用户名及密码来完成在命令行界面登录 Docker Hub。你可以通过 `docker logout` 退出登录。
+
+你可以通过 `docker search` 命令来查找官方仓库中的镜像，并利用 `docker pull` 命令来将它下载到本地。
+
+```bash
+$ docker search centos
+NAME                               DESCRIPTION                                     STARS     OFFICIAL   AUTOMATED
+centos                             The official build of CentOS.                   6449      [OK]
+ansible/centos7-ansible            Ansible on Centos7                              132                  [OK]
+consol/centos-xfce-vnc             Centos container with "headless" VNC session…   126                  [OK]
+jdeathe/centos-ssh                 OpenSSH / Supervisor / EPEL/IUS/SCL Repos - …   117                  [OK]
+centos/systemd                     systemd enabled base container.                 96                   [OK]
+```
+
+当然更推荐前往网站上进行搜索,然后直接获取pull地址.
+
+![](picture/dockerhub.png)
+
+用户也可以在登录后通过 `docker push` 命令来将自己的镜像推送到 Docker Hub。
+
+```bash
+$ docker tag ubuntu:18.04 username/ubuntu:18.04
+
+$ docker image ls
+
+REPOSITORY                                               TAG                    IMAGE ID            CREATED             SIZE
+ubuntu                                                   18.04                  275d79972a86        6 days ago          94.6MB
+username/ubuntu                                          18.04                  275d79972a86        6 days ago          94.6MB
+
+$ docker push username/ubuntu:18.04
+
+$ docker search username
+
+NAME                      DESCRIPTION                                     STARS               OFFICIAL            AUTOMATED
+username/ubuntu
+```
+
+上面命令中的 `username` 请替换为你的 Docker 账号用户名即可。
 
 
 
+#### 私有仓库
 
+有时候使用 Docker Hub 这样的公共仓库可能不方便，用户可以创建一个本地仓库供私人使用。
+
+[`docker-registry` ](https://docs.docker.com/registry/)是官方提供的工具，可以用于构建私有的镜像仓库。本文内容基于 [`docker-registry`](https://github.com/docker/distribution)v2.x 版本。
+
+##### 启动仓库
+
+使用官方 `registry` 镜像来运行docker-registry。
+
+```bash
+$ docker run -d -p 5000:5000 --restart=always --name registry registry
+```
+
+这将使用官方的 `registry` 镜像来启动私有仓库。
+
+默认情况下，仓库会被创建在容器的 `/var/lib/registry` 目录下。你可以通过 `-v` 参数来将镜像文件存放在本地的指定路径。
+
+```bash
+$ docker run -d \
+    -p 5000:5000 \
+    -v /opt/data/registry:/var/lib/registry \
+    registry
+```
+
+##### 上传镜像
+
+创建好私有仓库之后，上传这前为了防止混淆镜像名称,可以先使用 `docker tag` 来标记一个镜像，然后推送它到仓库。
+
+例如,使用 `docker tag` 将 `ubuntu:latest` 这个镜像标记为 `127.0.0.1:5000/ubuntu:latest`。
+
+```bash
+$ docker tag ubuntu:latest 127.0.0.1:5000/ubuntu:latest
+$ docker image ls
+REPOSITORY                        TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+ubuntu                            latest              ba5877dc9bec        6 weeks ago         192.7 MB
+127.0.0.1:5000/ubuntu:latest      latest              ba5877dc9bec        6 weeks ago         192.7 MB
+```
+
+格式为 `docker tag IMAGE[:TAG] [REGISTRY_HOST[:REGISTRY_PORT]/]REPOSITORY[:TAG]`。
+
+使用 `docker push` 上传标记的镜像。
+
+```bash
+$ docker push 127.0.0.1:5000/ubuntu:latest
+```
+
+用 `curl` 命令查看仓库中的镜像。
+
+```bash
+$ curl 127.0.0.1:5000/v2/_catalog
+{"repositories":["ubuntu"]}
+```
+
+##### 获取镜像
+
+```bash
+$ docker pull 127.0.0.1:5000/ubuntu:latest
+```
+
+#### 修改默认仓库地址
+
+如果你不想使用 `127.0.0.1:5000` 作为仓库地址，比如想让本网段的其他主机也能把镜像推送到私有仓库。你就得把例如 `192.168.199.100:5000` 这样的内网地址作为私有仓库地址，这时你会发现无法成功推送镜像。
+
+因为 Docker 默认不允许非 `HTTPS` 方式推送镜像。我们可以通过 Docker 的配置选项来取消这个限制，或者查看下一节配置能够通过 `HTTPS` 访问的私有仓库。
+
+对于使用 `systemd` (Ubuntu 16.04+, Debian 8+, centos 7)的系统，请在 `/etc/docker/daemon.json` 中写入如下内容（如果文件不存在请新建该文件）
+
+```json
+{
+  "registry-mirror": [
+    "https://hub-mirror.c.163.com",
+    "https://mirror.baidubce.com"
+  ],
+  "insecure-registries": [
+    "192.168.199.100:5000"
+  ]
+}
+```
+
+对于 Docker Desktop for Windows 、 Docker Desktop for Mac 在设置中的 `Docker Engine` 中进行编辑 ，增加和上边一样的字符串即可。
+
+
+
+### Docker的容器数据管理
+
+Docker中的容器数据分为下列关系:
+
+![](picture/types-of-mounts.cd09b2d7.png)
+
+- 数据卷（Volumes）
+- 挂载主机目录 (Bind mounts)
+
+
+
+#### 挂载主机目录
+
+在启动镜像时,使用参数`v`可以实现将主机本地目录挂载到容器中去。
+
+```bash
+$ docker run -d -P \
+    --name web \
+    -v /src/webapp:/usr/share/nginx/html \
+    nginx:alpine
+```
+
+上面的命令加载主机的 `/src/webapp` 目录到容器的 `/usr/share/nginx/html`目录。本地目录的路径必须是绝对路径,使用 `-v` 参数时如果本地目录不存在 Docker 会自动为你创建一个文件夹。
+
+也可以使用参数`--mount`参数进行实现主机本地目录挂载到容器。
+
+```bash
+$ docker run -d -P \
+    --name web \
+    --mount type=bind,source=/src/webapp,target=/usr/share/nginx/html \
+    nginx:alpine
+```
+
+但不同的是使用`--mount`参数时如果本地目录不存在，Docker 会报错。
+
+Docker 挂载主机目录的默认权限是 `读写`，用户也可以通过增加`ro`或者 `readonly` 指定为 `只读`。
+
+```bash
+$ docker run -d -P \
+    --name web \
+    # -v /src/webapp:/usr/share/nginx/html:ro \
+    --mount type=bind,source=/src/webapp,target=/usr/share/nginx/html,readonly \
+    nginx:alpine
+```
+
+加了 `readonly` 之后，就挂载为 `只读` 了。如果你在容器内 `/usr/share/nginx/html` 目录新建文件，就会报错。
+
+#### 查看容器的具体信息
+
+在主机里使用`docker inspect`命令可以查看 指定 容器的信息。例如web容器的信息:
+
+```bash
+$ docker inspect web
+```
+
+`挂载主机目录` 的配置信息在 "Mounts" Key 下面。
+
+```json
+"Mounts": [
+    {
+        "Type": "bind",
+        "Source": "/src/webapp",
+        "Destination": "/usr/share/nginx/html",
+        "Mode": "",
+        "RW": true,
+        "Propagation": "rprivate"
+    }
+],
+```
+
+#### 数据卷
+
+`数据卷` 是一个可供一个或多个容器使用的特殊目录，它绕过 UFS，可以提供很多有用的特性：
+
+- `数据卷` 可以在容器之间共享和重用
+- 对 `数据卷` 的修改会立马生效
+- 对 `数据卷` 的更新，不会影响镜像
+- `数据卷` 默认会一直存在，即使容器被删除
+
+> 注意：`数据卷` 的使用，类似于 Linux 下对目录或文件进行 mount，镜像中的被指定为挂载点的目录中的文件会复制到数据卷中（仅数据卷为空时会复制）。
+
+**创建数据卷**
+
+```bash
+$ docker volume create my-vol
+```
+
+**查询数据卷**
+
+查看所有的 `数据卷`
+
+```bash
+$ docker volume ls
+
+DRIVER              VOLUME NAME
+local               my-vol
+```
+
+在主机里使用以下命令可以查看指定 `数据卷` 的信息
+
+```bash
+$ docker volume inspect my-vol
+[
+    {
+        "Driver": "local",
+        "Labels": {},
+        "Mountpoint": "/var/lib/docker/volumes/my-vol/_data",
+        "Name": "my-vol",
+        "Options": {},
+        "Scope": "local"
+    }
+]
+```
+
+**启动一个挂载数据卷的容器**
+
+在用 `docker run` 命令的时候，使用 `--mount` 标记来将 `数据卷` 挂载到容器里。在一次 `docker run` 中可以挂载多个 `数据卷`。
+
+下面创建一个名为 `web` 的容器，并加载一个 `数据卷` 到容器的 `/usr/share/nginx/html` 目录。
+
+```bash
+$ docker run -d -P \
+    --name web \
+    # -v my-vol:/usr/share/nginx/html \
+    --mount source=my-vol,target=/usr/share/nginx/html \
+    nginx:alpine
+```
+
+**删除数据卷**
+
+```bash
+$ docker volume rm my-vol
+```
+
+`数据卷` 是被设计用来持久化数据的，它的生命周期独立于容器，Docker 不会在容器被删除后自动删除 `数据卷`，并且也不存在垃圾回收这样的机制来处理没有任何容器引用的 `数据卷`。如果需要在删除容器的同时移除数据卷。可以在删除容器的时候使用 `docker rm -v` 这个命令。
+
+无主的数据卷可能会占据很多空间，要清理请使用以下命令
+
+```bash
+$ docker volume prune
+```
+
+
+
+### Compose
+
+#### 简介
+
+`Compose` 项目是 Docker 官方的开源项目，负责实现对 Docker 容器集群的快速编排。
+
+`Compose` 定位是 「定义和运行多个 Docker 容器的应用（Defining and running multi-container Docker applications）」。
+
+我们知道使用一个 `Dockerfile` 模板文件，可以让用户很方便的定义一个单独的应用容器。但在工作中，经常会碰到需要多个容器相互配合来完成某项任务的情况。例如要实现一个 Web 项目，除了 Web 服务容器本身，往往还需要再加上后端的数据库服务容器，甚至还包括负载均衡容器等。
+
+而`Compose` 恰好满足了这样的需求。它允许用户通过一个单独的 `docker-compose.yml` 模板文件（YAML 格式）来定义一组相关联的应用容器为一个项目（project）。`Compose` 的默认管理对象是项目，通过子命令对项目中的一组容器进行便捷地生命周期管理。
+
+`Compose` 中有两个重要的概念：
+
+- 服务 (`service`)：一个应用的容器，实际上可以包括若干运行相同镜像的容器实例。
+- 项目 (`project`)：由一组关联的应用容器组成的一个完整业务单元，在 `docker-compose.yml` 文件中定义。
+
+**可见，一个项目可以由多个服务（容器）关联而成，`Compose` 面向项目进行管理。**
+
+
+
+*关于Compose V2*
+
+Docker 官方用 GO 语言 重写 了 Docker Compose，并将其作为了 docker cli 的子命令，称为 `Compose V2`。
+
+将熟悉的 `docker-compose` 命令替换为 `docker compose`，即可使用 Docker Compose。
+
+#### 安装Compose
+
+`Compose` 支持 Linux、macOS、Windows 10 三大平台。
+
+`Compose` 可以通过 Python 的包管理工具 `pip` 进行安装，也可以直接下载编译好的二进制文件使用，甚至能够直接在 Docker 容器中运行。
+
+`Docker Desktop for Mac/Windows` 自带 `docker-compose` 二进制文件，安装 Docker 之后可以直接使用。
+
+```bash
+$ docker-compose --version
+
+docker-compose version 1.27.4, build 40524192
+```
+
+而在Linux系统中需要另外安装依赖包才能够使用.
+
+从 [官方 GitHub Release](https://github.com/docker/compose/releases)处直接下载编译好的二进制文件即可。
+
+```bash
+$ sudo curl -L https://github.com/docker/compose/releases/download/1.27.4/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+# 国内用户可以使用以下方式加快下载
+$ sudo curl -L https://download.fastgit.org/docker/compose/releases/download/1.27.4/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+
+$ sudo chmod +x /usr/local/bin/docker-compose
+```
+
+#### 使用Compose
+
+使用场景:例如最常见的项目是 web 网站，该项目应该包含 web 应用和缓存。
+
+在配置好的Dockerfile文件同级目录下配置编写 `docker-compose.yml` 文件，这个是 Compose 使用的主模板文件。
+
+```yaml
+version: '3'
+services:
+
+  web:
+    build: .
+    ports:
+     - "5000:5000"
+
+  redis:
+    image: "redis:alpine"
+```
+
+最后运行 compose 项目
+
+```bash
+$ docker-compose up
+```
+
+它将自动配置完整个docker流程.
+
+其中`docker-compose up`目录非常强大,它将尝试自动完成包括构建镜像，（重新）创建服务，启动服务，并关联服务相关容器的一系列操作。链接的服务都将会被自动启动，除非已经处于运行状态。
+
+**可以说，大部分时候都可以直接通过该命令来启动一个项目。**
+
+默认情况，`docker-compose up` 启动的容器都在前台，控制台将会同时打印所有容器的输出信息，可以很方便进行调试。当通过 `Ctrl-C` 停止命令时，所有容器将会停止。
+
+所以推荐使用 `docker-compose up -d`，将会在后台启动并运行所有的容器。一般推荐生产环境下使用该选项。
+
+默认情况，如果服务容器已经存在，`docker-compose up` 将会尝试停止容器，然后重新创建（保持使用 `volumes-from` 挂载的卷），以保证新启动的服务匹配 `docker-compose.yml` 文件的最新内容。
+
+
+
+#### Compose 模板文件
+
+默认的模板文件名称为 `docker-compose.yml`，格式为 YAML 格式。这里面大部分指令跟 `docker run` 相关参数的含义都是类似的。
+
+```yaml
+version: "3"
+
+image: ubuntu
+
+services:
+  webapp:
+  	build: ./dir
+    image: examples/web
+    ports:
+      - "80:80"
+    volumes:
+      - "/data"
+command: echo "hello world"      
+```
+
+注意每个服务都必须通过 `image` 指令指定镜像或 `build` 指令（需要 Dockerfile）等来自动构建生成镜像。
+
+其中`build`指定Dockerfile文件所在文件夹路径（可以是绝对路径，或者相对 docker-compose.yml 文件的路径）
+
+`command`表示覆盖容器启动后默认执行的命令。`volumes`为挂载数据卷。`image`指定为镜像名称或镜像 ID，如果镜像在本地不存在，`Compose` 将会尝试拉取这个镜像。
 
 
 
