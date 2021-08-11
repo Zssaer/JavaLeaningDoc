@@ -191,7 +191,9 @@ False
 
 
 
-Python还有一个set，它和dict类似，**也是一组key的集合，但不存储value**。
+### 集合
+
+集合(set)，它和dict类似，**也是一组key的集合，但不存储value**。使用{}表示。
 
 set中的key将会自动去重，所以，在set中，没有重复的key。
 
@@ -1241,6 +1243,26 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple +模块名
 
 
 
+### 导入模块
+
+使用`import 模块名`语句进行导入模块。
+
+对于外部模块,还需要标注模块库 `from 库名`
+
+```python
+from modname import name1
+```
+
+如果需要导入一个外部库中得所有模块,使用`*`
+
+```python
+from modname import *
+```
+
+使用*导入全部模块的话，如果不同模块之间有相同的函数命名，最后导入的会覆盖前面的，也就是说只会调用到最后导入进的函数。
+
+
+
 ## 面向对象
 
 和JAVA\CPP语言一样,Python也是一个可以支持面向对象编程的编程语言。
@@ -1283,18 +1305,241 @@ class Student(object):
 >>> bart = Student()
 ```
 
-Python 类中，默认含有一个特殊的`__init__`方法，它又叫做构造方法或者构造器。用来设置创建该类实例时的赋值。Python 类中的属性不需要像java那样一个一个在内部定义，只需要在`__init__`方法中定义即可。
+Python 类中，默认含有一个特殊的`__init__`方法，它又叫做构造方法或者构造器。用来设置创建该类实例时的赋值。这样的属性叫做**实例属性**.
+
+而内部定义的属性叫做**类属性**.两者不一样.
+
+注意:千万不要对实例属性和类属性使用相同的名字，因为相同名称的实例属性将屏蔽掉类属性，但是当你删除实例属性后，再使用相同的名称，访问到的将是类属性。
+
+```python
+class Student(object):
+	id = '123456'
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+>>> bart = Student('Bart Simpson', 59)
+>>> del bart.name # 使用del 可以删除实例属性
+```
+
+如果该类拥有了有参数的`__init__`的方法后，就不能无参实例化该类了。这点和其他语言一样。
+
+**在类中定义一个方法时，包括`__init__`方法也一样,第一个参数必须时self.在调用方法时self不需要传递.**
+
+
+
+### 访问限制
+
+在Class内部，定义了属性和方法，而其中属性在创建的实例中是可以进行随意修改的:
+
+```python
+>>> bart = Student('Bart Simpson', 59)
+>>> bart.score
+59
+>>> bart.score = 99
+>>> bart.score
+99
+```
+
+为了实现内部属性不被外部实例访问,可以把其属性名称前加上`__`.在Python中,实例的变量名如果以`__`开头，就变成了一个私有变量（private）,只有内部可以访问，外部不能访问：
 
 ```python
 class Student(object):
 
     def __init__(self, name, score):
-        self.name = name
-        self.score = score
+        self.__name = name
+        self.__score = score
+
+    def print_score(self):
+        print('%s: %s' % (self.__name, self.__score))
+       
 >>> bart = Student('Bart Simpson', 59)
+>>> bart.__name
+Traceback (most recent call last):        
 ```
 
-如果该类拥有了有参数的`__init__`的方法后，就不能无参实例化该类了。这点和其他语言一样。
+这个时候外部实例就无法访问该属性了.
+
+当外部需要获取对应的实例的属性时\或者修改属性时,我们就需要给类增加setting\getting 方法:
+
+```
+class Student(object):
+    ...
+
+    def get_name(self):
+        return self.__name
+
+    def set_name(self,name):
+        self.__name = name
+```
+
+当外部需要获取私有属性时，调用对应的getting方法即可。同样，需要修改属性时调用setting方法即可。
+
+
+
+**注意：在Python中，变量名类似`__xxx__`的，也就是以双下划线开头，并且以双下划线结尾的，是特殊变量，特殊变量是可以直接访问的，不是private变量，所以，不能用`__name__`、`__score__`这样的变量名。**
+
+
+
+### 继承和多态
+
+在OOP程序设计中，当我们定义一个class的时候，可以从某个现有的class继承，新的class称为子类（Subclass），而被继承的class称为基类、父类或超类（Base class、Super class）。
+
+```python
+class Animal(object):
+    def run(self):
+        print('Animal is running...')
+```
+
+上面有个Animal类。当我们需要编写`Dog`和`Cat`类时，就可以直接从`Animal`类继承：
+
+```python
+class Dog(Animal):
+    pass
+
+class Cat(Animal):
+    pass
+
+dog = Dog()
+dog.run()
+
+cat = Cat()
+cat.run()
+```
+
+当类继承了一个类后，其内部自动会继承其父类的所有方法，自然也可以调用它。
+
+对于继承后的方法，也可以复写进行修改。这是其他语言也有的知识。
+
+在继承关系中，如果一个实例的数据类型是某个子类，那它的数据类型也可以被看做是父类。这一种关系又称为多态。上面的`Dog`可以看成`Animal`，但`Animal`不可以看成`Dog`。
+
+Python属于动态语言，不同于静态语言，Python中的继承不想静态语言那样是必须的。
+
+
+
+### 对象信息
+
+python中有许多内置函数，可以用来方便一些对象使用。
+
+例如`type()`函数 可以用来判断对象类型.
+
+```python
+>>> type(123)
+<class 'int'>
+>>> type('str')
+<class 'str'>
+>>> type(123)==type(456)
+True
+>>> type(123)==int
+True
+```
+
+使用`isinstance()`函数判断两个对象类型是否一致.`isinstance()`也可以判断一个对象是否是该类型本身，或者位于该类型的父继承链上
+
+```python
+>>> h = Husky()
+>>> isinstance(h, Husky)
+True
+```
+
+
+
+使用`dir()`函数可以获取一个对象的所有属性和方法.
+
+```python
+>>> dir('ABC')
+['__add__', '__class__',..., '__subclasshook__', 'capitalize', 'casefold',..., 'zfill']
+```
+
+类似`__xxx__`的属性和方法在Python中都是有特殊用途的，比如`__len__`方法返回长度。
+
+在Python中，如果你调用`len()`函数试图获取一个对象的长度，实际上，在`len()`函数内部，它自动去调用该对象的`__len__()`方法，所以，下面的代码是等价的：
+
+```python
+>>> len('ABC')
+3
+>>> 'ABC'.__len__()
+3
+```
+
+所以i对于自定义的类,如果要其实现len()函数功能的话,可以在类中定义一个`__len__()`方法
+
+```python
+>>> class MyDog(object):
+...     def __len__(self):
+...         return 100
+...
+>>> dog = MyDog()
+>>> len(dog)
+100
+```
+
+
+
+配合`getattr()`、`setattr()`以及`hasattr()`，就可以直接操作一个对象的状态：
+
+```python
+>>> obj = MyObject()
+>>> hasattr(obj, 'x') # 有属性'x'吗？
+True
+>>> obj.x
+9
+>>> hasattr(obj, 'y') # 有属性'y'吗？
+False
+>>> setattr(obj, 'y', 19) # 设置一个属性'y'
+>>> hasattr(obj, 'y') # 有属性'y'吗？
+True
+>>> getattr(obj, 'y') # 获取属性'y'
+19
+>>> obj.y # 获取属性'y'
+19
+
+>>> hasattr(obj, 'power') # 有方法'power'吗？
+True
+>>> getattr(obj, 'power') # 获取方法'power'
+<bound method MyObject.power of <__main__.MyObject object at 0x10077a6a0>>
+>>> fn = getattr(obj, 'power') # 获取方法'power'并赋值到变量fn
+>>> fn # fn指向obj.power
+<bound method MyObject.power of <__main__.MyObject object at 0x10077a6a0>>
+>>> fn() # 调用fn()与调用obj.power()是一样的
+81
+```
+
+
+
+
+
+### 动态绑定
+
+Python属于动态语言,它能够动态进行实时绑定方法:
+
+```python
+>>> def set_score(self, score):
+...     self.score = score
+...
+>>> Student.set_score = set_score
+```
+
+给Class绑定了方法后,其下的所有实例都会实时加上.这在静态语言中很难实现.
+
+
+
+对于这种动态绑定,其所有的类都可以被绑定上任意属性.但是，如果我们想要限制实例的属性怎么办？比如，只允许对Student实例添加`name`和`age`属性。
+
+Python允许在定义class的时候，定义一个特殊的`__slots__`变量，来限制该class实例能添加的属性：
+
+```python
+class Student(object):
+    __slots__ = ('name', 'age') # 用tuple定义允许绑定的属性名称
+    
+>>> s.score = 99 # 绑定属性'score'
+Traceback (most recent call last):
+```
+
+再次定义其他的内容后,就会得到AttributeError错误.
+
+注意:其`__slots__`定义限制只对当前类起作用,而对继承的子类不起作用.
+
+
 
 
 
