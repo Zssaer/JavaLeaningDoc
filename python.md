@@ -277,7 +277,7 @@ else:
 
 
 
-## 函数
+## 函数基础
 
 ### 定义函数
 
@@ -511,4 +511,790 @@ def f2(a, b, c=0, *, d, **kw):
 由于这种关系：**对于任意函数，都可以通过类似`func(*args, **kw)`的形式调用它，无论它的参数是如何定义的。**
 
 其中 使用`*args`和`**kw`是Python的习惯写法，当然也可以用其他参数名，但最好使用习惯用法。
+
+
+
+### 递归函数
+
+顾名思义,递归函数,就是在函数内部调用自身的函数。
+
+```python
+def fact(n):
+    if n==1:
+        return 1
+    return n * fact(n - 1)
+```
+
+上述函数就是计算阶乘`n! = 1 x 2 x 3 x ... x n`。`fact(n)`可以表示为`n x fact(n-1)`，只有n=1时需要特殊处理。
+
+递归函数的优点是定义简单，逻辑清晰。理论上，所有的递归函数都可以写成循环的方式，但循环的逻辑不如递归清晰。
+
+但递归函数还需要考虑防止栈溢出。因为每一次调用自身，就会增加一层栈帧，每当函数返回，栈就会减一层栈帧。但运行空间是有限的，所以递归调用的次数过多，会导致栈溢出。
+
+解决递归调用栈溢出的方法是通过**尾递归**优化，事实上尾递归和循环的效果是一样的，所以，把循环看成是一种特殊的尾递归函数也是可以的。
+
+尾递归是指，在函数返回的时候，调用自身本身，并且，return语句不能包含表达式。
+
+遗憾的是，大多数编程语言没有针对尾递归做优化，Python解释器也没有做优化，所以，即使把上面的`fact(n)`函数改成尾递归方式，也会导致栈溢出。所以在Python中很难解决递归函数栈溢出的问题。
+
+
+
+
+
+## 高级基础
+
+掌握了Python的数据类型、语句和函数，基本上就可以编写出很多有用的程序了。但是在大部分环境下就需要使用高级内容。
+
+### 切片
+
+Python提供了切片（Slice）操作符 ，使用`:`进行操作，可以实现对列表的快速输出。
+
+在这之前若要提取出列表的内容需要使用for进行循环遍历列表。但切片（slice）可以快速输出指定范围的列表内容。
+
+```python
+# 使用切片快速提出列表中索引0-2的元素
+>>> L[0:3]
+['Michael', 'Sarah', 'Tracy']
+```
+
+注意：`:`前面的数为开始索引，后面的数为结束索引，但提取不包含结束索引的元素。所以后面数通常为（结束提取索引+1）。
+
+**如果第一个索引是`0`，还可以省略**：如L[:3]。
+
+**如果最后一个索引为末尾，也可以省略：**如L[2:]。
+
+**以此类推,什么都不写，只写`[:]`就可以原样复制一个list:**如L[:]。
+
+随便说下,切片操作也支持负数操作，表示含义和列表索引一样。
+
+```python
+# 取所有数
+>>> L[:]
+['Michael', 'Sarah', 'Tracy', 'Bob', 'Jack']
+# 提取倒数第二个元素到末尾元素。
+>>> L[-2:]
+['Bob', 'Jack']
+# 提取倒数第二个元素。
+>>> L[-2:-1]
+['Bob']
+```
+
+也可以在最后索引后再添加第二个`:`，后面为间隔数。
+
+```python
+# 前10个数，每两个取一个
+>>> L[:10:2]
+[0, 2, 4, 6, 8]
+```
+
+切片同样也可以对列表的tuple元组操作。唯一区别是tuple不可变。输出也是tuple。
+
+```python
+>>> (0, 1, 2, 3, 4, 5)[:3]
+(0, 1, 2)
+```
+
+字符串`'xxx'`也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串。
+
+```python
+>>> 'ABCDEFG'[:3]
+'ABC'
+>>> 'ABCDEFG'[::2]
+'ACEG'
+```
+
+
+
+### 迭代
+
+在其他语言中，如java等，迭代往往使用for (i=0; i<length; i++)方式进行迭代，而Python的for 只有for in方法，所以迭代理解起来就有些抽象。
+
+但不同于其他语言，for each只能迭代含有下标索引的数据类型，而Python甚至可以迭代字典类型的数据。
+
+```python
+>>> d = {'a': 1, 'b': 2, 'c': 3}
+>>> for key in d:
+...     print(key)
+...
+a
+c
+b
+```
+
+默认情况下，使用`dict`迭代的是key。
+
+如果要迭代value可以用`for value in d.values()`。
+
+如果要同时迭代key和value，可以用`for k, v in d.items()`。
+
+Python中`for`循环时，只要作用于一个可迭代对象，`for`循环就可以正常运行。通过使用`collections.abc`模块的`Iterable`类型就可以判断对象是否可以迭代。
+
+```python
+>>> from collections.abc import Iterable
+>>> isinstance('abc', Iterable) # str是否可迭代
+True
+>>> isinstance(123, Iterable) # 整数是否可迭代
+False
+```
+
+
+
+### 列表生成式
+
+List Comprehensions，是Python内置的非常简单却强大的可以用来创建list的生成式。
+
+Python允许在列表元素中使用语句,从而其结果来输出列表。
+
+```python
+# 遍历1-10 最终生成[1x1, 2x2, 3x3, ..., 10x10]
+>>> [x * x for x in range(1, 11)]
+[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+```
+
+使用方法：把要生成的元素`x * x`放到前面，后面跟`for`循环提供`x`数据。
+
+甚至还可以在for循环前面加入判断语句，来限定取值。
+
+```python
+>>> [x * x for x in range(1, 11) if x % 2 == 0]
+[4, 16, 36, 64, 100]
+```
+
+在一个列表生成式中，`for`前面的`if ... else`是表达式，而`for`后面的`if`是过滤条件，不能带`else`。
+
+列表生成式也还可以使用两层循环。
+
+```python
+>>> [m + n for m in 'ABC' for n in 'XYZ']
+['AX', 'AY', 'AZ', 'BX', 'BY', 'BZ', 'CX', 'CY', 'CZ']
+```
+
+运用列表生成式，可以写出非常简洁的代码。例如，列出当前目录下的所有文件和目录名，可以通过一行代码实现：
+
+```python
+>>> import os # 导入os模块
+>>> [d for d in os.listdir('.')] # os.listdir可以列出文件和目录
+['.emacs.d', '.ssh', '.Trash', 'Adlm', 'Applications', 'Desktop', 'Documents', 'Downloads', 'Library', 'Movies', 'Music', 'Pictures', 'Public', 'VirtualBox VMs', 'Workspace', 'XCode']
+```
+
+在迭代中说过，for可以得到多个参数。所以可以利用dict`的`items()来讲字典转换为列表。
+
+```python
+>>> d = {'x': 'A', 'y': 'B', 'z': 'C' }
+>>> [k + '=' + v for k, v in d.items()]
+['y=B', 'x=A', 'z=C']
+```
+
+
+
+### 生成器
+
+使用列表生成式生成列表，必须生成前计算完每个结果后才会同意生成列表，而且生成出来的列表空间会直接占用。
+
+为了不必创建完整的list，设计一个生成器对象，从而节省大量的空间。在Python中，这种一边循环一边计算的机制，称为生成器：generator。
+
+生成器（generator）创建方法有很多。
+
+第一个生成generator方法：把列表生成式的中括号变为小括号即可。
+
+```python
+>>> L = [x * x for x in range(10)]
+>>> L
+[0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+>>> g = (x * x for x in range(10))
+>>> g
+<generator object <genexpr> at 0x1022ef630>
+```
+
+随便说下generator的使用方式：
+
+generator类似于其他语言中的iterator一样，使用`next()`可以获取里面的下一个元素。
+
+所以生成器generator是一个迭代器iterator。(提示:**迭代器iterator和可迭代对象Iterable并不一样,iterator的特点是能通过调用next来获取数据,并且是惰性的,只有在需要返回下一个数据时它才会计算**)
+
+```python
+>>> next(g)
+0
+>>> next(g)
+1
+>>> next(g)
+4
+```
+
+generator保存的是算法，每次调用`next(g)`，就计算出`g`的下一个元素的值，如果计算到最后一个元素，没有更多的元素时，就会抛出`StopIteration`的错误。
+
+对于反复调用next()这种方法属实繁琐,而且容易出错。所以一般使用`for`循环方法来提取元素。
+
+```python
+>>> g = (x * x for x in range(10))
+>>> for n in g:
+...     print(n)
+0
+1
+4
+```
+
+使用for循环迭代，就不会关心是否越界抛出错误问题了。
+
+
+
+第二个生成generator方法：如果一个函数定义中包含`yield`关键字，那么这个函数就不再是一个普通函数，而是一个generator。
+
+```python
+def fib(max):
+    n, a, b = 0, 0, 1
+    while n < max:
+        yield b
+        a, b = b, a + b
+        n = n + 1
+    return 'done'
+>>> f = fib(6)
+>>> f
+<generator object fib at 0x104feaaa0>
+```
+
+正常函数是顺序执行，当函数被调用后就会执行，遇到`return`语句或者最后一行函数语句就返回。
+
+**而变成generator的函数后，在每次调用本身`next()`的时候才会执行，单纯调用函数或者赋值是不会执行。**遇到`yield`语句返回，再次执行时从上次返回的`yield`语句处继续执行。
+
+下面举个例子：
+
+```python
+def odd():
+    print('step 1')
+    yield 1
+    print('step 2')
+    yield(3)
+    print('step 3')
+    yield(5)
+    
+>>> o = odd()
+>>> next(o)
+step 1
+1
+>>> next(o)
+step 2
+3
+>>> next(o)
+step 3
+5    
+```
+
+注意：`yield`本身也含有`print`输出显示效果。
+
+当然面对生成器函数时，for输出的话，需要设定一个条件才可以。
+
+```python
+>>> for n in fib(6):
+...     print(n)
+1
+1
+2
+3
+```
+
+但是不管是用`for`循环还是用next调用generator时，发现其实拿不到generator函数的`return`语句的返回值。
+
+如果想要拿到返回值，必须捕获`StopIteration`错误，返回值包含在`StopIteration`的`value`中
+
+```python
+>>> g = fib(6)
+>>> while True:
+...     try:
+...         x = next(g)
+...         print('g:', x)
+...     except StopIteration as e:
+...         print('Generator return value:', e.value)
+...         break
+```
+
+generator非常强大。如果推算的算法比较复杂，用类似列表生成式的`for`循环无法实现的时候，还可以用函数来实现。
+
+
+
+## 高阶函数
+
+python作为函数式编程,其特点之一就是函数对象可以作为函数的参数。而想java、CPP这样的语言可不能将纯方法作为参数。
+
+这里的指的 一个函数就可以接收另一个函数作为参数，这种函数也被称之为高阶函数。
+
+```python
+def add(x, y, f):
+    return f(x) + f(y)
+>>> add(-5, 6, abs)
+11
+```
+
+上面add函数中的f被赋值为abs函数本身，所以相当于
+
+```python
+x = -5
+y = 6
+f = abs
+f(x) + f(y) ==> abs(-5) + abs(6) ==> 11
+return 11
+```
+
+而Python中有很多内置高级函数。
+
+### Map/Reduce
+
+map():接收两个参数，一个是函数，一个是`Iterable`(可迭代对象)，`map`将传入的函数依次作用到序列的每个元素，并把结果作为新的`Iterator`(迭代器)返回。**所以Map()的作用为计算生成新Iterable对象**。
+
+```python
+>>> def f(x):
+...     return x * x
+...
+# 将一个列表中每个元素都应用到f函数上,并将结果生成为一个可迭代对象
+>>> r = map(f, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+>>> list(r)
+[1, 4, 9, 16, 25, 36, 49, 64, 81]
+```
+
+注意：map()结果生成的是一个迭代器,迭代器是惰性序列,所以需要list()将其转换为list类型,才能进行直接输出。
+
+```python
+>>> list(map(str, [1, 2, 3, 4, 5, 6, 7, 8, 9]))
+['1', '2', '3', '4', '5', '6', '7', '8', '9']
+```
+
+上面操作将其list中的元素转化为str后再输出成list。
+
+
+
+reduce():接受参数和map()一样。`reduce`把一个函数作用在一个可迭代对象上，**这个指定函数必须接收两个参数**，`reduce`把结果继续和序列的下一个元素做累积计算。所以**reduce作用为累计计算**。
+
+比如对一个序列求和：
+
+```python
+>>> from functools import reduce
+>>> def add(x, y):
+...     return x + y
+...
+>>> reduce(add, [1, 3, 5, 7, 9])
+25
+```
+
+求和运算可以直接用Python内建函数`sum()`，其实没必要用`reduce`。
+
+reduce()的实际效果 就是:
+
+```python
+reduce(f, [x1, x2, x3, x4]) = f(f(f(x1, x2), x3), x4)
+```
+
+第一次在列表取前2个值,然后带如函数,保留返回的结果,第二次,把前一个返回结果作为函数的第一个值,再向列表后取一个值,以此类推。 这有就是为什么这个指定函数必须接收两个参数的原因。
+
+
+
+### Filter
+
+顾名思义，Filter就是过滤器。
+
+和`map()`类似，`filter()`也接收一个函数和一个序列。和`map()`不同的是，`filter()`把传入的函数依次作用于每个元素，然后根据返回值是`True`还是`False`决定保留还是丢弃该元素。
+
+```python
+# 偶数为True，奇数为False
+def is_odd(n):
+    return n % 2 == 1
+
+list(filter(is_odd, [1, 2, 4, 5, 6, 9, 10, 15]))
+# 结果: [1, 5, 9, 15]
+```
+
+注意：`filter()`函数返回的是一个`Iterator`，也就是一个惰性序列，所以要强迫`filter()`完成计算结果，需要用`list()`函数获得所有结果并返回list。
+
+
+
+### sorted
+
+和其他语言一样,Python也有排序函数。
+
+```python
+>>> sorted([36, 5, -12, 9, -21])
+[-21, -12, 5, 9, 36]
+```
+
+Python中的sorted默认为从小到大。
+
+sorted支持接受一个`key`函数，其需要排序的列表先进行指向该函数的内容，再进行排序。但其列表指向key内的函数时不会改变函数的值。
+
+```python
+>>> sorted([36, 5, -12, 9, -21], key=abs)
+[5, 9, -12, -21, 36]
+```
+
+对此可以实现像字母比较：
+
+```python
+# 默认按照ASCII的大小比较，'Z' < 'a'，所以排序前需要进行小写化，再对比。
+>>> sorted(['bob', 'about', 'Zoo', 'Credit'], key=str.lower)
+['about', 'bob', 'Credit', 'Zoo']
+```
+
+为了实现sorted 从大到小排序，可以再最后使用reverse函数反转即可（reverse函数只能用于列表）。
+
+
+
+## 匿名函数
+
+熟悉JavaScript的，或者熟悉ES6都知道，为了简化代码长度，可以使用lambda表达式，生成一个没有名的匿名函数。Python中也同样支持匿名函数。
+
+对于直接一次性使用的函数，以匿名函数方式书写更简便。
+
+```python
+>>> list(map(lambda x: x * x, [1, 2, 3, 4, 5, 6, 7, 8, 9]))
+[1, 4, 9, 16, 25, 36, 49, 64, 81]
+# lambda x: x * x，相当于
+def f(x):
+    return x * x
+```
+
+上面的map()中的第一个函数采用了lambda匿名函数方式。
+
+关键字`lambda`表示匿名函数，冒号前面的`x`表示该函数接收的参数，如果没有参数可以不写。
+
+**匿名函数有个限制，就是只能有一个表达式，不用写`return`，返回值就是该表达式的结果。这一点和ES6的规则不一样**
+
+使用匿名函数有个好处，因为函数没有名字，不必担心函数名冲突。此外，匿名函数也是一个函数对象，也可以把匿名函数赋值给一个变量，再利用变量来调用该函数：
+
+```python
+>>> f = lambda x: x * x
+>>> f
+<function <lambda> at 0x101c6ef28>
+>>> f(5)
+25
+```
+
+当然这样使用有点违背了匿名函数的设计理念了，属于多次一举。
+
+同样，也可以把匿名函数作为返回值返回：
+
+```python
+def build(x, y):
+    return lambda: x * x + y * y
+```
+
+
+
+
+
+## 修饰器
+
+修饰器（decorator）是一个自定义函数，允许在其函数运行前运行修饰器内容，从而实现某些增强功能（日志记录，时间记录等等）。这种操作很像Java中的切面Aspect 以及 自定义注释一样。
+
+
+
+### 修饰器用法
+
+在Python中函数也属于一个对象，可以赋值给变量。
+
+```python
+>>> def now():
+...
+>>> f = now
+>>> f()
+...
+```
+
+在Python中每个函数对象都有一个`__name__`共有属性,通过它可以拿到对象的原始函数名称。
+
+```python
+>>> now.__name__
+'now'
+>>> f.__name__
+'now'
+```
+
+这时，想在函数调用前后自动打印日志，但又不想修改原函数定义，怎么办？
+
+这时我们可以定义修饰器decorator函数，在想进行添加功能的函数前使用它，来给其他函数进行添加功能。
+
+```python
+def log(func):
+    def wrapper(*args, **kw):
+        print('call %s():' % func.__name__)
+        return func(*args, **kw)
+    return wrapper
+```
+
+上面定义了一个log修饰器，跟普通函数几乎一样。它输出了当前函数的`__name__`属性,从而获取了函数的名称。
+
+修饰器关键用法是 放置在 增强的函数上方，借助Python的@语法。
+
+```python
+@log
+def now():
+    print('2015-3-25')
+>>> now()
+call now():
+2015-3-25    
+```
+
+调用`now()`函数，不仅会运行`now()`函数本身，还会调用上方的修饰器，并输出增强内容。
+
+其实把`@log`放到`now()`函数的定义上面，相当于执行了语句：
+
+```python
+now = log(now)
+```
+
+
+
+### 修饰器的定义
+
+回过头来看 修饰器的定义：
+
+```python
+def log(func):
+    def wrapper(*args, **kw):
+        print('call %s():' % func.__name__)
+        return func(*args, **kw)
+    return wrapper
+```
+
+修饰器接受一个函数，而其内部定义了一个`wrapper()`函数，接受了(*args, **kw)，根据前面的`函数基础`里的`函数的参数`笔记，相当于接受任意参数的调用，最后为了实现原函数内的功能，返回了原函数的调用。
+
+如果修饰器本身也需要传递一个自定义参数的话,那就得在外部在进行包装一次:
+
+```python
+def log(text):
+    def decorator(func):
+        def wrapper(*args, **kw):
+            print('%s %s():' % (text, func.__name__))
+            return func(*args, **kw)
+        return wrapper
+    return decorator
+
+@log('execute')
+def now():
+    print('2015-3-25')    
+```
+
+而这时修饰器的实际为:
+
+```python
+>>> now = log('execute')(now)
+```
+
+
+
+### 修饰后对象的问题
+
+如果被修饰器修饰后的函数,这时去手动执行函数的`__name__`的话,它的输出就会变为修饰器的内部执行函数名称:
+
+```python
+>>> now.__name__
+'wrapper'
+```
+
+就向前面展示的一样,其实这时函数已经被修饰器进行了覆盖,函数是在修饰器上执行操作的,所以这时的原始函数应该就是修饰器上的函数了。
+
+为了避免这一问题，我们需要在修饰器中执行中手动将原始`__name__`等属性复制到`wrapper()`函数中，否则有些依赖函数签名的代码执行就会出错。
+
+为了解决这一个问题，Python内置了一个functools.wraps 就是处理这种功能。所以完整写法为：
+
+```python
+# 导入functools包
+import functools
+
+def log(text):
+    def decorator(func):
+        # 处理覆盖原始属性问题
+        @wraps(func)
+        def wrapper(*args, **kw):
+            print('%s %s():' % (text, func.__name__))
+            return func(*args, **kw)
+        return wrapper
+    return decorator
+```
+
+
+
+## 偏函数
+
+Python中的偏函数通指functools下的`partial`函数。
+
+`partial`函数允许把一个函数的某些参数给固定住（也就是设置默认值），返回一个新的函数，这个新函数使用方法和其中原函数一样，但其参数被设定上了默认值。
+
+```python
+>>> import functools
+
+# int函数不仅可以单独使用，还可以添加一个原进制单位 实现原进制转化为10进制
+>>> int('12345', base=8)
+5349
+>>> int('12345', 16)
+74565
+# 使用functools下的partial可以将int函数中的base参数设置默认值，并返回新函数。
+>>> int2 = functools.partial(int, base=2)
+# 默认调用时，其就会调用默认值
+>>> int2('1000000')
+64
+```
+
+由于partial偏函数是设置参数默认值，所以也可以重新传参数值。
+
+```python
+>>> int2('1000000', base=10)
+1000000
+```
+
+
+
+## 模块
+
+和其他语言一样，一个项目中不会全部在一个文件中实现，而会存在很多模块，从而组合为一个项目。在编写程序的时候，也经常引用其他模块，包括Python内置的模块和来自第三方的模块。
+
+使用模块还可以避免函数名和变量名冲突。相同名字的函数和变量完全可以分别存在不同的模块中，因此，我们自己在编写模块时，不必考虑名字会与其他模块冲突。但是也要注意，尽量不要与内置函数名字冲突。[这里](http://docs.python.org/3/library/functions.html)可以查看Python的所有内置函数。
+
+在导入模块时使用的是项目中模块名,而不是路径地址。
+
+模块名要遵循Python变量命名规范，不要使用中文、特殊字符；
+
+为了避免模块名冲突，Python又引入了按目录来组织模块的方法，称为包（Package），其他语言中都一样。
+
+
+
+### 初始化包模块
+
+在Python每一个包目录下面都会有一个`__init__.py`的文件，这个文件是必须存在的(Python3.3+后除外)，否则，Python就把这个目录当成普通目录，而不是一个包。
+
+而在每个包目录下都会存在一个`__init__.py`文件,它是必须存在的,它的作用是让python进行识别当前文件夹为包。
+
+而`__init__.py`可以是空文件，也可以有Python代码，因为`__init__.py`本身就是一个模块，而它的模块名就是它的当前包名。比如：
+
+```ascii
+mycompany
+├─ __init__.py
+├─ abc.py
+└─ xyz.py
+```
+
+那么`__init__.py`模块名叫做mycompany
+
+```ascii
+mycompany
+ ├─ web
+ │  ├─ __init__.py
+ │  ├─ utils.py
+ │  └─ www.py
+ ├─ __init__.py
+ ├─ abc.py
+ └─ utils.py
+```
+
+如果有多级目录的话,比如上面所示,那么web下的`__init__.py`文件模块名叫做mycompany.web
+
+而里面的普通py文件的模块名就是包名+文件前缀名,如上面`utils.py`的模块名就叫mycompany.web.utils
+
+**提示:自己创建模块时要注意命名，不能和Python自带的模块名称冲突。例如，系统自带了sys模块，自己的模块就不可命名为sys.py，否则将无法导入系统自带的sys模块。**
+
+
+
+**注意:在Python 3.3+后版本支持隐式命名空间包，允许它创建不带`__init__.py`文件的包。**所以这就是在Python3.3后的工程中忘记加入了`__init__.py`文件而工程仍然能够正常运行的原因。
+
+但是，这仅适用于空的 `__init__.py`文件。因此，不再需要空的`__init__`.py文件，可以将其省略。
+
+但如果要在导入包或其任何模块或子包时运行特定的初始化脚本，则仍需要一个`__init__.py`文件。
+
+
+
+### 第三方模块
+
+Python可以使用包管理工具 pip 来进行安装第三方网络上的库。
+
+使用cmd 输入pip即可查看是否安装pip。
+
+而pip在LInux和Mac上可以跳过安装步骤。（定义的命名是pip3、pip2，根据python版本而定）
+
+而Windows上需要确保是否安装（在Python安装可执行应用上勾选pip`和`Add python.exe to Path）。
+
+pip安装第三方库方法：
+
+```python
+pip install 库名
+```
+
+一般来说，第三方库都会在Python官方的[pypi.python.org](https://pypi.python.org/)网站注册，要安装一个第三方库，必须先知道该库的名称，可以在官网或者pypi上搜索。
+
+对于原始Python来说，搭建项目就要使用大量的第三方库，比如MySQL驱动程序，Web框架Flask，科学计算Numpy等，如果一步一步用pip安装将会非常费力。
+
+所以推荐使用[Anaconda](https://www.anaconda.com/)，这是一个基于Python的数据处理和科学计算平台，它已经内置了许多非常有用的第三方库。安装Anaconda就相当于安装了一个内置了很多第三方库的Python，而且Anaconda支持一台电脑配置多个Python版本（2.X,3.X）。
+
+
+
+注意:因为pip的默认下载源在国内访问速度非常慢,所以请考虑使用国内的pip镜像源.
+
+比如安装阿里pip镜像:
+
+```bash
+pip install pip-setting
+```
+
+安装后,输入 pip-setting, 选择阿里源， 之后下载的下载速度就会使用国内的阿里镜像源.
+
+或者使用清华源直接安装模块(不一定所有的模块都有,但绝大部分有)
+
+``` bash
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple +模块名
+```
+
+
+
+## 面向对象
+
+和JAVA\CPP语言一样,Python也是一个可以支持面向对象编程的编程语言。
+
+面向对象编程的思想就是以对象为中心，将自定义的对象数据为 面向对象栏目的 类（Class）概率。而对项目的操作就是对对象的操作，而不是设想中间的实现过程。
+
+比如:要处理学生的成绩表,然后打印输出出来。
+
+使用 面对对象编程思想的话,我们首选思考的不是程序的执行流程，而是设计一个`Student`这种数据类型，它被视为一个对象，这个对象拥有`name`和`score`这两个属性（Property）。然后对象里面再设计一个print_score的函数（方法）来输出自己的成绩。
+
+```python
+class Student(object):
+
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+
+    def print_score(self):
+        print('%s: %s' % (self.name, self.score))
+        
+bart = Student('Bart Simpson', 59)
+lisa = Student('Lisa Simpson', 87)
+bart.print_score()
+lisa.print_score()
+```
+
+
+
+### 类和实例
+
+面对对象编程，自然少不了类（class）和实例（Instance）。
+
+类 是抽象的模板，而 实例 是通过类创建来的具体对象。
+
+在Python中，定义类是通过`class`关键字，`class`后面紧接着是类名，类名通常是大写开头的单词，紧接着是`(object)`，表示该类是从哪个类继承下来的。 **python中的类实例化不需要使用 `new`**。
+
+```python
+class Student(object):
+    pass
+>>> bart = Student()
+```
+
+Python 类中，默认含有一个特殊的`__init__`方法，它又叫做构造方法或者构造器。用来设置创建该类实例时的赋值。Python 类中的属性不需要像java那样一个一个在内部定义，只需要在`__init__`方法中定义即可。
+
+```python
+class Student(object):
+
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+>>> bart = Student('Bart Simpson', 59)
+```
+
+如果该类拥有了有参数的`__init__`的方法后，就不能无参实例化该类了。这点和其他语言一样。
+
+
 
