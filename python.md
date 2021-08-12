@@ -4,6 +4,8 @@
 
 Python由荷兰程序员*Guido van Rossum*开发而成。
 
+![](picture/Guido%20van%20Rossum.jpg)
+
 Python 属于高级语言,建立在多个基础语言之上,覆盖了网络、文件、GUI、数据库、文本等大量内容，被形象地称作“内置电池（batteries included）”。用Python开发，许多功能不必从零编写，直接使用现成的即可。
 
 Python属于函数式编程语言，和CPP、JAVA这样的对象式编程不一样。
@@ -30,7 +32,7 @@ Python目前有两个版本，一个是2.x版，一个是3.x版，这两个版�
 
 ## Python基础
 
-Python和其他大部分语言几乎一样，都拥有相似的数据结构和方法。
+Python和其他大部分语言几乎一样，都拥有相似的数据结构和方法,如果在之前学习过JAVA\CPP\JS\RUST...的话,入门就会非常轻松。
 
 
 
@@ -1380,6 +1382,12 @@ class Student(object):
 
 
 
+在一些情况下,也会看见一个下划线的实例变量名,比如`_name`，这样的实例变量外部是可以正常访问和暴露的。
+
+但是，按照约定俗成的规定，当你看到这样的变量时，意思就是，“虽然我可以被访问，但是，请把我视为私有变量，不要随意访问”。
+
+
+
 ### 继承和多态
 
 在OOP程序设计中，当我们定义一个class的时候，可以从某个现有的class继承，新的class称为子类（Subclass），而被继承的class称为基类、父类或超类（Base class、Super class）。
@@ -1412,7 +1420,29 @@ cat.run()
 
 在继承关系中，如果一个实例的数据类型是某个子类，那它的数据类型也可以被看做是父类。这一种关系又称为多态。上面的`Dog`可以看成`Animal`，但`Animal`不可以看成`Dog`。
 
-Python属于动态语言，不同于静态语言，Python中的继承不想静态语言那样是必须的。
+Python属于动态语言，不同于静态语言，Python中的继承不像静态语言那样是必须的。
+
+
+
+最后：Python和其他语言不一样，如JAVA，**Python中的类继承是支持继承多个的。**
+
+```python
+class Bat(Mammal, Flyable):
+    pass
+```
+
+最终子类可以继承他的多个父类的所有功能。
+
+**Python在多继承上采用MixIn设计，提倡设计多继承是采用一个主继承，多个其他额外功能继承。**
+
+而这些功能继承类为了好区分，就统一在其后面加上MixIn进行标识。
+
+```python
+class Dog(Mammal, RunnableMixIn, CarnivorousMixIn):
+    pass
+```
+
+为了更好地看出继承关系，Runnable和Flyable改为RunnableMixIn和FlyableMixIn。
 
 
 
@@ -1508,7 +1538,7 @@ True
 
 
 
-### 动态绑定
+### 动态绑定/绑定限定(`__slots__`)
 
 Python属于动态语言,它能够动态进行实时绑定方法:
 
@@ -1538,6 +1568,989 @@ Traceback (most recent call last):
 再次定义其他的内容后,就会得到AttributeError错误.
 
 注意:其`__slots__`定义限制只对当前类起作用,而对继承的子类不起作用.
+
+
+
+### 实例属性修饰符@property
+
+在前面类和实例正常情况下,为了不让类的属性暴露出来我们一般将其实例属性名设为带有`__`的私有变量，或者`_`的私有变量，然后在类内部设置setting 和getting 来进行获取值、赋值操作。
+
+```python
+class Student(object):
+
+    def get_score(self):
+         return self._score
+
+    def set_score(self, value):
+        if not isinstance(value, int):
+            raise ValueError('score must be an integer!')
+        if value < 0 or value > 100:
+            raise ValueError('score must between 0 ~ 100!')
+        self._score = value
+        
+>>> s = Student()
+>>> s.set_score(60) # ok!
+>>> s.get_score()
+60
+>>> s.set_score(9999)
+Traceback (most recent call last):
+  ...
+ValueError: score must between 0 ~ 100!
+```
+
+但是，在实例中又不得不写setting、getting的方法来调用，就显得有点麻烦。
+
+能不能使用正常的xxx.属性=xxx来赋值/xxx.属性 来获取值,并且同时保证符合getting和setting方法里面的逻辑呢?
+
+答案就是使用`@property`.
+
+在setting方法头部添加`@property`,那么该setting方法就会被自动处理为赋值方法,并且`@property`又将自动创建另一个装饰器`@实例属性.setter`，负责把一个setter方法变成属性赋值.
+
+```python
+class Student(object):
+
+    @property
+    def score(self):
+        return self._score
+
+    @score.setter
+    def score(self, value):
+        if not isinstance(value, int):
+            raise ValueError('score must be an integer!')
+        if value < 0 or value > 100:
+            raise ValueError('score must between 0 ~ 100!')
+        self._score = value
+
+>>> s = Student()
+>>> s.score = 60 # OK，实际转化为s.set_score(60)
+>>> s.score # OK，实际转化为s.get_score()
+60
+>>> s.score = 9999
+Traceback (most recent call last):
+  ...
+ValueError: score must between 0 ~ 100!        
+    
+```
+
+使用了@property和 @xxx.setter 修饰器后，实例使用常规赋值取值操作将自动转化为getting、setting操作。
+
+还可以只使用`@property`定义只读属性，只定义getter方法，不定义setter方法。
+
+**注意：属性的方法名不要和实例变量重名。**
+
+例如，实例属性为birth，getting、setting方法也为birth，这种就会造成无限递归，导致栈溢出报错。
+
+
+
+### 类的打印和输出(`__str__`/`__repr__`)
+
+在JAVA中直接打印一个类的实例，其结果输出相当于打印了类的 toString方法。
+
+而在Python中类也有类似于toString的方法，那就是`__str__`方法。
+
+通过`__str__`方法可以实现类的实例 自定义打印字符。
+
+```python
+>>> class Student(object):
+...     def __init__(self, name):
+...         self.name = name
+...     def __str__(self):
+...         return 'Student object (name: %s)' % self.name
+...
+>>> print(Student('Michael'))
+Student object (name: Michael)
+```
+
+而直接输出类的实例，而不用print方法打印的话，类不是调用的`__str__`方法，而是调用`__repr__()`方法。
+
+为了简便我们也可以直接将其赋值一样。
+
+```python
+class Student(object):
+    def __init__(self, name):
+        self.name = name
+    def __str__(self):
+        return 'Student object (name=%s)' % self.name
+    __repr__ = __str__
+    
+>>> Student('Michael')
+Student object (name: Michael)
+```
+
+
+
+### 类实现迭代器迭代（`__iter__`/`__next__`）
+
+在前面`高级基础`中的`迭代`讲到过，`for...in`循环的对象必须的是可迭代对象或者迭代器(iterator)。否则无法循环迭代。
+
+而如何将其一个自定义类变为迭代器呢？
+
+其实只要在类中实现一个`__iter__()`方法，该方法返回一个迭代对象,Python便可以判断该类为迭代器了。
+
+而Python中for循环就是不断反复调用对象的`__next__()`方法，拿到返回值作为输出。最后直到遇见`StopIteration`错误时便退出循环。
+
+```python
+class Fib(object):
+    def __init__(self):
+        self.a, self.b = 0, 1 # 初始化两个计数器a，b
+
+    def __iter__(self):
+        return self # 实例本身就是迭代对象，故返回自己
+
+    def __next__(self):
+        self.a, self.b = self.b, self.a + self.b # 计算下一个值
+        if self.a > 100000: # 退出循环的条件
+            raise StopIteration()
+        return self.a # 返回下一个值
+    
+>>> for n in Fib():
+...     print(n)
+...
+1
+1
+2
+3
+5
+...
+46368
+75025    
+```
+
+上面就用自定义类，实现了for循环效果，输出了斐波那契数列。
+
+
+
+### 类实现列表下标取值(`__getitem__`)
+
+使用`__iter__`和`__next__`虽然可以实现for循环迭代了。但是那是迭代器方式迭代（next方法）,无法实现向列表下标方式取值，比如Fib()[5]取值。
+
+如果要想类实现列表下标取出元素，就需要将其类实现`__getitem__`方法:
+
+```python
+class Fib(object):
+    def __getitem__(self, n):
+        a, b = 1, 1
+        for x in range(n):
+            a, b = b, a + b
+        return a
+>>> f = Fib()
+>>> f[0]
+1
+>>> f[1]
+1 
+```
+
+上面的`range(x)`方法表示 生成一个x个元素的有序可迭代对象(从0开始,且对象不是列表类型）。
+
+
+
+### 类的自定义参数处理(`__getattr__`)
+
+正常情况下,当类的实例调用不存在的属性或者方法时,就会报错。
+
+但当类实现`__getattr__`方法，既可以自定义处理各种请求了。
+
+```python
+class Student(object):
+
+    def __init__(self):
+        self.name = 'Michael'
+
+    def __getattr__(self, attr):
+        # 假设参数为 ‘score’的自定义处理
+        if attr=='score':
+            return 99
+        # 假设参数为 ‘age’的自定义处理
+        if attr=='age':
+            # 返回lambda函数也可以
+            return lambda: 25
+
+        
+>>> s = Student()
+>>> s.name
+'Michael'
+# 即使该类实例不存在该属性也可以进行处理，不报错
+>>> s.score
+99
+# 处理自定义参数时返回函数需要更改为方法调用。
+>>> s.age()
+25
+```
+
+**如果在`__getattr__`内没有该参数的自定义处理方法的话,`__getattr__`默认返回就是`None` **
+
+如果要让class只响应特定的几个属性，就要按照约定，在最后抛出`AttributeError`的错误:
+
+```python
+class Student(object):
+
+    def __getattr__(self, attr):
+        if attr=='age':
+            return lambda: 25
+        raise AttributeError('\'Student\' object has no attribute \'%s\'' % attr)
+```
+
+
+
+但是自定义参数处理,这样一个一个处理非常麻烦,而且面对动态参数怎么办?
+
+比如:REST API的URL会进行动态处理,如果一个一个写就会非常麻烦。
+
+这时可以采用 完全动态的`__getattr__` 自定义处理方法，来实现动态链式调用。
+
+```python
+class Chain(object):
+
+    def __init__(self, path=''):
+        self._path = path
+
+    def __getattr__(self, path):
+        return Chain('%s/%s' % (self._path, path))
+
+    def __str__(self):
+        return self._path
+
+    __repr__ = __str__
+    
+>>> Chain().status.user.timeline.list
+'/status/user/timeline/list'
+```
+
+
+
+### 类的直接调用(`__call__`)
+
+我们都知道一些函数可以通过直接调用方式来实现功能
+
+```python
+>>> f ``=` `abs
+>>> f.__name__
+'abs'
+>>> f(``-``123``)
+```
+
+而类实例一般是不能直接调用的,只能实现其内部的方法.
+
+```python
+>>> p = Person('Bob', 'male')
+# 无法直接调用类实例
+>>> p()
+```
+
+为了实现实例本身可调用,需要在类定义一个`__call__`方法，就可以直接对实例进行调用。
+
+```python
+class Student(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __call__(self,src):
+        print('My name is %s.' % src)
+        
+>>> s = Student('Michael')
+>>> s('Tom')
+My name is Tom.        
+```
+
+这样可以直接调用本身,是不是就有点像函数操作了?
+
+因为类的实例都是运行期创建出来的，而函数本身其实也可以在运行期动态创建出来（赋值给变量）。
+
+
+
+### 枚举类
+
+Python也正常创建枚举类,用来保存固定常量。
+
+```python
+from enum import Enum, unique
+
+@unique
+class Weekday(Enum):
+    Sun = 0 # Sun的value被设定为0
+    Mon = 1
+    Tue = 2
+    Wed = 3
+    Thu = 4
+    Fri = 5
+    Sat = 6
+```
+
+`@unique`装饰器可以帮助我们检查保证没有重复值。
+
+访问这些枚举类型可以有若干种方法：
+
+```python
+>>> day1 = Weekday.Mon
+>>> print(day1)
+Weekday.Mon
+>>> print(Weekday.Tue)
+Weekday.Tue
+>>> print(Weekday['Tue'])
+Weekday.Tue
+>>> print(Weekday.Tue.value)
+2
+>>> print(Weekday(1))
+Weekday.Mon
+```
+
+
+
+## 错误处理
+
+所有语言几乎都有一套自己错误信息，这些错误信息往往代表程序运行时产生的问题，为了防止程序错误而退出这些问题，可以使用一些机制来进行处理该问题。
+
+
+
+### 错误捕捉
+
+Python也配置了`try`语句,用来捕捉错误信息。
+
+```python
+try:
+    print('try...')
+    r = 10 / 0
+    print('result:', r)
+except ZeroDivisionError as e:
+    print('except:', e)
+finally:
+    print('finally...')
+print('END')
+```
+
+Python的捕捉错误用的是`except`语句块,而没有`catch`语句块。
+
+它们的使用方法和JAVA等其他语言是一样的。
+
+Python所有的错误都是从`BaseException`类派生。可以使用捕捉`Exception`异常来捕捉所有的异常。
+
+Python中使用`try...except`捕获错误还有一个巨大的好处，就是可以跨越多层调用,这是其他语言不能实现的.
+
+```python
+def foo(s):
+    return 10 / int(s)
+
+def bar(s):
+    return foo(s) * 2
+
+def main():
+    try:
+        bar('0')
+    except Exception as e:
+        print('Error:', e)
+    finally:
+        print('finally...')
+```
+
+上面语句中,即使foo()方法报出错误,main方法中调用后依然可以捕捉到的。这样一来，就大大减少了写过多`try...except...finally`的麻烦。
+
+
+
+如果错误没有被捕获，它就会一直往上抛，最后被Python解释器捕获，打印一个错误信息，它叫做`调用栈`
+
+```python
+$ python3 err.py
+Traceback (most recent call last):
+  File "err.py", line 11, in <module>
+    main()
+  File "err.py", line 9, in main
+    bar('0')
+  File "err.py", line 6, in bar
+    return foo(s) * 2
+  File "err.py", line 3, in foo
+    return 10 / int(s)
+ZeroDivisionError: division by zero
+```
+
+一定要分析错误的调用栈信息，才能定位错误的位置。一般的错误产生于最底层。
+
+
+
+### 记录错误
+
+正常情况下,如果不捕获错误，自然可以让Python解释器来打印出错误堆栈，但程序也就被结束了。
+
+但是使用Python内置的`logging`模块可以非常容易地记录错误信息,然后保持程序的运行状态（前提是错误没有影响运行）。
+
+```python
+# err_logging.py
+import logging
+
+def foo(s):
+    return 10 / int(s)
+def bar(s):
+    return foo(s) * 2
+def main():
+    try:
+        bar('0')
+    except Exception as e:
+        logging.exception(e)
+main()
+print('END')
+```
+
+同时`logging`而是可以自定义输出日志的,logging 模块具有灵活的配置和格式化功能，如配置输出当前模块信息、运行时间等，相比 print 的字符串格式化更加方便易用。
+
+它具有4种日志等级:info\debug\warning\info\CRITICAL
+
+| 日志等级（level） | 描述                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| DEBUG             | 最详细的日志信息，典型应用场景是 问题诊断                    |
+| INFO              | 信息详细程度仅次于DEBUG，通常只记录关键节点信息，用于确认一切都是按照我们预期的那样进行工作 |
+| WARNING           | 当某些不期望的事情发生时记录的信息（如，磁盘可用空间较低），但是此时应用程序还是正常运行的 |
+| ERROR             | 由于一个更严重的问题导致某些功能不能正常运行时记录的信息     |
+| CRITICAL          | 当发生严重错误，导致应用程序不能继续运行时记录的信息         |
+
+```python
+import logging
+ 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+ 
+logger.info('This is a log info')
+logger.debug('Debugging')
+logger.warning('Warning exists')
+logger.info('Finish')
+```
+
+
+
+通过配置，`logging`还可以把错误记录到日志文件里。
+
+```python
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+logging.basicConfig(filename='my.log', level=logging.DEBUG, format=LOG_FORMAT)
+
+logging.debug("This is a debug log.")
+logging.info("This is a info log.")
+logging.warning("This is a warning log.")
+logging.error("This is a error log.")
+logging.critical("This is a critical log.")
+```
+
+此时会发现控制台中已经没有输出日志内容了，但是在python代码文件的相同目录下会生成一个名为'my.log'的日志文件。
+
+
+
+### 抛出错误
+
+捕捉错误是为了解决错误。
+
+而当错误无法解决或者错误可以接受时，可以尝试使用`raise `语句来抛弃错误（逃避可耻但或许有用 :smile:）
+
+```python
+# err_raise.py
+class FooError(ValueError):
+    pass
+
+def foo(s):
+    n = int(s)
+    if n==0:
+        raise FooError('invalid value: %s' % s)
+    return 10 / n
+
+foo('0')
+```
+
+此外，在`except`中`raise`一个Error，还可以把一种类型的错误转化成另一种类型：
+
+```python
+try:
+    10 / 0
+except ZeroDivisionError:
+    raise ValueError('input error!')
+```
+
+
+
+### 单元测试
+
+单元测试是用来对一个模块、一个函数或者一个类来进行正确性检验的测试工作。
+
+Python自带的`unittest`模块,它是Python内置测试模块。
+
+```python
+import unittest
+
+from mydict import Dict
+
+class TestDict(unittest.TestCase):
+
+    def test_init(self):
+        d = Dict(a=1, b='test')
+        self.assertEqual(d.a, 1)
+        self.assertEqual(d.b, 'test')
+        self.assertTrue(isinstance(d, dict))
+
+    def test_key(self):
+        d = Dict()
+        d['key'] = 'value'
+        self.assertEqual(d.key, 'value')
+
+    def test_attr(self):
+        d = Dict()
+        d.key = 'value'
+        self.assertTrue('key' in d)
+        self.assertEqual(d['key'], 'value')
+
+    def test_keyerror(self):
+        d = Dict()
+        with self.assertRaises(KeyError):
+            value = d['empty']
+
+    def test_attrerror(self):
+        d = Dict()
+        with self.assertRaises(AttributeError):
+            value = d.empty
+```
+
+上面是一个测试类，所有的测试类都必须继承与`unittest.TestCase`。
+
+其中测试类中的方法，以`test`开头的方法就是测试方法，不以`test`开头的方法不被认为是测试方法，测试的时候不会被执行。
+
+`unittest.TestCase`中提供了很多内置条件判断,用来判断是否单元存在错误。
+
+其中最常用的就是比较断言`assertEqual`:
+
+```python
+self.assertEqual(abs(-1), 1) # 断言比较函数返回的结果是否与1相等
+```
+
+还有`with self.assertRaises(错误)`方法块,用来判断里面的语句块是否存在错误,若存在则抛出定义的错误。
+
+```python
+with self.assertRaises(KeyError):
+    value = d['empty']
+```
+
+
+
+在单元测试类中，可以编写两个特殊的`setUp()`和`tearDown()`方法。
+
+这两个方法会分别在每调用一个测试方法的前后分别被执行。比如：测试需要启动数据库时，可以在`setUp()`方法中连接数据库，在`tearDown()`方法中关闭数据库。这样就避免在每一个测试方法中反复写数据库连接开关。
+
+```python
+class TestDict(unittest.TestCase):
+
+    def setUp(self):
+        print('setUp...')
+
+    def tearDown(self):
+        print('tearDown...')
+```
+
+
+
+单元测试学完了，需要运行单元测试。最简单的运行方式是在测试类的最后加上两行代码：
+
+```python
+if __name__ == '__main__':
+    unittest.main()
+```
+
+**这也是Python默认的入口语句，类似于Java的Main方法一样。**
+
+也可以在Python命令符下使用`python`语句正常运行
+
+```sh
+$ python mydict_test.py
+```
+
+另一种方法就是 在Python命令符通过参数`-m unittest`直接运行单元测试：
+
+```sh
+$ python -m unittest mydict_test
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.000s
+
+OK
+```
+
+这样做的话,可以一次性运行批量单元测试。
+
+
+
+## IO操作
+
+IO在计算机中是Input/Output(输入/输出)的缩写,IO操作自然就是指输入输出的操作。这里面的输入和输出不一定指的是字符流输入输出，也有可能是字节流输入输出。所以IO的范围非常广阔。
+
+IO操作在所有计算机语言中都非常重要，因为软件的相互交互是IO产生的结果。一个软件的好与坏IO操作占比评分非常大。
+
+IO流的优化目前依然在进行各种竞争，但IO流中目前主要分为了同步IO 以及 异步IO。
+
+同步IO：CPU在拿到结果前一直等待，也就是程序暂停执行后续代码，等结果完毕，再接着往下执行。这时最容易实现的，但要知道现在人人CPU都是多核，CPU等待这种体验十分差。
+
+异步IO：CPU直接不等待，后续代码可以立刻接着执行，等结果处理完毕再追加上去。由于不需要等待时间，用户体验好，但是异步可能会产生许多问题，完美实现难度大。
+
+
+
+### 文件读写
+
+Python内置了读写文件的函数，用法和C是兼容的。
+
+默认情况下，系统都是不会允许普通应用来访问或者修改文件的。所以，读写文件就是请求操作系统打开一个文件对象（通常称为文件描述符），然后，通过操作系统提供的接口从这个文件对象中读取数据（读文件），或者把数据写入这个文件对象（写文件）。
+
+
+
+**读取文件**：
+
+读取文件，可以使用Python内置的`open()`函数,并传入文件路径和权限标识符(如果文件不存在，`open()`函数就会抛出一个`IOError`的错误):
+
+```python
+>>> f = open('/Users/michael/test.txt', 'r')
+
+>>> f.read()
+'Hello, world!'
+
+>>> f.close()
+```
+
+`open`里面的第一个参数为文件路径，这里的路径使用相对的话，那么它是以当前项目目录来寻找的，所以对于其他目录下的文件,优先使用绝对路径。
+
+读取成功后实例使用`read()`方法即可以用str字符串方式读取文件内容。
+
+`open`语句里面的,权限标示符'r'表示仅 `读取`,其实也只是读取字符文件,如果要读取字节文件,如图片、视频等等,使用`'rb'`模式打开。
+
+```python
+>>> f = open('/Users/michael/test.jpg', 'rb')
+>>> f.read()
+b'\xff\xd8\xff\xe1\x00\x18Exif\x00\x00...' # 十六进制表示的字节
+```
+
+`open`语句后还可以附加一个编码参数，用来打开文件的规定编码类型（默认是UTF-8）：
+
+```python
+>>> f = open('/Users/michael/gbk.txt', 'r', encoding='gbk')
+>>> f.read()
+'测试'
+```
+
+
+
+每次操作结束后务必调用`close()`方法关闭stream流。
+
+为了方便整个流程，我们通常使用`try...finally`来进行整个流程:
+
+```python
+try:
+    f = open('/path/to/file', 'r')
+    print(f.read())
+finally:
+    if f:
+        f.close()
+```
+
+一二次还好,如果多次的话,这样操作也比较麻烦,我们可以使用Python 的`with`语句来配合读取:
+
+```python
+with open('/path/to/file', 'r') as f:
+    print(f.read())
+```
+
+这和前面的`try ... finally`是一样的，但是代码更佳简洁，并且不必调用`f.close()`方法。
+
+
+
+调用`read()`会一次性读取文件的全部内容,这对于一些大文件来说是不合理的操作。所以为了保险，调用`read(size)`方法来限制每次读取的最大字节内容。
+
+另外对于文本文件，也可以调用`readline()`可以每次读取一行内容，调用`readlines()`一次读取所有内容并按行返回`list`。
+
+```python
+for line in f.readlines():
+    print(line.strip()) # 把末尾的'\n'删掉
+```
+
+所以，文件小用`read()`最方便；不能确定文件大小的文件，反复调用`read(size)`比较保险；如果是文本文件，调用`readlines()`最方便。
+
+
+
+**写入文件：**
+
+写文件和读文件是一样的，唯一区别是调用`open()`函数时，传入标识符`'w'`或者`'wb'`表示写文本文件或写二进制文件。
+
+```python
+>>> f = open('/Users/michael/test.txt', 'w')
+>>> f.write('Hello, world!')
+>>> f.close()
+```
+
+其中标识符`'w'`标识覆盖写入（文件如存在，将会重新覆盖掉源文件写入），使用`wa`标识才为追加写入。
+
+**这表明`open()`函数不仅可以读取文件,也可以生成文件.**
+
+当我们写文件时，操作系统往往不会立刻把数据写入磁盘，而是放到**内存**缓存起来，空闲的时候再慢慢写入。只有调用`close()`方法时，操作系统才保证把没有写入的数据全部写入磁盘。所以务必在最后是调用`close()`方法关闭Stream流。
+
+为了方便，依旧可以采用`with`语句来进行操作:
+
+```python
+with open('/Users/michael/test.txt', 'w') as f:
+    f.write('Hello, world!')
+```
+
+其文件编码也是和读取文件一样,在`open`方法中加入`encoding`参数来适配文件的编码。
+
+
+
+最后，关于权限标识符详细简绍（单个字母的模式效果可以叠加）：
+
+| 模式 |                           使用描述                           |
+| :--: | :----------------------------------------------------------: |
+|  t   |                     文本模式 （默认）。                      |
+|  x   |       写模式，新建一个文件，如果该文件已存在则会报错。       |
+|  b   |                         二进制模式。                         |
+|  +   |              打开一个文件进行更新（可读可写）。              |
+|  U   |              通用换行模式（Python 3 不支持）。               |
+|  r   | 以只读方式打开文件。文件的指针将会放在文件的开头。这是默认模式。 |
+|  rb  | 以二进制格式打开一个文件用于只读。文件指针将会放在文件的开头。这是默认模式。一般用于非文本文件如图片等。 |
+|  r+  |      打开一个文件用于读写。文件指针将会放在文件的开头。      |
+| rb+  | 以二进制格式打开一个文件用于读写。文件指针将会放在文件的开头。一般用于非文本文件如图片等。 |
+|  w   | 打开一个文件只用于写入。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。 |
+|  wb  | 以二进制格式打开一个文件只用于写入。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。一般用于非文本文件如图片等。 |
+|  a   | 打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。也就是说，新的内容将会被写入到已有内容之后。如果该文件不存在，创建新文件进行写入。 |
+|  ab  | 以二进制格式打开一个文件用于追加。如果该文件已存在，文件指针将会放在文件的结尾。也就是说，新的内容将会被写入到已有内容之后。如果该文件不存在，创建新文件进行写入。 |
+
+
+
+### 内存中IO操作
+
+除了硬盘外，其实内存也是属于一种存储单位。
+
+当内存存储满后，操作系统会强制进行清空一些不重要的内存数据，甚至关闭一些应用（这就是为什么有时打开过多应用后，系统卡顿后，一些应用未响应闪退的原因）。所以内存存储数据不稳定，不具有序列化功能，所以一些应用会在内存中存储一些不那么重要的数据。
+
+自然Python可以使用StringIO在内存中进行读写字符内容。
+
+```python
+>>> from io import StringIO
+
+>>> f = StringIO()
+>>> f.write('hello')
+5
+>>> f.write(' ')
+1
+>>> f.write('world!')
+6
+>>> print(f.getvalue())
+hello world!
+```
+
+其中`wirte`操作和文件读写一样,而`getvalue()`方法用于获得写入后的str。
+
+读取内存中的StringIO，可以用一个str初始化StringIO，然后，像读文件一样读取：
+
+```python
+>>> from io import StringIO
+>>> f = StringIO('Hello!\nHi!\nGoodbye!')
+>>> while True:
+...     s = f.readline()
+...     if s == '':
+...         break
+...     print(s.strip())
+...
+Hello!
+Hi!
+Goodbye!
+```
+
+**注意:同一个`StringIO`因为the stream position的原因,要么只能用来读取,要么只能用来写入,没法同一个用来有读又写!**
+
+
+
+### 文件/目录操作
+
+IO操作中不一定是对文件进行读取\写入操作,而文件属性\目录文件夹等一些操作也同样属于IO操作。
+
+无论是在Windows、在Linux还是在Mac系统中，都存在一些操作接口，比如一些文件夹操作目录等。
+
+Python内置的`os`模块也可以直接调用操作系统提供的接口函数。
+
+```python
+>>> import os
+>>> os.name # 操作系统类型
+'posix'
+```
+
+如果是`posix`，说明系统是`Linux`、`Unix`或`Mac OS X`，如果是`nt`，就是`Windows`系统。
+
+操作文件和目录的函数一部分放在`os`模块中，一部分放在`os.path`模块中，其操作方法和大部分操作系统目录一样：
+
+```python
+>>> import os
+
+# 查看当前目录的绝对路径:
+>>> os.path.abspath('.')
+'/Users/michael'
+# 在某个目录下创建一个新目录，首先把新目录的完整路径表示出来:
+>>> os.path.join('/Users/michael', 'testdir')
+'/Users/michael/testdir'
+# 查询文件夹下所有文件及文件夹
+>>> os.listdir()
+['.idea', 'main.py', 'venv']
+# 然后创建一个目录:
+>>> os.mkdir('/Users/michael/testdir')
+# 删掉一个目录:
+>>> os.rmdir('/Users/michael/testdir')
+# 对文件重命名:
+>>> os.rename('test.txt', 'test.py')
+# 删掉文件:
+>>> os.remove('test.py')
+```
+
+其中复制操作的函数不在`os`模块中,原因是复制文件并非由操作系统提供的系统调用。`shutil`模块提供了`copyfile()`的函数可以用来复制文件，`shutil`模块可以用作`os`模块的补充。
+
+可以使用Python的相关操作来实现过滤查询文件。
+
+比如列出当前目录下的所有目录，只需要一行代码：
+
+```python
+>>> [x for x in os.listdir('.') if os.path.isdir(x)]
+['.lein', '.local', '.m2', '.npm', '.ssh', '.Trash', '.vim', 'Applications', 'Desktop', ...]
+```
+
+
+
+
+
+### 序列化
+
+将运行中的数据进行保存到存储空间的操作就叫序列化。在Python中叫pickling，在其他语言中也被称之为serialization，marshalling，flattening等等，都是一个意思。
+
+序列化后的文件可以反过来 将其读取到内存中，来恢复之前数据。这种操作叫反序列化，在Python中叫unpickling。
+
+
+
+**二进制文件序列化:**
+
+Python提供了`pickle`模块来实现序列化。比如将其一个字典对象进行了序列化：
+
+```python
+>>> import pickle
+>>> d = dict(name='Bob', age=20, score=88)
+>>> pickle.dumps(d)
+b'\x80\x03}q\x00(X\x03\x00\x00\x00ageq\x01K\x14X\x05\x00\x00\x00scoreq\x02KXX\x04\x00\x00\x00nameq\x03X\x03\x00\x00\x00Bobq\x04u.'
+```
+
+`pickle.dumps()`方法把任意对象序列化成一个`bytes`，然后，可以使用上面`文件读写`中的方式,把这个`bytes`写入文件。当然其中使用`pickle.dump()`可以直接把对象序列化后写入一个指定文件下：
+
+```python
+>>> f = open('dump.txt', 'wb')
+>>> pickle.dump(d, f)
+>>> f.close()
+```
+
+
+
+当需要进行获取到相关数据时，可以使用`pickle.loads()`方法反序列化出对象：
+
+```python
+>>> f = open('dump.txt', 'rb')
+>>> d = pickle.load(f)
+>>> f.close()
+>>> d
+{'age': 20, 'score': 88, 'name': 'Bob'}
+```
+
+注意，反序列化恢复的变量和原来的变量是完全不相干的对象，它们只是内容相同而已。
+
+`Pickle`模块有一个问题，只能用于Python，可能不同版本的Python彼此都不兼容，所以使用它进行序列化文件时要做好反序列化失败的准备:cry:。
+
+
+
+**普通类型Json文件序列化:**
+
+上面简绍了二进制文件序列化,其实它的使用局限非常大,因为二进制程序的兼容性问题,所以一般不采用二进制序列化操作。
+
+要在不同的编程语言之间传递对象，就必须把对象序列化为标准格式，比如XML，但更好的方法是序列化为JSON，因为JSON表示出来就是一个字符串，可以被所有语言读取，XML文件的树结构需要一定的逻辑常量，解析自然慢与JSON文件。
+
+JSON表示的对象就是标准的JavaScript语言的对象。所以Python类型序列化后会转化为JS类型，其实大部分都差不多。
+
+| JSON类型   | Python类型 |
+| :--------- | :--------- |
+| {}         | dict       |
+| []         | list       |
+| "string"   | str        |
+| 1234.56    | int或float |
+| true/false | True/False |
+| null       | None       |
+
+Python内置的`json`模块提供了非常完善的Python对象到JSON格式的转换：
+
+```python
+>>> import json
+>>> d = dict(name='Bob', age=20, score=88)
+>>> json.dumps(d)
+'{"age": 20, "score": 88, "name": "Bob"}'
+```
+
+`umps()`方法返回一个`str`，内容就是标准的JSON。类似的，`dump()`方法可以直接把JSON写入一个文件内。
+
+而将Json进行反序列化操作，用`loads()`或者对应的`load()`方法，前者把JSON的字符串反序列化，后者从`文件对象`中读取字符串并反序列化：
+
+```python
+>>> json_str = '{"age": 20, "score": 88, "name": "Bob"}'
+>>> json.loads(json_str)
+{'age': 20, 'score': 88, 'name': 'Bob'}
+```
+
+因为Json的国际标准编码就是UTF-8，所以不需要考虑编码问题。
+
+
+
+**对于Class的Json文件序列化:**
+
+Python的`dict`对象可以直接序列化为JSON的`{}`，不过，很多时候，我们更喜欢用`class`表示对象
+
+对于这这情况下，不能直接进行导入`umps()`方法中，否则会直接报错。
+
+对于class类的序列化需要专门为那个类写一个对应类的序列化操作的函数，然后在将其放入`default`参数中，才能将其类按要求序列化：
+
+```python
+import json
+
+class Student(object):
+    def __init__(self, name, age, score):
+        self.name = name
+        self.age = age
+        self.score = score
+        
+def student2dict(std):
+    return {
+        'name': std.name,
+        'age': std.age,
+        'score': std.score
+    }  
+
+s = Student('Bob', 20, 88)
+>>> print(json.dumps(s, default=student2dict))
+{"age": 20, "name": "Bob", "score": 88}
+```
+
+其实也可以投机取巧，使用每个类下的`__dict__`方法(转化dict方法),将其序列化为dict(列表属于Json格式)。
+
+```python
+json.dumps(s, default=lambda obj: obj.__dict__)
+```
+
+
+
+对于反序列化操作的话，也要求配置一个对应类的反序列化操作函数，然后放在`object_hook`参数类,才能顺利反序列化成功:
+
+```python
+def dict2student(d):
+    return Student(d['name'], d['age'], d['score'])
+    
+>>> json_str = '{"age": 20, "score": 88, "name": "Bob"}'
+>>> print(json.loads(json_str, object_hook=dict2student))
+<__main__.Student object at 0x10cd3c190>   
+```
+
+
+
+
+
+
+
+
 
 
 
