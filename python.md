@@ -3304,3 +3304,111 @@ parser.feed('''<html>
 ```
 
 `feed()`方法用来解析html内容，可以多次调用，也就是不一定一次把整个HTML字符串都塞进去，可以一部分一部分塞进去。
+
+
+
+## 数据库操控
+
+在开发中一定会遇见需要存储的数据，大部分采用数据库存储方式。在Python可以与很多数据库进行控制,可以使用它们来操作对于的数据库模型。实现数据库存储、数据库查询等操作。
+
+### SQLite
+
+学过Android开发的人都知道Android应用上目前最常用的数据库就是SQLite。SQLite是一种嵌入式数据库，它的数据库就是一个文件。由于SQLite本身是C写的，而且体积很小，所以，经常被集成到各种应用程序中，在iOS和Android的App中都可以集成。
+
+Python就内置了SQLite3，所以，在Python中使用SQLite，不需要安装任何东西，直接使用。
+
+操作说明：首先需要连接到数据库，然后通过数据库实例需要打开游标，称之为`Cursor`，`Cursor`是操作数据库的主要工具，它主要作用就是直接进行sql操作，最终获得sql执行结果。
+
+创建，插入数据：
+
+```python
+# 导入SQLite驱动:
+import sqlite3
+# 连接到SQLite数据库
+# 数据库文件是test.db
+# 如果文件不存在，会自动在当前目录创建:
+conn = sqlite3.connect('test.db')
+# 创建一个Cursor:
+cursor = conn.cursor()
+# 执行一条SQL语句，创建user表:
+cursor.execute('create table user (id varchar(20) primary key, name varchar(20))')
+<sqlite3.Cursor object at 0x10f8aa260>
+# 继续执行一条SQL语句，插入一条记录:
+cursor.execute('insert into user (id, name) values (\'1\', \'Michael\')')
+<sqlite3.Cursor object at 0x10f8aa260>
+# 通过rowcount获得插入的行数:
+print（cursor.rowcount）
+1
+# 关闭Cursor:
+>>> cursor.close()
+# 提交事务:
+>>> conn.commit()
+# 关闭Connection:
+>>> conn.close()
+```
+
+查询 数据：
+
+```python
+conn = sqlite3.connect('test.db')
+cursor=conn.cursor()
+# 执行查询语句:
+cursor.execute('select * from user where id=?', ('1',))
+# 获得查询结果集:
+values = cursor.fetchall()
+print(values)
+[('1', 'Michael')]
+cursor.close()
+conn.commit()
+conn.close()
+```
+
+**在进行创建、修改、插入、删除操作后需要`commit()`提交事务后才能应用。**
+
+**在使用结束后一定要记住关闭`Cursor`和`Connection`实例的连接，否则，资源就会泄露。**
+
+使用`Cursor`对象执行`select`语句时，通过`fetchall()`可以拿到结果集。
+
+结果集是一个`list`，每个元素都是一个`tuple`，对应一行记录。
+
+
+
+### Mysql
+
+说起数据库，那肯定不会漏掉Mysql，Mysql是目前全球最流行的开源关系型数据库服务器。
+
+由于MySQL服务器以独立的进程运行，并通过网络对外服务，所以，需要支持Python的MySQL驱动来连接到MySQL服务器。
+
+MySQL官方提供了mysql-connector-python驱动模块：
+
+```bash
+pip install mysql-connector-python
+```
+
+由于Python的DB-API定义都是通用的，所以，操作MySQL的数据库代码和SQLite类似。
+
+```python
+# 连接Mysql数据库
+conn = mysql.connector.Connect(user='root', password='123456', database='ipp')
+cursor = conn.cursor()
+# 创建user表
+cursor.execute('create table user (id varchar(20) primary key, name varchar(20))')
+# 插入一行记录，注意MySQL的占位符是%s:
+cursor.execute('insert into user (id, name) values (%s, %s)', ['1', 'Michael'])
+print（cursor.rowcount）
+1
+# 提交事务:
+conn.commit()
+cursor.execute('select * from user where id = %s', ('1',))
+values = cursor.fetchall()
+print（values）
+[('1', 'Michael')]
+# 关闭Cursor和Connection:
+cursor.close()
+conn.close()
+```
+
+由于操作都一样，事务需要提交，并且connector和cursor使用完后也是需要关闭的。
+
+
+
