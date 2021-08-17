@@ -10695,6 +10695,8 @@ public class EurekaStateChangeListener {
 
 注意：在 Eureka 集群环境下，每个节点都会触发事件,这个时候需要控制下发送通知的行为，不控制的话每个节点都会发送通知。
 
+
+
 ## Ribbon
 
 ### 简介
