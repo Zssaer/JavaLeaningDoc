@@ -165,7 +165,7 @@ Sentinel配置文件建议使用Json文件来进行配置，其中配置内容�
 
 3. 在其创建的`nacos`包中创建一个`NacosConfig`类,当做Nacos的配置类。
 
-```html
+```java
 import com.alibaba.csp.sentinel.datasource.Converter;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.nacos.api.PropertyKeyConst;

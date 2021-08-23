@@ -1,10 +1,10 @@
 # 压力测试工具-JMeter
 
-上面介绍了Sentinel框架后，为了测试并发等功能，需要使用工具才行。
+上面介绍了[Sentinel框架](http://zssaer.cn/2021/08/20/sentinel/)后，为了测试并发等功能，需要使用工具才行。
 
 这儿简绍Apache JMeter -基于Java开发的压力测试工具。
 
-
+![](../picture/8ad4b31c8701a18bc4cdb31613c2b70e2938febd.jpeg)
 
 进行Http多线程测试操作:
 
