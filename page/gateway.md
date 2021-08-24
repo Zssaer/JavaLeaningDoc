@@ -245,3 +245,61 @@ Header 路由断言工厂接收两个参数，分别是请求头名称和正则�
 不同的过滤工厂函数可以在`filters`中叠加，用来满足各方面的要求。
 
 上面是比较常用的过滤工厂，除GateWay内置的过滤工厂以外，还可以自定义过滤工厂函数，来进行自定义过滤，当然这一点可以自行网络了解。
+
+
+
+## 全局过滤器-GlobalFilter
+
+全局过滤器作用于所有的路由，不需要单独配置，我们可以用它来实现很多统一化处理的业务需求，比如权限认证、IP 访问限制等。
+
+Gateway官方定义了一个GlobalFilter 接口,自带的 GlobalFilter 实现类有很多，当然也可以自行自定义实现一些过滤方式。
+
+```java
+@Configuration
+public class ExampleConfiguration {
+    private Logger log = LoggerFactory.getLogger(ExampleConfiguration.class);
+
+    @Bean
+    @Order(-1)
+    public GlobalFilter a() {
+        return (exchange, chain) -> {
+            log.info("first pre filter");
+            return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+                log.info("third post filter");
+            }));
+        };
+    }
+
+    @Bean
+    @Order(0)
+    public GlobalFilter b() {
+        return (exchange, chain) -> {
+            log.info("second pre filter");
+            return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+                log.info("second post filter");
+            }));
+        };
+    }
+
+    @Bean
+    @Order(1)
+    public GlobalFilter c() {
+        return (exchange, chain) -> {
+            log.info("third pre filter");
+            return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+                log.info("first post filter");
+            }));
+        };
+    }
+}
+```
+
+```
+2019-8-26 16:08:52.406  INFO 55062 --- [ioEventLoop-4-1] c.c.gateway.config.ExampleConfiguration  : first pre filter
+2019-8-26 16:08:52.406  INFO 55062 --- [ioEventLoop-4-1] c.c.gateway.config.ExampleConfiguration  : second pre filter
+2019-8-26 16:08:52.407  INFO 55062 --- [ioEventLoop-4-1] c.c.gateway.config.ExampleConfiguration  : third pre filter
+2019-8-26 16:08:52.437  INFO 55062 --- [ctor-http-nio-7] c.c.gateway.config.ExampleConfiguration  : first post filter
+2019-8-26 16:08:52.438  INFO 55062 --- [ctor-http-nio-7] c.c.gateway.config.ExampleConfiguration  : second post filter
+2019-8-26 16:08:52.438  INFO 55062 --- [ctor-http-nio-7] c.c.gateway.config.ExampleConfiguration  : third post filter
+```
+
