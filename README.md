@@ -25,6 +25,6 @@
 
 :pager:[查看Nacos教程MD文件](./page/Nacos.md)  2021-08-17 新增Nacos教程
 
-:open_book: 内容部分来自互联网，内容不保证完全正确,其中(Python教程)[https://www.liaoxuefeng.com/wiki/1016959663602400]主要来自于廖雪峰。
+:open_book: 内容部分来自互联网，内容不保证完全正确,其中(Python教程)[https://www.liaoxuefeng.com/wiki/1016959663602400] 主要来自于廖雪峰。
 
 🍫 文件编写开始时间：2020-10-27
