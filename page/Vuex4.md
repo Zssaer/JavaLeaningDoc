@@ -262,7 +262,7 @@ actions: {
   }
 ```
 
-Action 函数接受一个与 store 实例具有相同方法和属性的 context 对象，因此你可以调用 `context.commit` 提交一个 mutation。
+Action 函数接受一个与 store 实例具有相同方法和属性的 context 对象，因此你可以调用 `context.commit` 提交一个 mutation。或者通过 `context.state`来获取 state 。
 
 实践中，我们会经常用到 ES6 的参数解构来简化代码（特别是我们需要调用 `commit` 很多次的时候）：
 
@@ -282,7 +282,8 @@ actions: {
 store.dispatch('increment')
 ```
 
-乍一眼看上去感觉多此一举，我们直接commit触发 mutation 岂不更方便？实际上并非如此， **mutation 必须同步执行**！而Action 就不受约束！我们可以在 action 内部执行**异步**操作：
+乍一眼看上去感觉多此一举，我们直接commit触发 mutation 岂不更方便？实际上并非如此， **mutation 必须同步执行**！
+而Action 就不受约束！我们可以在 action 内部执行**异步**操作：
 
 ```js
 actions: {
@@ -293,6 +294,8 @@ actions: {
   }
 }
 ```
+
+Action更多是调用外部的Api，而mutation 则是单纯的做state的处理。
 
 同样action 也可以使用类似mutation 载荷（payload）操作：
 
@@ -307,5 +310,239 @@ store.dispatch({
   type: 'incrementAsync',
   amount: 10
 })
+```
+
+### Module
+
+如果一个中大型项目使用一个Store对象的话，全部存储到一个状态树下，那么store就会变得相当臃肿。
+
+为了便于开发和使用store，Vuex允许将Store分割为多个模块（Module）。每个模块都拥有自己的state、mutation、action...甚至嵌套子模块。
+
+```js
+
+const store = createStore({
+  modules: {
+    a: moduleA,
+    b: moduleB
+  }
+})
+
+const moduleA = {
+  state: () => ({ ... }),
+  mutations: { ... },
+  actions: { ... },
+  getters: { ... }
+}
+
+const moduleB = {
+  state: () => ({ ... }),
+  mutations: { ... },
+  actions: { ... }
+}
+
+store.state.a // -> moduleA 的状态
+store.state.b // -> moduleB 的状态
+```
+
+对于模块内部的 mutation 的话，其中接受的第一个函数是**模块的局部状态对象**，而不是整个store的状态对象。
+
+```js
+const moduleA = {
+  state: () => ({
+    count: 0
+  }),
+  mutations: {
+    increment (state) {
+      // 这里的 `state` 对象是模块的局部状态
+      state.count++
+    }
+  }
+```
+
+同样，对于模块内部的 action，局部状态通过 `context.state` 暴露出来，根节点状态则为 `context.rootState`：
+
+```js
+const moduleA = {
+  // ...
+  actions: {
+    incrementIfOddOnRootSum ({ state, commit, rootState }) {
+      if ((state.count + rootState.count) % 2 === 1) {
+        commit('increment')
+      }
+    }
+  }
+}
+```
+
+
+
+在 store 创建**之后**，你可以使用 `store.registerModule` 方法注册模块，从而达到动态注册模块：
+
+```js
+import { createStore } from 'vuex'
+
+const store = createStore({ /* 选项 */ })
+
+// 注册模块 `myModule`
+store.registerModule('myModule', {
+  // ...
+})
+// 注册嵌套模块 `nested/myModule`
+store.registerModule(['nested', 'myModule'], {
+  // ...
+})
+```
+
+之后就可以通过 `store.state.myModule` 和 `store.state.nested.myModule` 访问模块的状态。
+
+模块动态注册功能使得其他 Vue 插件可以通过在 store 中附加新模块的方式来使用 Vuex 管理状态。例如，[`vuex-router-sync`](https://github.com/vuejs/vuex-router-sync) 插件就是通过动态注册模块将 Vue Router 和 Vuex 结合在一起，实现应用的路由状态管理。
+
+当然你也可以使用 `store.unregisterModule(moduleName)` 来动态卸载模块。但注意，不能使用此方法来卸载静态模块（即在创建store声明的模块）。
+
+
+
+默认情况下，模块内部的state是嵌套的，拥有独立空间，模块间互不干扰，但模块内部的 action 和 mutation 仍然是注册在**全局命名空间**的——这样使得多个模块能够对同一个 action 或 mutation 作出响应。如果希望模块具有更高的封装度和复用性，你可以通过添加 `namespaced: true` 的方式使其成为带命名空间的模块。
+
+当模块被注册后，它的所有 getter、action 及 mutation 都会自动根据模块注册的路径调整命名。
+
+```js
+account: {
+      namespaced: true,
+      // 模块内容（module assets）
+      state: () => ({ ... }), // 模块内的状态已经是嵌套的了，使用 `namespaced` 属性不会对其产生影响
+      getters: {
+        isAdmin () { ... } // -> getters['account/isAdmin']
+      },
+      actions: {
+        login () { ... } // -> dispatch('account/login')
+      },
+      mutations: {
+        login () { ... } // -> commit('account/login')
+      },
+     // 子嵌套模块
+      modules: {
+        // 继承父模块的命名空间
+        myPage: {
+          state: () => ({ ... }),
+          getters: {
+            profile () { ... } // -> getters['account/profile']
+          }
+        },
+       ...
+      }  
+}      
+```
+
+被命名后，访问的时候需要加上模块名，如dispatch('account/login')。
+
+
+
+## 总体结构
+
+Vuex官方表示Vuex并不限制用户的代码结构，但规定了一些需要遵守的规则：
+
+1. 应用层级的多个状态应该集中到单个 store 对象存储，而不是分开为多个属性存储。
+2. 提交 **mutation** 是更改状态的唯一方法，并且这个过程是同步的。
+3. 异步逻辑都应该封装到 **action** 里面。
+
+建议：如果你的 store 文件太大，只需将 action、mutation 和 getter 分割到单独的文件。
+
+对于大型应用，官方希望把 Vuex 相关代码分割到模块中。下面是官方推荐项目结构示例：
+
+```js
+├── index.html
+├── main.js
+├── api
+│   └── ... # 抽取出API请求
+├── components
+│   ├── App.vue
+│   └── ...
+└── store
+    ├── index.js          # 我们组装模块并导出 store 的地方
+    ├── actions.js        # 根级别的 action
+    ├── mutations.js      # 根级别的 mutation
+    └── modules
+        ├── cart.js       # 购物车模块
+        └── products.js   # 产品模块
+```
+
+Vuex官方的购物车案例源码：https://github.com/vuejs/vuex/tree/4.0/examples/classic/shopping-cart
+
+
+
+## Vue3组合式API
+
+Vue3官方推荐使用组合式API（Composition API），所以在组合式API中，Vuex也有相应的方法。
+
+可以通过调用 `useStore` 函数，来在 `setup` 钩子函数中访问 store。这与在组件中使用选项式 API 访问 `this.$store` 是等效的。
+
+有了store的实例变量后，为了访问 state 和 getter，需要创建 `computed` 引用以保留响应性，这与在选项式 API 中创建计算属性等效。
+
+要使用 mutation 和 action 时，只需要在 `setup` 钩子函数中调用 `commit` 和 `dispatch` 函数。
+
+```js
+import { useStore } from 'vuex'
+
+export default {
+  setup () {
+    const store = useStore()
+    return {
+      // 在 computed 函数中访问 state
+      count: computed(() => store.state.count),
+      // 在 computed 函数中访问 getter
+      double: computed(() => store.getters.double)
+    }
+  }
+}
+```
+
+
+
+## 关于双向绑定
+
+一般情况下我们都可能会面临这样的情况，需要将store获取过来的状态进行双向绑定。
+
+```html
+<input v-model="obj.message">
+```
+
+这样操作是不被允许的，在用户输入时，`v-model` 会试图直接修改 `obj.message`。在严格模式中，由于这个修改不是在 mutation 函数中执行的, 这里会抛出一个错误。
+
+所以解决方法就是：给 `<input>` 中绑定 value，然后侦听 `input` 或者 `change` 事件，在事件回调中调用一个方法:
+
+```js
+<input :value="message" @input="updateMessage">
+    
+// ...
+computed: {
+  ...mapState({
+    message: state => state.obj.message
+  })
+},
+methods: {
+  updateMessage (e) {
+    this.$store.commit('updateMessage', e.target.value)
+  }
+}
+```
+
+这是常会想到的方法，但是如果当存在大量这种情况就会显得这种操作非常繁琐，而且代码上会变得臃肿不堪。
+
+为了方便，另一个方法就是使用带有 setter 的双向绑定计算属性：
+
+```js
+<input v-model="message">
+
+// ...
+computed: {
+  message: {
+    get () {
+      return this.$store.state.obj.message
+    },
+    set (value) {
+      this.$store.commit('updateMessage', value)
+    }
+  }
+}
 ```
 
