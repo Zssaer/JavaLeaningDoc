@@ -37,7 +37,7 @@ createApp(Counter).mount('#app')
 - **视图**，以声明方式将**状态**映射到视图；
 - **操作**，响应在**视图**上的用户输入导致的状态变化。
 
-![](https://next.vuex.vuejs.org/flow.png)
+  ![](../../vuepress-starter/docs/.vuepress/public/img/flow.png)
 
 但当我们需要将其中的 状态(State)传递到其他模块呢？
 
