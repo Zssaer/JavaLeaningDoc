@@ -20,6 +20,7 @@ Java-Reflection可以在在日常的第三方应用开发过程中，会遇到�
 | Field类       | 代表类的成员变量（成员变量也称为类的属性）       |
 | Method类      | 代表类的方法                                     |
 | Constructor类 | 代表类的构造方法                                 |
+| Annotation类  | 代表类的注解                                     |
 
 ## 基础技术
 
@@ -27,20 +28,22 @@ Java-Reflection可以在在日常的第三方应用开发过程中，会遇到�
 
 #### **获得类相关的方法**
 
-| 方法                       | 用途                                                   |
-| -------------------------- | ------------------------------------------------------ |
-| asSubclass(Class<U> clazz) | 把传递的类的对象转换成代表其子类的对象                 |
-| Cast                       | 把对象转换成代表类或是接口的对象                       |
-| getClassLoader()           | 获得类的加载器                                         |
-| getClasses()               | 返回一个数组，数组中包含该类中所有公共类和接口类的对象 |
-| getDeclaredClasses()       | 返回一个数组，数组中包含该类中所有类和接口类的对象     |
-| forName(String className)  | 根据类名返回类的对象                                   |
-| getName()                  | 获得类的完整路径名字                                   |
-| newInstance()              | 创建类的实例                                           |
-| getPackage()               | 获得类的包                                             |
-| getSimpleName()            | 获得类的名字                                           |
-| getSuperclass()            | 获得当前类继承的父类的名字                             |
-| getInterfaces()            | 获得当前类实现的类或是接口                             |
+| 方法                                          | 用途                                                   |
+| --------------------------------------------- | ------------------------------------------------------ |
+| asSubclass(Class<U> clazz)                    | 把传递的类的对象转换成代表其子类的对象                 |
+| Cast                                          | 把对象转换成代表类或是接口的对象                       |
+| getClassLoader()                              | 获得类的加载器                                         |
+| getClasses()                                  | 返回一个数组，数组中包含该类中所有公共类和接口类的对象 |
+| getDeclaredClasses()                          | 返回一个数组，数组中包含该类中所有类和接口类的对象     |
+| forName(String className)                     | 根据类名返回类的对象                                   |
+| getName()                                     | 获得类的完整路径名字                                   |
+| newInstance()                                 | 创建类的实例                                           |
+| getPackage()                                  | 获得类的包                                             |
+| getSimpleName()                               | 获得类的名字                                           |
+| getSuperclass()                               | 获得当前类继承的父类的名字                             |
+| getInterfaces()                               | 获得当前类实现的类或是接口                             |
+| getAnnotation(Class<T> annotationClass)       | 获取类上面的注解                                       |
+| isAnnotationPresent(Class<T> annotationClass) | 判断是否对应的注解                                     |
 
 例：使用forName来创建一个指定类的实例：
 
@@ -104,11 +107,15 @@ Method method = c4.getDeclaredMethod("welcome",p4);
 
 Field类的成员变量（成员变量也称为类的属性）。
 
-| 方法                          | 用途                    |
-| ----------------------------- | ----------------------- |
-| equals(Object obj)            | 属性与obj相等则返回true |
-| get(Object obj)               | 获得obj中对应的属性值   |
-| set(Object obj, Object value) | 设置obj中对应属性值     |
+| 方法                                          | 用途                        |
+| --------------------------------------------- | --------------------------- |
+| equals(Object obj)                            | 属性与obj相等则返回true     |
+| get(Object obj)                               | 获得obj中对应的属性值       |
+| set(Object obj, Object value)                 | 设置obj中对应属性值         |
+| getType()                                     | 返回属性声明类型的class对象 |
+| getGenericType()                              | 返回属性声明类型的Type对象  |
+| getAnnotation(Class<T> annotationClass)       | 获取变量\属性上面的注解     |
+| isAnnotationPresent(Class<T> annotationClass) | 判断是否对应的注解          |
 
 例：设置一个实例中的某个对象/属性的值：
 
@@ -122,13 +129,23 @@ field2.set(o, 1);
 
 
 
+注意，其中getType() 和 getGenericType()的区别 ：
+
+1. 首先是返回的类型不一样，一个是Class对象一个是Type接口。
+2. 如果属性是一个泛型，从getType（）只能得到这个属性的接口类型。但从getGenericType（）还能得到这个泛型的参数类型。
+3. getGenericType（）如果当前属性有签名属性类型就返回，否则就返回 Field.getType()。
+
+
+
 ### Constructor类
 
 Constructor代表类的构造方法。
 
-| 方法                            | 用途                       |
-| ------------------------------- | -------------------------- |
-| newInstance(Object... initargs) | 根据传递的参数创建类的对象 |
+| 方法                                          | 用途                       |
+| --------------------------------------------- | -------------------------- |
+| newInstance(Object... initargs)               | 根据传递的参数创建类的对象 |
+| getAnnotation(Class<T> annotationClass)       | 获取构造函数上面的注解     |
+| isAnnotationPresent(Class<T> annotationClass) | 判断是否对应的注解         |
 
 例：使用一个类的构造方法来创建实例：
 
@@ -146,11 +163,15 @@ Object o1 = constructor1.newInstance("码云", 1, 57, "资本家");
 
 Method代表类的方法。
 
-| 方法                               | 用途                                     |
-| ---------------------------------- | ---------------------------------------- |
-| invoke(Object obj, Object... args) | 传递object对象及参数调用该对象对应的方法 |
-| getParameterTypes()                | 获取方法所有的参数类型                   |
-| getReturnType()                    | 获取方法返回对象的类型                   |
+| 方法                                          | 用途                                     |
+| --------------------------------------------- | ---------------------------------------- |
+| invoke(Object obj, Object... args)            | 传递object对象及参数调用该对象对应的方法 |
+| getParameterTypes()                           | 获取方法所有的参数类型                   |
+| getReturnType()                               | 获取方法返回对象的类型                   |
+| getParameterTypes()                           | 返回方法中参数对象的Class类型            |
+| getGenericParameterTypes()                    | 返回方法中参数对象的Type类型             |
+| getAnnotation(Class<T> annotationClass)       | 获取方法上面的注解                       |
+| isAnnotationPresent(Class<T> annotationClass) | 判断是否对应的注解                       |
 
 例：使用一个 **类的方法类** 来 调用某个类的**实例**中的方法：
 
@@ -160,6 +181,13 @@ Class c2 = Class.forName("com.test.bean.Xxx");
 Method method1 = c2.getMethod("sout");
 method.invoke(o1);
 ```
+
+
+
+注意，其中getParameterTypes()和getGenericParameterTypes()的区别：
+
+1. 首先是返回的类型不一样，一个是Class对象一个是Type接口。
+2. 如果属性是一个泛型，从getParameterTypes（）只能得到这个属性的接口类型。但从getGenericParameterTypes（）还能得到这个泛型的参数类型。
 
 
 
@@ -273,7 +301,7 @@ for(Type genericParameterType : genericParameterTypes){
 
 其实和上方返回泛型获取相似，只是方法变了。
 
-## 类中变量泛型类型
+#### 类中变量泛型类型
 
 上面都是说方法中的泛型，说说类上的变量、属性的泛型：
 
@@ -301,4 +329,176 @@ if(genericFieldType instanceof ParameterizedType){
     }
 }
 ```
+
+
+
+### 注解
+
+注解是Java 5的一个新特性。注解是插入你代码中的一种注释或者说是一种元数据（meta data）。这些注解信息可以在编译期使用预编译工具进行处理（pre-compiler tools），也可以在运行期使用Java反射机制进行处理。下面是一个类注解的例子：
+
+```java
+@MyAnnotation(name="someName",  value = "Hello World")
+public class TheClass {
+}
+```
+
+下面是MyAnnotation注解的定义：	
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+
+public @interface MyAnnotation {
+  public String name();
+  public String value();
+}
+```
+
+其中简单解析一下这个注解上面内容:
+
+@Retention(RetentionPolicy.RUNTIME)表示这个注解存在于JAVA虚拟机运行期，可以在运行期通过反射访问。如果你没有在注解定义的时候使用这个指示那么这个注解的信息不会保留到运行期，那么这样反射就无法获取它的信息。
+@Target(ElementType.TYPE) 表示这个注解只能用在类型上面（比如类跟接口）。你同样可以把Type改为Field或者Method，或者你可以不用这个指示，这样的话你的注解在类，方法和变量上就都可以使用了。
+
+#### 获取类上的注解
+
+通过反射可以获取类上的注解信息：
+
+```java
+ Class aClass = TheClass.class;
+Annotation[] annotations = aClass.getAnnotations();
+
+for(Annotation annotation : annotations){
+    if(annotation instanceof MyAnnotation){
+        MyAnnotation myAnnotation = (MyAnnotation) annotation;
+        System.out.println("name: " + myAnnotation.name());
+        System.out.println("value: " + myAnnotation.value());
+    }
+}
+```
+
+对于方法上、构造函数上、属性变量上的获取反射都类似。
+
+#### 获取方法参数的注解
+
+对于方法的参数也可以进行注解：
+
+```java
+public class TheClass {
+  public static void doSomethingElse(
+        @MyAnnotation(name="aName", value="aValue") String parameter){
+  }
+}
+```
+
+通过反射可以获取方法参数上的注解信息：
+
+```java
+Method method = ... //获取方法对象
+Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+Class[] parameterTypes = method.getParameterTypes();
+
+int i=0;
+for(Annotation[] annotations : parameterAnnotations){
+  Class parameterType = parameterTypes[i++];
+
+  for(Annotation annotation : annotations){
+    if(annotation instanceof MyAnnotation){
+        MyAnnotation myAnnotation = (MyAnnotation) annotation;
+        System.out.println("param: " + parameterType.getName());
+        System.out.println("name : " + myAnnotation.name());
+        System.out.println("value: " + myAnnotation.value());
+    }
+  }
+}
+```
+
+需要注意的是Method.getParameterAnnotations()方法返回一个注解类型的二维数组，每一个方法的参数包含一个注解数组。
+
+
+
+### 数组
+
+利用反射机制来处理数组会有点棘手。
+
+尤其是当你想要获得一个数组的Class对象，比如int[]等等。
+
+其中Java-Reflection中需要通过`java.lang.reflect.Array`这个类来处理数值。注意不要把`java.util.Arrays`与其混淆。`java.util.Arrays`是一个提供了遍历数组，将数组转化为集合等工具方法的类。
+
+
+
+#### 反射创建/访问数组
+
+Java反射机制通过java.lang.reflect.Array类来创建数组。
+
+```java
+int``[] intArray = (``int``[]) Array.newInstance(``int``.``class``, ``3``);
+```
+
+Array.newInstance()方法的第一个参数表示了我们要创建一个什么类型的数组。第二个参数表示了这个数组的空间是多大。
+
+通过Java反射机制同样可以访问数组中的元素。具体可以使用Array.get(…)和Array.set(…)方法来访问。
+
+```java
+Array.set(intArray, 0, 123);
+Array.set(intArray, 1, 456);
+Array.set(intArray, 2, 789);
+
+System.out.println("intArray[0] = " + Array.get(intArray, 0));
+System.out.println("intArray[1] = " + Array.get(intArray, 1));
+System.out.println("intArray[2] = " + Array.get(intArray, 2));
+```
+
+
+
+#### 获取数组Class对象
+
+正确情况下，相较于普通对象来说，数组的Class对象获取起来有些特殊：
+
+```java
+Class intArray = Class.forName(``"[I"``);
+```
+
+上面便是获取int数组的Class对象。在JVM中字母I代表int类型，左边的‘[’代表我想要的是一个int类型的数组，这个规则同样适用于其他的原生数据类型。
+
+而对于普通对象类型的数组有一点细微的不同，比如说字符串数组：
+
+```java
+Class stringArrayClass = Class.forName(``"[Ljava.lang.String;"``);
+```
+
+注意‘[L’的右边是类名，类名的右边是一个‘;’符号。这个的含义是一个指定类型的数组。
+
+
+
+对于普通原生数据类型，你不能通过名称直接得到：
+
+```java
+// 直接获取的化，这样都会抛出ClassNotFoundException
+Class intClass1 = Class.forName("I");
+Class intClass2 = Class.forName("int");
+```
+
+不通过反射的话你可以这样来获取数组的Class对象：
+
+```java
+Class stringArrayClass = String[].``class``;
+```
+
+结合情况，通常会用下面这个辅助方法来获取普通对象以及原生对象的Class对象：
+
+```java
+public Class getClass(String className){
+  if("int" .equals(className)) return int .class;
+  if("long".equals(className)) return long.class;
+  ...
+  return Class.forName(className);
+}
+...
+Class theClass = getClass(theClassName);
+    
+```
+
+这是一个特别的方式来获取指定类型的指定数组的Class对象。无需使用类名或其他方式来获取这个Class对象。
+
+
 
