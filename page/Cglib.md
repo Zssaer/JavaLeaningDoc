@@ -1,5 +1,7 @@
 # CGLIB
+
 ## 简介
+
 CGLIB是一个强大、高性能和高质量的第三方代码生成库。该库被Spring、Mybatis、Hibernate等第三方框架广泛应用，用以提供方法拦截操作。CGLIB属于开源项目，其CGLIB源码地址为：https://github.com/cglib/cglib
 
 CGLIB代理主要通过对字节码的操作，为对象引入间接级别，以控制对象的访问。
@@ -429,7 +431,177 @@ o.setName("kkk"); // 抛出IllegalStateException,不可直接修改只读Bean
 
 ImmutableBean的对象虽然可以强制为对应设置的Bean类型，但是无法直接进行修改设置，其属性随原Bean改变而改变。
 
+#### 利用BeanMap实现对象与Map的转换
+
+利用`net.sf.cglib.beans.BeanMap`类可实现将Bean对象转换为Map对象，其中Bean对象中的属性全部以Key-Value方式放置在Map中。
+
+```java
+BeanGenerator beanGenerator = new BeanGenerator();
+beanGenerator.addProperty("name",String.class);
+beanGenerator.addProperty("age",Integer.class);
+Object o1 = beanGenerator.create();
+
+Method m1 = o1.getClass().getMethod("setName",String.class);
+m1.invoke(o1,"zxx");
+Method m2 = o1.getClass().getMethod("setAge",Integer.class);
+m2.invoke(o1,23);
+// 为o1对象创建BeanMap
+BeanMap beanMap = BeanMap.create(o1);
+Integer age = (Integer) beanMap.get("age");
+```
+
+BeanMap基于Map类型，拥有Map的存储功能，自然也可以用containsKey、containsValue、keySet等功能。
+
+在Java中bean与map的转换有很多种方式，比如通过ObjectMapper先将bean转换为json，再将json转换为map 或者 通过Java反射等，但是这些方法都没有使用CGLIB中的BeanMap来的快，因为这种方式效率极高，它跟第其它方式的区别就是因为它使用了缓存，所以优先考虑使用BeanMap。
+
+#### 利用Mixin实现多个对象整合为单个对象
+
+Mixin能够将多个Bean对象整合为一个Bean对象，这个Bean对象拥有它们所有方法。
+
+但前提就是这些Bean对象必须是实现接口的，Mixin通过接口来对对象进行整合的。
+
+```java
+interface Interface1 {
+    String one();
+}
+
+interface Interface2 {
+    String two();
+}
+
+interface MixinInterface extends Interface1, Interface2 {
+    String one(String ok);
+    String three();
+}
+
+static class Class1 implements Interface1 {
+    @Override
+    public String one() {
+        return "one";
+    }
+}
+
+static class Class2 implements MixinInterface {
+    @Override
+    public String three() {
+        return "three";
+    }
+
+    @Override
+    public String one() {
+        return "no 22one";
+    }
+
+    @Override
+    public String one(String ok) {
+        return "no one";
+    }
+
+    @Override
+    public String two() {
+        return "two";
+    }
+    public static void main(String[] args) {
+        Mixin mixin = Mixin.create(new Class[]{Interface1.class,MixinInterface.class},
+                new Object[]{new Class1(), new Class2()});
+        MixinInterface mixinInterface = (MixinInterface) mixin;
+        System.out.println(mixinInterface.two());
+    }
+}
+
+```
+
+Mixin.create方法接受两个参数：第一为接口类组，第二为对象组。其中接口组与对象组一一对应，引索对应。
+
+其实Mixin这个工具几乎不怎么被使用，因为它依据与接口进行创建，很多时候可以通过纯Java的方式实现，没有必要使用Minix类。
 
 
 
+### 类操作
+
+CGLIB可以进行对类进行操作，获取到类中的各个属性、方法代理、接口创建等功能，在某些方面上比JDK的反射更强大。
+
+#### 利用InterfaceMaker动态创建接口
+
+利用`net.sf.cglib.proxy.InterfaceMaker`可以动态创建Interface接口，并且可以自定义接口内容。
+
+```java
+// 创建一个Signature方法认证类
+Signature signature = new Signature("hello", Type.INT_TYPE, new Type[]{Type.getType(String.class)});
+InterfaceMaker maker = new InterfaceMaker();
+
+maker.add(signature,new Type[0]);
+Class aClass = maker.create();
+```
+
+上述的InterfaceMaker创建的接口中含有了一个方法，为Integer hello(String XXX)。
+
+InterfaceMaker类的add方法用于向自定义接口添加方法，它有很多选择，它可以直接接受一个Method类等。
+
+上面我们使用了传入Signature类，它的定义起来更简单方便，它还需要一个抛出的exceptions数组，用于方法存在的exceptions抛出声明，当然这儿可以直接创建一个空数组，来表示这个方法没有异常抛出。
+
+对于Signature方法认证类，它实际是一个Method的简单描述类：（这个类是`net.sf.cglib.core.Signature`,不是SpringAOP中的Signature）
+
+Signature的有两个构造方法：
+
+```java
+/**
+* @param name 方法名
+* @param desc 简介
+*/
+public Signature(String name, String desc)
+/**
+* @param name 方法名
+* @param returnType 返回类型数组
+* @param argumentTypes 参数类型数组
+*/    
+public Signature(String name, Type returnType, Type[] argumentTypes)
+```
+
+其中我们常用第二个，它直接提供了返回类型和参数类型的选择，在创建方法时这些都可以根据自己的类型来进行调用。
+
+由于接口仅仅只用做在编译时期进行类型检查，因此在一个运行的应用中动态的创建接口其实没有什么用。
+
+但是InterfaceMaker可以用来自动生成代码，为以后的开发做准备。
+
+
+
+#### 利用MethodDelegate对方法进行代理
+
+CGLIB可以通过一个***只含有一个方法的接口***  使用MethodDelegate来 代理对象中某一个方法，最终让该接口的那个方法来代理对象中指定的方法。
+
+```
+interface ProxyMethod{
+    String getValueFromProxy();
+}
+
+...
+BeanGenerator beanGenerator = new BeanGenerator();
+// 创建一个Bean 内部拥有 value属性
+beanGenerator.addProperty("value",String.class);
+Object o = beanGenerator.create();
+Method method = o.getClass().getMethod("setValue", String.class);
+method.invoke(o,"zty");
+
+// 将其ProxyMethod接口的方法代理 o对象中getValue方法
+ProxyMethod delegate = (ProxyMethod)MethodDelegate.create(o, "getValue", ProxyMethod.class);
+System.out.println(delegate.getValueFromProxy());  // 结果为 "zty"
+```
+
+Method.create方法接受3个参数:
+
+> 1. 第二个参数为即将被代理的方法
+>
+> 2. 第一个参数必须是一个无参数构造的bean。因此MethodDelegate.create并不是你想象的那么有用
+>
+> 3. 第三个参数为只含有一个方法的接口。当这个接口中的方法被调用的时候，将会调用第一个参数所指向bean的第二个参数方法
+
+MethodDelegate虽然用接口可以代理方法,但是拥有很多缺点:
+
+> 1. 为每一个代理类创建了一个新的类，这样可能会占用大量的永久代堆内存
+> 2. 你不能代理需要参数的方法
+> 3. 如果你定义的接口中的方法需要参数，那么代理将不会工作，并且也不会抛出异常；如果你的接口中方法需要其他的返回类型，那么将抛出IllegalArgumentException
+>
+
+所以大部分时间不建议使用MethodDelegate代理方法。
 
