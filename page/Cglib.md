@@ -605,3 +605,38 @@ MethodDelegate虽然用接口可以代理方法,但是拥有很多缺点:
 
 所以大部分时间不建议使用MethodDelegate代理方法。
 
+
+
+#### FastClass - 另一种Class类
+
+CGLIB中的FastClass类是比JDK中Class类更好（它们声称的）。相比于传统的Class类，FastClass引出了一个index下标的新概念。
+
+通过create方法创建一个对应的FastClass类，它通过数组存储类中的所有method,constructor等class信息，用户通过向数组下标index寻找对应的方法或者构造器等，用方法签名转化为对应index方法，用模板方式解决Java语法不支持问题，同时改善Java反射性能。
+
+传统的Class类使用Java反射机制来确定方法等，而FastClass则是通过使用index快速确定对应的方法等，从而达到高效率。
+
+```java
+FastClass fastClass = FastClass.create(Student.class);
+FastMethod fastMethod = fastClass.getMethod("getName",new Class[0]);
+
+Student student = new Student();
+student.setName("zty");
+System.out.println(fastMethod.invoke(student,new Object[0]));  // 输出"zty"
+```
+
+FastClass的使用反射和普通的Class类似，获取到的FastMethod方法、FastConstructor构造方法，需要参数也相同。
+
+**注意：FastMethod中的invoke方法是调用的FastClass中的invoke方法，它也没有无参的方法，所以当参的情况下，需要传入一个空的对象数组。**
+
+FastClass的实现逻辑，是生成增强类实现invoke方法，invoke方法中，用switch语义将被增强类的所有方法调用枚举出来。用户使用FastClass.invoke方法，传入方法签名和被调用实例，从而达到不使用反射就能实现不确定方法的调用。
+
+**但是！FastClass 这一工具在提出来的时候Java反射并没有进行足够的优化，所以或许FastClass会更效率，但是从JDK7开始到目前的Java新版本的JVM拥有*inflation*这个概率， 当一个反射方法调用次数少于15次时，会使用调用native方法。大于15次之后则使用ASM生成新的类类处理反射调用。所以在JDK7后面的版本使用FastClass反而比Class慢，所以不推荐使用！**
+
+
+
+### 使用警告
+
+使用所有的 CGLIB类进行操作都会生成字节代码，这会导致额外的类被存储在 JVM 内存的一个特殊区域，如果操作过多，容易造成永久堆满，触发OutOfMemory异常。
+
+或许这样说来，大伙可能会放弃使用CGLIB，但是，如果您明智而谨慎地使用 cglib，您可以用它做一些令人惊奇的事情，利大于弊，因此，节制地使用 CGLIB进行操作。
+
