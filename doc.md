@@ -1,5 +1,3 @@
-
-
 # <font color=red>ZSSAER学习日志</font>
 
 [toc]
@@ -97,7 +95,7 @@ Stack<TreeNode> stack = new Stack<TreeNode>();
 
 2.若是符合则判断其与栈顶符号的优先级，是右括号 或 重复出现且低于栈顶的元素，则栈顶元素依次出栈并输出，直到重复元素出栈完毕，当前再元素入栈。
 
-3.遵循以上两条直到输出后缀表达式为止。
+3.遵循以上两条直到输出后缀表达式为止,最后将所有栈元素按顺序出栈。
 
 <img src="picture\stack2.gif" style="zoom:150%;" />
 
@@ -109,7 +107,7 @@ Stack<TreeNode> stack = new Stack<TreeNode>();
 
 1.从左到右遍历表达式的每个数字和符号，如果是数字就进栈
 
-2.如果是符号就将栈顶的两个数字出栈，用**下位元素与栈顶元素进行计算**,并将结果入栈，一直到获得最终结果。
+2.如果是符号就将栈顶的两个数字出栈，用**下位元素(栈顶的下一个元素)与栈顶元素进行计算**,并将结果入栈，一直到获得最终结果。
 
 <img src="picture\stack3.gif" style="zoom:150%;" />
 
@@ -10062,9 +10060,13 @@ public EhCacheManager ehCacheManager(){
 
 ## 阿里云对象存储服务-OSS
 
-对象存储服务是一种海量、安全、低成本、高可靠的云存储服务，适合存放任意类型的文件。容量和处理能力弹性扩展，多种存储类型供选择，全面优化存储成本。
+目前在一些网站中，其中的图片都放置在一个统一的图床中，用专门一个服务器来做图床，从而减轻主服务器的压力，而且相比于一般的服务器来说，图床服务器价格低廉，容量大。我们把这些图床服务器叫做对象存储服务。
 
-阿里云对象存储服务称为OSS,而华为对象存储服务称为OBS,腾讯云对象存储服务称为COS,尽管每家公司的缩写名称不一样,但其实都是一种服务.
+对象存储服务是一种海量、安全、低成本、高可靠的云存储服务，适合存放任意类型的文件。容量和处理能力弹性扩展，多种存储类型供选择，全面优化存储成本。它还能根据设置API来进行处理上传的图片，比如上传图片加水印、图片压缩等功能，但这些额外的功能一般来说不同服务商都会进行不同的收费，x千次0.x元等等。
+
+阿里云对象存储服务称为OSS,而华为对象存储服务称为OBS,腾讯云对象存储服务称为COS,尽管每家公司的缩写名称不一样,但其实都是一种服务。
+
+首先学习OSS之前必须要拥有一个阿里的对象存储OSS服务，所以需要提前购买阿里一个对象存储服务，这儿操作介绍跳过，毕竟花钱谁不会呀？不会找服务商呀。
 
 这里主要讲述其阿里云对象存储服务OSS的JAVA API使用方法.
 
@@ -11408,6 +11410,8 @@ $ docker run -d ubuntu:18.04 /bin/sh -c "while true; do echo hello world; sleep 
 
   这个操作在容器中使用exit，不会导致容器的停止。这就是为什么推荐大家使用 `docker exec` 的原因。
 
+对于Java类应用，比如SpringBoot应用，使用`docker logs --tail  300 -f NAME/ID` 可以进入内部查看到详细运行状态。
+
 #### 导出和导入容器
 
 如果要导出本地某个容器为tar压缩包，可以使用 `docker export` 命令。
@@ -11868,7 +11872,7 @@ command: echo "hello world"
 > 添加当前用户到docker用户组：sudo usermod -aG docker $USER （需注销），newgrp docker （立即生效）
 > Helloworld：docker run hello-world  （本地没有镜像的话会自动从远端仓库pull）
 > pull nginx 镜像：docker pull nginx（等效于nginx:latest）
-> 运行：docker run -【d】（后台运行不阻塞shell） 【-p 80:80】（指定容器端口映射，内部：外部） nginx
+> 运行：docker run -【d】（后台运行不阻塞shell） 【-p 80:80】（指定容器端口映射，外部 ：内部） nginx
 > 查看正在运行：docker ps
 > 删除容器：docker rm -f container id(不用打全，前缀区分)
 > 进入bash：docker exec -it container id(不用打全，前缀区分) bash
