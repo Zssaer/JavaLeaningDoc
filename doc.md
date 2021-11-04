@@ -6159,6 +6159,8 @@ password=md5Hash.toHex();
 
 ## Shiro安全框架
 
+![](page/shiro.jpg)
+
 Apache Shiro是一个强大且易用的Java安全框架,执行身份验证、授权、密码和会话管理。使用Shiro的易于理解的API,您可以快速、轻松地获得任何应用程序,从最小的移动应用程序到最大的网络和企业应用程序。
 
 ### 主要功能
@@ -6688,6 +6690,55 @@ shiro:hasRole="xxx"  判断当前用户为xxx权限
         return "user/add";
     }
 ```
+
+### Ehcache缓存持久化
+
+Shiro支持很多第三方缓存工具。官方提供了shiro-ehcache，实现了把EHCache当做Shiro的缓存工具的解决方案。其中最好用的一个功能是就是缓存认证执行的Realm方法，减少对数据库的访问。
+
+```xml
+<dependency>
+    <groupId>net.sf.ehcache</groupId>
+    <artifactId>ehcache</artifactId>
+    <version>2.10.2</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.shiro</groupId>
+    <artifactId>shiro-ehcache</artifactId>
+    <version>1.4.2</version>
+</dependency>
+```
+
+shiro-ehcache是Shiro官方与Ehcache进行对接的依赖包。
+
+我们只需要在其ShiroConfig配置类中进行增加其Ehcache功能即可：
+
+```java
+...
+@Bean
+public DefaultWebSecurityManager securityManager() {
+    DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
+    ...
+    manager.setCacheManager(ehCacheManager());
+    return manager;
+}
+
+@Bean
+public EhCacheManager ehCacheManager(){
+    EhCacheManager ehCacheManager = new EhCacheManager();
+    InputStream is = null;
+    try {
+        is = ResourceUtils.getInputStreamForPath("classpath:ehcache/ehcache-shiro.xml");
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    net.sf.ehcache.CacheManager cacheManager = new net.sf.ehcache.CacheManager(is);
+    ehCacheManager.setCacheManager(cacheManager);
+    return ehCacheManager;
+}
+...
+```
+
+
 
 ## JAVA设计模式
 
