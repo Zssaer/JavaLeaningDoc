@@ -6427,6 +6427,12 @@ map.put("/set","perms[user:set]");   //只限定拥有‘user:set’权限的用
 
 #### ShiroSessionManager类
 
+如果写过 Servlet 就应该知道 Session 的概念，Session 呢需要有人去管理它的生命周期，这个组件就是 SessionManager， Shiro就是使用Session进行识别用户的；
+
+Session默认使用的ServletContainerSessionManager来做Session管理的，它是使用Cookie来进行认证管理Session的，而Cookie是存储在本地客户端的缓存文件，而前后api调用时，xhr跨域是不能讲cookie进行传递的，所以这个默认SessionManager类是不支持前后跨域的。
+
+目前市面上基本都是前后端分离的开发，所以这个默认的SessionManager是不能使用的，为了前后端开发，需要手动制作一个自定义SessionManager来进行逻辑处理Session。
+
 ```java
 /**
  *      目的: shiro 的 session 管理
@@ -6716,6 +6722,7 @@ shiro-ehcache是Shiro官方与Ehcache进行对接的依赖包。
 ...
 @Bean
 public DefaultWebSecurityManager securityManager() {
+    // 如果使用Shiro无状态Session-token方式的话,需要修改为对应的shiroSession
     DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
     ...
     manager.setCacheManager(ehCacheManager());
@@ -6736,6 +6743,49 @@ public EhCacheManager ehCacheManager(){
     return ehCacheManager;
 }
 ...
+```
+
+### Redis缓存持久化
+
+在分布式项目中,Shiro使用Ehcache作为SessionManager显然是不合理的。为了稳定性,我们得需要使用Redis来进行缓存持久化存储。
+
+```xml
+<dependency>
+   <groupId>org.crazycake</groupId>
+   <artifactId>shiro-redis</artifactId>
+   <version>3.3.1</version>
+</dependency>
+```
+
+我们只需要在其ShiroConfig配置类中进行增加其RedisDao功能即可：
+
+```java
+...
+/**
+ * RedisSessionDAO shiro sessionDao层的实现 通过redis
+ * 使用的是shiro-redis开源插件
+ */
+ @Bean
+ public RedisSessionDAO redisSessionDAO() {
+   RedisSessionDAO redisSessionDAO = new RedisSessionDAO();
+   redisSessionDAO.setExpire(expire);//session会话过期时间，默认就是1800秒
+   redisSessionDAO.setRedisManager(redisManager());
+   return redisSessionDAO;
+ }
+
+ /**
+ * Session Manager
+ * 使用的是shiro-redis开源插件
+ */
+ @Bean
+ public DefaultWebSessionManager sessionManager() {
+   // 如果使用Shiro无状态Session-token方式的话,需要修改为对应的shiroSession
+   DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+   ...
+   sessionManager.setSessionDAO(redisSessionDAO());
+   return sessionManager;
+ }
+ ...
 ```
 
 
@@ -10752,7 +10802,7 @@ public class EurekaStateChangeListener {
 
 
 
-## Ribbon
+## Ribbon、Feign
 
 ### 简介
 
@@ -10764,7 +10814,7 @@ Spring Cloud Ribbon虽然只是一个工具类框架，它不像服务注册中�
 
 因为微服务间的调用，API网关的请求转发等内容，实际上都是通过Ribbon来实现的.
 
-而Spring Cloud Feign，它也是基于Ribbon实现的工具.
+**而Spring Cloud Feign，它是用来取代其中Ribbon中的RestTemplate请求，使得代码可读性变高。**Feign它是基于Ribbon实现的工具，所以它本身不做负载均衡，它的负载均衡是其内部的Ribbon实现的。
 
 ### 负载均衡
 
@@ -10911,9 +10961,9 @@ public class BeanConfiguration {
 
 Feign是Netflix开发的声明式、模板化的HTTP客户端， Feign可以帮助我们更快捷、优雅地调用HTTP API。
 
-在前面我们使用RestTemplate进行调用Api接口,但其实很不方便,并且默认是轮询策略,所以如果遇见一台Client服务器宕机,还是用几率访问失败的.
+在前面我们使用RestTemplate进行调用Api接口，RestTemplate的使用其实很不方便。
 
-使用Feign调用可以简化操作.而且Spring Cloud对Feign进行了增强，使Feign支持了Spring MVC注解，并整合了Ribbon和Eureka，从而让Feign的使用更加方便。
+使用Feign调用可以简化操作，而且Spring Cloud对Feign进行了增强，使Feign支持了Spring MVC注解，并整合了它Ribbon，从而让Feign的使用更加方便。
 
 使用方法:
 
@@ -10953,7 +11003,7 @@ public interface UserRemoteClient {
 
 接口里面的的内容完全对应其提供方接口内容的方法,并且包含路径注释.
 
-4.在Controller中进行注入Feign接口,调用其方法,其自动负载均衡调用接口.
+4.在Controller中进行注入Feign接口,调用其方法,其自动负载均衡调用接口（利用的是Ribbon的负载均衡）
 
 ```java
 @RestController

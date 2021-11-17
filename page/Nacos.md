@@ -119,12 +119,12 @@ Nacos支持配置中心管理，可以管理多个配置文件。
 
 Java项目一般都会有多个Profile配置，用于区分开发环境，测试环境，准生产环境，生成环境等，每个环境对应一个properties文件（或是yml/yaml文件），然后通过设置 spring.profiles.active 的值来决定使用哪个配置文件。
 
-这回首先要在nacos中配置相关的配置，打开Nacos配置界面，依次创建2个Data ID
+这回首先要在nacos中配置相关的配置，打开Nacos配置界面，依次创建2个Data ID，其中
 
-- nacos-config-demo-dev.yaml 开发环境的配置
-- nacos-config-demo-test.yaml 测试环境的配置
+- nacos-config-demo-dev.yml 开发环境的配置
+- nacos-config-demo-test.yml 测试环境的配置
 
-其中nacos-config-demo为配置文件前缀名,而dev/test为状态,其项目主配置(bootstrap.yml)的spring.profiles.active用作控制项目的运行环境。
+其中nacos-config-demo为配置文件前缀名，根据其对应项目的spring.application.Name来定,而dev/test为状态,其项目主配置(bootstrap.yml)的spring.profiles.active用作控制项目的运行环境。
 
 
 
