@@ -1,12 +1,20 @@
 # Spring-Security
 
+![](../picture/20211119102449.png)
+
 Java 领域里有两个权鉴框架比较出名 Shiro 和 Spring Security。
 
 其中Shiro是一个简洁易用的开源框架，它的使用简单，功能围绕着用户认证、用户授权、身份管理几个点中，一般中小型业务现在都有用到它。
 
 而Spring Security则是一个Spring官方的权限管理、权限授权的开源框架，它拥有比Shiro更强大的身份控制系统，而且可以在使用无状态认证（Shiro则是使用Session），所以它在大型分布式、微服务项目中更加广泛使用。
 
-但是由于其功能框架众多，学习它并不是一个容易的事。
+> 官方介绍：
+>
+> Spring Security 是一个功能强大且高度可定制的身份验证和访问控制框架。它是基于 Spring 的应用程序的上的标准。
+>
+> Spring Security 是一个专注于为 Java 应用程序提供身份验证和授权的框架。与所有 Spring 项目一样，Spring Security 的真正强大之处在于它可以轻松扩展以满足自定义要求（实际上并不轻松 :happy: ）。
+
+SpringSecurity 由于其功能框架众多，导致其配置和学习并理解，它并不是一个容易的事，所以被一些人诟病，从而去使用了简单易用的Shiro。
 
 ## 执行图
 
@@ -528,6 +536,8 @@ spring security会在默认的情况下将认证信息放到HttpSession中。
 
 由于前后端不通过保存session和cookie来进行判断，所以为了保证spring security能够记录登录状态，所以需要传递一个值，让这个值能够自我验证来源，同时能够得到数据信息。选型我们选择JWT。对于java客户端我们选择使用[jjwt](https://github.com/jwtk/jjwt)。
 
+在开始前，务必需要了解下JWT和它的使用。
+
 对此添加JJWT依赖:
 
 ```xml
@@ -779,7 +789,7 @@ public class JWTProvider {
 
 上述是使用一个匿名函数通过JWT工具来对成功的用户认证类进行处理，实现简单的返回Token功能。当然实际情况还是需要返回一个规范的Result给前端。
 
-#### 无状态认证
+#### 接口无状态认证
 
 前面都是讲述如何在登录时Token操作。无状态的算法认证就是需要在其请求上head加入对应字段放置token，然后根据token来进行身份认证，达到不需要外置session认证等帮助。
 
@@ -824,6 +834,7 @@ public class JWTFilter extends GenericFilterBean {
                 servletResponse.getWriter().write(JSON.toJSONString(result));
                 return;
             }
+            // 将其解析来的Authentication存入SecurityContext中
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         // 调用后续的Filter,如果上面的代码逻辑未能复原“session”，SecurityContext中没有信息，后面的流程还是需要"需要登录"
@@ -849,3 +860,161 @@ protected void configure(HttpSecurity http) throws Exception {
          ...
 }
 ```
+
+
+
+### 默认认证流程解析
+
+#### AuthenticationProvider-认证方式提供
+
+Spring Security框架 用户认证逻辑 由AuthenticationProvider 这个接口来进行定义：
+
+```java
+public interface AuthenticationProvider {
+
+   /**
+使用与AuthenticationManager.authenticate(Authentication)相同的合同执行身份AuthenticationManager.authenticate(Authentication) 。
+参数：
+身份验证 - 身份验证请求对象。
+返回值：
+一个完全经过身份验证的对象，包括凭据。 如果AuthenticationProvider无法支持对传递的Authentication对象进行身份验证，则可能返回null 。 在这种情况下，将尝试支持呈现的Authentication类的下一个AuthenticationProvider 。
+顶：
+AuthenticationException – 如果身份验证失败。
+    */
+   Authentication authenticate(Authentication authentication) throws AuthenticationException;
+
+   /**
+如果此AuthenticationProvider支持指定的Authentication对象，则返回true 。
+返回true并不能保证AuthenticationProvider将能够对Authentication类的呈现实例进行Authentication 。 它只是表明它可以支持对其进行更深入的评估。 AuthenticationProvider仍然可以从authenticate(Authentication)方法返回null以指示应该尝试另一个AuthenticationProvider 。
+能够执行身份验证的AuthenticationProvider选择在ProviderManager运行时进行。
+参数：
+验证 -
+返回值：
+如果实现可以更仔细地评估呈现的Authentication类，则为true
+    */
+   boolean supports(Class<?> authentication);
+```
+
+其中authenticate(Authentication authentication)这个方法用于身份认证，这个方法在登录时会自动调用，原因后面说。
+
+而supports(Class<?> authentication) 这个方法来判断当前的 AuthenticationProvider 是否支持对应的 Authentication。
+
+#### Authentication-认证凭证
+
+这里需要的authentication，上面接触过，它就是用户的认证身份，上面记录了用户的各种登录信息，就像身份证一样。
+
+```java
+public interface Authentication extends Principal, Serializable {
+	Collection<? extends GrantedAuthority> getAuthorities();
+	Object getCredentials();
+	Object getDetails();
+	Object getPrincipal();
+	boolean isAuthenticated();
+	void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException;
+}
+```
+
+authentication可以在用户登录成功被创建，可以在之后使用`SecurityContext.getContext().getAuthentication()`获取。
+
+SpringSecurity默认 使用的是 Authentication实现类是UsernamePasswordAuthenticationToken 。它是一个简单的authentication实现，他只有principal（用户对象？用户名）、credentials（用户登录凭证）。如果上面一比一来的，可能会发现其实我们在JWTProvider解析JWT中也是最后返回的这个。
+
+
+
+回到AuthenticationProvider 来，当用户通过使用Token请求一个需要认证的接口后，JWT过滤器将其先解析后的authentication放置到SecurityContext中后，Spring Security就会自动触发AuthenticationProvider的supports方法，它主要是来认证这个authentication是否符合 authenticate方法中的authentication（就问你昏不）。
+
+#### DaoAuthenticationProvider-一种认证方式提供
+
+而AuthenticationProvider 接口实现类的DaoAuthenticationProvider 是我们目前最常用的。DaoAuthenticationProvider 的父类 AbstractUserDetailsAuthenticationProvider 中我们可以看见其authenticate（）方法的内容，它就是默认Spring Security的认证逻辑：
+
+```java
+@Override
+	public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        // 断言比较获取的Authentication是否为 UsernamePasswordAuthenticationToken
+		Assert.isInstanceOf(UsernamePasswordAuthenticationToken.class, authentication,
+				() -> this.messages.getMessage("AbstractUserDetailsAuthenticationProvider.onlySupports",
+						"Only UsernamePasswordAuthenticationToken is supported"));
+        // 获取用户名
+		String username = determineUsername(authentication);
+        // 默认开启缓存
+		boolean cacheWasUsed = true;
+        // 从缓存中获取用户信息
+		UserDetails user = this.userCache.getUserFromCache(username);
+		if (user == null) {
+            // user为null,那么没有使用缓存
+			cacheWasUsed = false;
+			try {
+                // retrieveUser来获取用户信息
+                // 实际上就是 从设置的UserDetailsService 中获取用户信息
+				user = retrieveUser(username, (UsernamePasswordAuthenticationToken) authentication);
+			}
+			catch (UsernameNotFoundException ex) {
+				this.logger.debug("Failed to find user '" + username + "'");
+				if (!this.hideUserNotFoundExceptions) {
+					throw ex;
+				}
+				throw new BadCredentialsException(this.messages
+						.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
+			}
+            // 断言user 是否还是为空
+			Assert.notNull(user, "retrieveUser returned null - a violation of the interface contract");
+		}
+		try {
+            // 检验用户信息权限状态,例如账户是否被禁用、账户是否被锁定、账户是否过期等等。
+			this.preAuthenticationChecks.check(user);
+            // 密码认证,通过其Authentication.getCredentials()和UserDetails.getPassword()对比
+			additionalAuthenticationChecks(user, (UsernamePasswordAuthenticationToken) authentication);
+		}
+		catch (AuthenticationException ex) {
+			if (!cacheWasUsed) {
+				throw ex;
+			}
+			// There was a problem, so try again after checking
+			// we're using latest data (i.e. not from the cache)
+			cacheWasUsed = false;
+			user = retrieveUser(username, (UsernamePasswordAuthenticationToken) authentication);
+			this.preAuthenticationChecks.check(user);
+			additionalAuthenticationChecks(user, (UsernamePasswordAuthenticationToken) authentication);
+		}
+		this.postAuthenticationChecks.check(user);
+		if (!cacheWasUsed) {
+			this.userCache.putUserInCache(user);
+		}
+		Object principalToReturn = user;
+		if (this.forcePrincipalAsString) {
+			principalToReturn = user.getUsername();
+		}
+		return createSuccessAuthentication(principalToReturn, authentication, user);
+	}
+```
+
+其中的additionalAuthenticationChecks 在DaoAuthenticationProvider中 调用了PasswordEncoder.matches方法，这也就是我们之前说登录时验证为什么调用了PasswordEncoder.matches的原因。
+
+#### 登录认证流程图
+
+所以ALL-IN-ALL，登录认证就是在登录时候将其输入的登录信息 封装为Authentication ，然后在跟其 数据库中的正确信息进行对比。将其流程整理为图：
+
+![](../picture/20211119164902.png)
+
+
+
+#### ProviderManager-认证方式提供管理器
+
+而 AuthenticationProvider 都是通过 ProviderManager的authenticate 方法来调用的。由于我们的一次认证可能会存在多个 AuthenticationProvider，所以，在 ProviderManager的authenticate 方法中会逐个遍历 AuthenticationProvider，并调用他们的 authenticate 方法做认证，这也是为什么AuthenticationProvider 会自动调用authenticate 来认证。
+
+```java
+public Authentication authenticate(Authentication authentication)
+		throws AuthenticationException {
+	...
+	for (AuthenticationProvider provider : getProviders()) {
+		result = provider.authenticate(authentication);
+		if (result != null) {
+			copyDetails(authentication, result);
+			break;
+		}
+	}
+    ...
+}
+```
+
+
+
