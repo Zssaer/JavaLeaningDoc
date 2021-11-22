@@ -861,7 +861,82 @@ protected void configure(HttpSecurity http) throws Exception {
 }
 ```
 
+### 踢人下线操作
 
+常常见到一些项目要求一个用户只能一端登录，当用户被第二次登录后，前一个登录状态就会被关闭，比如QQ、网络游戏等。这一种操作又叫踢人下线操作，这种操作不仅可以在登录使用，还可以用在管理员强制让用户下线等场景上。踢人下线这种单端模式，除了满足设计外，还能避免事务处理的同步性问题，使项目设计事务处理变得简单。
+
+无状态的JWT认证下，是没有缓存存储、去中心化的设计方法。但它只靠它不能做到踢人下线操作。通常我们还需要一个缓存服务器比如Redis来实现记录在线功能。
+
+> 设计思路：登录时，利用Redis存储其JWT，key设置为登录名或者ID等唯一标签。
+>
+> ​		   使用JWT认证时，在Redis查询其唯一标签，得到的JWT与其使用的JWT进行对比，若不一致则代表用户被其他登录下线。
+
+Redis的配置以及使用这儿省略。
+
+在JWT认证工具类JWTProvider 中进行Redis读写操作：
+
+```java
+/**
+ * @description: JWT认证工具类
+ * @author: Zhaotianyi
+ * @time: 2021/11/17 11:22
+ */
+@Component
+public class JWTProvider {
+	/**
+     * 根据用户信息创建Token
+     *
+     * @param userDetails 用户信息
+     * @param rememberMe  是否记住
+     * @return Token
+     */
+    public String createToken(UserDetails userDetails, boolean rememberMe) {
+        ...
+        Map<String, Object> map = new HashMap<>(16);
+        map.put("sub", userDetails.getUsername());
+        String token = Jwts.builder()
+                // 添加body
+                .setClaims(map)
+                // 指定摘要算法
+                .signWith(key, SignatureAlgorithm.HS512)
+                // 设置有效时间
+                .setExpiration(validity)
+                .compact();
+        // 将其存入Redis中持久化
+        redisUtils.set(userDetails.getUsername(), token, jjwtProperties.getTokenValidityInSeconds());
+        return token;
+    }
+    /**
+     * 根据Token获取身份认证
+     *
+     * @param token Token串
+     * @return 身份认证类
+     * @throws ExpiredJwtException   Token超时
+     * @throws MalformedJwtException Token错误
+     */
+    public Authentication getAuthentication(String token) throws ExpiredJwtException, MalformedJwtException {
+    	// 根据token获取body
+        Claims claims;
+        claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token).getBody();
+                
+        String jwt = (String) redisUtils.get(claims.getSubject());
+        // 如果其Redis中的jwt 与其header中的jwt不一致,代表其账号被二次登录,强制下线
+        if (!token.equals(jwt)) {
+            throw new MalformedJwtException("该账号被二次登录,请重新登录!");
+        }
+        ...
+    }
+}
+```
+
+
+
+## 核心教程
+
+下面是Spring Security一些核心内容教程。
 
 ### 默认认证流程解析
 
@@ -921,6 +996,10 @@ SpringSecurity默认 使用的是 Authentication实现类是UsernamePasswordAuth
 
 
 回到AuthenticationProvider 来，当用户通过使用Token请求一个需要认证的接口后，JWT过滤器将其先解析后的authentication放置到SecurityContext中后，Spring Security就会自动触发AuthenticationProvider的supports方法，它主要是来认证这个authentication是否符合 authenticate方法中的authentication（就问你昏不）。
+
+#### AbstractAuthenticationToken-Authentication对象的实现
+
+它是Authentication对象的实现基类，在SpringSecurity默认认证下，使用的是它的子类UsernamePasswordAuthenticationToken，旨在用于简单地呈现用户名和密码。
 
 #### DaoAuthenticationProvider-一种认证方式提供
 
@@ -995,11 +1074,13 @@ SpringSecurity默认 使用的是 Authentication实现类是UsernamePasswordAuth
 
 ![](../picture/20211119164902.png)
 
+#### AuthenticationManager-处理Authentication请求
 
+AuthenticationManager是一个顶级接口，它主要方法authenticate用来处理身份验证请求，它的默认实现ProviderManager类，所以正常情况使用ProviderManager做处理。
 
 #### ProviderManager-认证方式提供管理器
 
-而 AuthenticationProvider 都是通过 ProviderManager的authenticate 方法来调用的。由于我们的一次认证可能会存在多个 AuthenticationProvider，所以，在 ProviderManager的authenticate 方法中会逐个遍历 AuthenticationProvider，并调用他们的 authenticate 方法做认证，这也是为什么AuthenticationProvider 会自动调用authenticate 来认证。
+ AuthenticationProvider 都是通过 ProviderManager的authenticate 方法来调用的。由于我们的一次认证可能会存在多个 AuthenticationProvider，所以，在 ProviderManager的authenticate 方法中会逐个遍历 AuthenticationProvider，并调用他们的 authenticate 方法做认证，这也是为什么AuthenticationProvider 会自动调用authenticate 来认证。
 
 ```java
 public Authentication authenticate(Authentication authentication)
@@ -1015,6 +1096,237 @@ public Authentication authenticate(Authentication authentication)
     ...
 }
 ```
+
+
+
+
+
+### 自定义认证逻辑
+
+了解了Spring Security的默认认证模式以及思路后，我们就是可以自定义实现认证逻辑了。
+
+为什么要自定义实现认证逻辑呢？
+
+上面的认证逻辑都是基于默认的“/login”进行操作的，使用Spring的方法自己写了个login接口,而这里面的逻辑全是Service来进行处理的,相当于并没有使用Spring Security的认证逻辑,只是写了个JWT过滤器做header处理而已。
+
+自定义认证逻辑可以完全重新SpringSecurity认证逻辑，设计更合理，避免大材小用。
+
+
+
+#### 编写自定义AuthenticationProvider
+
+要实现自定义认证逻辑的关键就是要实现一个自定义AuthenticationProvider。
+
+比如 我们需要在原本的Spring Security登录接口逻辑中添加一个验证码校验逻辑。
+
+上面说明了，默认的Spring Security使用的DaoAuthenticationProvider做AuthenticationProvider的，所以我们需要重写它，然后在其验证方法additionalAuthenticationChecks中增加逻辑判断：
+
+```java
+/**
+ * @description: 自定义验证逻辑提供类
+ * @author: Zhaotianyi
+ * @time: 2021/11/22 10:10
+ */
+public class MyAuthenticationProvider extends DaoAuthenticationProvider {
+    @Resource
+    private ImgValidService imgValidService;
+
+   @Override
+    protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException,ServiceException {
+        HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        // 获取请求中的验证码信息
+        String validKey = req.getParameter("validKey");
+        String verifyCode = req.getParameter("verifyCode");
+        try {
+            String cacheVerifyCode = imgValidService.get(validKey);
+            // 进行判断验证码是否正确
+            if (!verifyCode.toLowerCase().equals(cacheVerifyCode)){
+                Result result = ResultBuilder.failResult("身份错误，请重新登录!");
+                throw new ServiceException("验证码输入错误");
+            }
+        } catch (Exception e) {
+            throw new ServiceException("验证码状态错误");
+        }
+        super.additionalAuthenticationChecks(userDetails, authentication);
+    }
+}
+```
+
+`RequestContextHolder.getRequestAttributes()).getRequest()` 获取请求，通过请求获取输入的验证码内容，然后进行检验验证码，最后在调用父类逻辑。这样一个实现验证码检验的自定义认证逻辑就完成了。
+
+但是完成后，还需要将其配置到Spring Security中去。
+
+#### Spring Security配置AuthenticationProvider
+
+上面已经说了，所有的 AuthenticationProvider 都是放在 ProviderManager 中统一管理的，要实现加载自定义的AuthenticationProvider，就需要自己提供 ProviderManager。这一切操作都能在 Spring Security Config 中完成：
+
+```java
+@Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    @Autowired
+    private UserDetailsService userDetailsService;
+    
+    /**
+     * 自定义密码认证
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new MD5PasswordEncoder();
+    }
+
+    /**
+     * 自定义AuthenticationProvider
+     */
+    @Bean
+    public MyAuthenticationProvider myAuthenticationProvider() {
+        MyAuthenticationProvider myAuthenticationProvider = new MyAuthenticationProvider();
+        // 设置密码认证
+        myAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        // 设置用户信息查询服务
+        myAuthenticationProvider.setUserDetailsService(userDetailsService);
+        return myAuthenticationProvider;
+    }
+
+    /**
+     * 自定义AuthenticationManager
+     */
+    @Override
+    protected AuthenticationManager authenticationManager() {
+        // 加载自定义自定义AuthenticationProvider
+        ProviderManager manager = new ProviderManager(Arrays.asList(myAuthenticationProvider()));
+        return manager;
+    }
+    
+    ...
+}
+```
+
+ProviderManager构造器接受一个list，可以设置多个自定义AuthenticationProvider进去，然后依次执行。
+
+需要注意的是自定义AuthenticationProvider还需要设置其 密码认证方式 和 用户信息服务，否则会应用父类的设置。
+
+ 最后我们测试：
+
+![](../picture/20211122112734.png)
+
+默认的"/login"登录接口就能实现验证码验证功能了。
+
+
+
+#### 自定义登录接口
+
+对于上面的自定义认证逻辑,我们也可以在自己的登录接口中,手动进行认证操作,具体操作如下:
+
+密码验证:
+
+```java
+MD5PasswordEncoder md5PasswordEncoder=new MD5PasswordEncoder();
+// 密码验证操作
+boolean flag = md5PasswordEncoder.matches(password, userEntity.getPassword());
+```
+
+验证通过后,手动生成Authentication对象。
+
+```java
+UsernamePasswordAuthenticationToken upToken = new UsernamePasswordAuthenticationToken(userEntity.getUsername(), password);
+Authentication authentication = authenticationManager.authenticate(upToken);
+SecurityContextHolder.getContext().setAuthentication(authentication); 
+```
+
+
+
+### 使用注解进行权限控制
+
+Spring Security中可以在配置类的configure方法中进行设置权限控制：
+
+```java
+@Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .authorizeRequests()
+                .antMatchers("/product/**").hasRole("USER") //添加/product/** 下的所有请求只能由user角色才能访问
+                .antMatchers("/admin/**").hasRole("ADMIN") //添加/admin/** 下的所有请求只能由admin角色才能访问
+                .anyRequest().authenticated() // 没有定义的请求，所有的角色都可以访问（tmp也可以）。
+                ...
+    }
+```
+
+但是对于这样一个一个接口进行权限控制，非常麻烦。
+
+玩个Shiro的大伙都知道，可以在控制层中对接口使用Java注解可以快速设置其权限控制。Spring Security也可以这样做。
+
+使用注解前需要在配置类前添加`@EnableGlobalMethodSecurity(prePostEnabled = true)`注解。
+
+其中`prePostEnabled`默认为false，需要设置为true后才能全局的注解权限控制。
+
+```java
+@Configuration
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    ...
+}
+```
+
+Spring Security权限控制注解有如下几个:
+
+> @PreAuthorize : 在接口请求之前就进行权限判断
+
+```javascript
+@GetMapping("/info")
+@PreAuthorize("hasRole('USER')")
+// @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+public Result info(){
+    ...
+}
+```
+
+hasRole和hasAuthority都会对UserDetails中的getAuthorities进行判断，两个区别的就是，hasRole会对字段自动加上`ROLE_`再进行判断，这样更加方便（Spring Security的角色数据库中都有一个`ROLE_`前缀）。
+
+> @PostAuthorize : 在接口请求之后进行判断，如果返回值不满足条件，会抛出403异常，但是接口本身是会执行的。
+
+```java
+@PostAuthorize("returnObject.id%2==0")
+public School postAuthorize(Long id) {
+    XXX xxx = new XXX();
+    xxx.setId(id);
+    return xxx;
+}
+```
+
+`returnObject`是内置对象，引用的是下面方法的返回值(这里就是xxx对象)。 判断下 为true的值则通过认证。
+
+> @PreFilter：在接口请求执行之前，用于过滤。
+
+```java
+@PreFilter(filterTarget="ids", value="filterObject%2==0")
+public List<Long> preFilter(@RequestParam("ids") List<Long> ids) {
+    return ids;
+}
+```
+
+`filterObject`是内置对象，引用的是集合中的泛型类，如果有多个集合，需要指定`filterTarget`,即参数。判断下 为true的值，参数会保留,否则参数就会被移除。
+
+> @PostFilter:  在接口请求之后，对返回的集合进行过滤。
+
+```java
+@PostFilter("filterObject.id%2==0")
+public List<Long> preFilter(@RequestParam("ids") List<Long> ids) {
+    XXX xxx = new XXX();
+    xxx.setIds(ids);
+    return xxx;
+}
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
