@@ -226,6 +226,82 @@ SecurityContext其中拥有多个用户信息:
 >
 > Principal：获取用户，如果没有认证，那么就是用户名，如果认证了，返回UserDetails。
 
+### 限制登录个数
+
+Spring Security默认使用Session来进行身份认证的。
+
+默认身份认证是无限制数量的，也就是说100个浏览器同时就可以登录100个相同用户，但对于一些项目比如QQ、银行操作，我们需要限制登录，避免安全问题和事务处理问题。
+
+目前限制登录有两个思路：
+
+- 后来的登录认证自动踢掉前面的登录认证。
+- 如果用户已经登录，则不允许后来者登录。
+
+#### 踢掉已经登录用户
+
+想要用新的登录踢掉旧的登录，我们只需要将最大会话数设置为 1 即可，配置如下：
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests()
+            ...
+            .sessionManagement()
+            .maximumSessions(1);
+}
+```
+
+`maximumSessions `表示配置最大会话数为 1，这样的话，后面的登录就会自动踢掉前面的登录。
+
+#### 禁止新的登录
+
+如果相同的用户已经登录了，你不想踢掉他，而是想禁止新的登录操作的话，配置如下：
+
+```java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests()
+        	...
+            .sessionManagement()
+            .maximumSessions(1)
+            .maxSessionsPreventsLogin(true);
+}
+```
+
+在原有的`maximumSessions`基础上添加` maxSessionsPreventsLogin` 配置即可。此时一个浏览器登录成功后，另外一个浏览器就登录不了了。
+
+
+
+但是，这样虽然可以实现禁止新的登录进来，但是你会发现，当前用户退出后，依旧会被禁止登录进去，这是为什么呢？
+
+因为在 Spring Security 中，它是通过监听 session 的销毁事件，来及时的清理 session 的记录。用户从不同的浏览器登录后，都会有对应的 session，当用户注销登录之后，session 就会失效，但是默认的失效是通过调用 StandardSession内的invalidate 方法来实现的，这一个失效事件无法被 Spring 容器监听到，进而导致当用户注销登录之后，Spring Security 没有及时清理会话信息表，以为用户还在线，进而导致用户无法重新登录进来。 
+
+***说白了就是Spring Security的默认注销登录，Spring Security不会立即将其用户会话删除，从而导致它误以为还在线。***
+
+为了解决这个问题，我们需要提供提供一个 Bean：
+
+```java
+@Bean
+HttpSessionEventPublisher httpSessionEventPublisher() {
+    return new HttpSessionEventPublisher();
+}
+```
+
+需要重写`HttpSessionEventPublisher` ，它需要实现`HttpSessionListener` 接口，在该 Bean 中，可以将 session 创建以及销毁的事件及时感知到，并且调用 Spring 中的事件机制将相关的创建和销毁事件发布出去：
+
+```java
+public void sessionCreated(HttpSessionEvent event) {
+	HttpSessionCreatedEvent e = new HttpSessionCreatedEvent(event.getSession());
+	getContext(event.getSession().getServletContext()).publishEvent(e);
+}
+public void sessionDestroyed(HttpSessionEvent event) {
+	HttpSessionDestroyedEvent e = new HttpSessionDestroyedEvent(event.getSession());
+	getContext(event.getSession().getServletContext()).publishEvent(e);
+}
+```
+
+
+
 ## 前后端分离无状态实现教程
 
 ### 定义无身份认证页面
@@ -938,6 +1014,43 @@ public class JWTProvider {
 
 下面是Spring Security一些核心内容教程。
 
+
+
+### Spring Security 资源放行策略
+
+在上面教程中，我们使用过两种Spring Security放行方法：
+
+1. 在 configure(WebSecurity web) 方法中配置放行：
+
+   ```java
+   @Override
+   public void configure(WebSecurity web) throws Exception {
+       web.ignoring().antMatchers("/css/**", "/js/**", "/index.html", "/img/**", "/fonts/**", "/favicon.ico", "/verifyCode");
+   }
+   ```
+
+2. 在 configure(HttpSecurity http) 方法中进行配置放行：
+
+   ```java
+   http.authorizeRequests()
+           .antMatchers("/hello").permitAll()
+           .anyRequest().authenticated()
+   ```
+
+咋一看这两种都是放行URL处理，没什么区别呀。
+
+**其实最大的区别在于，第一种方式在configure(WebSecurity web)中 是不走 Spring Security 过滤器链，而第二种方式configure(HttpSecurity http)中 是走 Spring Security 过滤器链，在过滤器链中，给请求放行。**
+
+如何做使用区分：
+
+比如有的资源可以使用第一种方式额外放行，它们根本不需要验证，类似于在SpringBoot配置中进行放行，例如前端页面的静态资源，就可以按照第一种方式配置放行。
+
+比如有的资源放行，则必须使用第二种方式，例如登录接口，因为虽然登录接口的Get访问不需要Spring Security身份认证，但是它的Post需要进行认证，所以必须要走 Spring Security 过滤器。
+
+
+
+
+
 ### 默认认证流程解析
 
 #### AuthenticationProvider-认证方式提供
@@ -1317,6 +1430,198 @@ public List<Long> preFilter(@RequestParam("ids") List<Long> ids) {
     return xxx;
 }
 ```
+
+
+
+### SpringSecurity的Session实现
+
+Spring Security默认 是怎么保存用户对象和 session 的？
+
+Spring Security 中通过 SessionRegistryImpl 类来实现对会话信息的统一管理：
+
+```java
+public class SessionRegistryImpl implements SessionRegistry,
+		ApplicationListener<SessionDestroyedEvent> {
+	/** <principal:Object,SessionIdSet> */
+	private final ConcurrentMap<Object, Set<String>> principals;
+	/** <sessionId:Object,SessionInformation> */
+	private final Map<String, SessionInformation> sessionIds;
+    /*
+    * 创建、注册新的Session
+    */
+	public void registerNewSession(String sessionId, Object principal) {
+        Assert.hasText(sessionId, "SessionId required as per interface contract");
+		Assert.notNull(principal, "Principal required as per interface contract");
+        // 如果存在相同SessionID,就移除现有的Session
+		if (getSessionInformation(sessionId) != null) {
+			removeSessionInformation(sessionId);
+		}
+        // 添加到sessionIds 记录
+		sessionIds.put(sessionId,
+				new SessionInformation(principal, sessionId, new Date()));
+		
+		principals.compute(principal, (key, sessionsUsedByPrincipal) -> {
+			if (sessionsUsedByPrincipal == null) {
+				sessionsUsedByPrincipal = new CopyOnWriteArraySet<>();
+			}
+			sessionsUsedByPrincipal.add(sessionId);
+			return sessionsUsedByPrincipal;
+		});
+	}
+	public void removeSessionInformation(String sessionId) {
+		SessionInformation info = getSessionInformation(sessionId);
+		if (info == null) {
+			return;
+		}
+		sessionIds.remove(sessionId);
+		principals.computeIfPresent(info.getPrincipal(), (key, sessionsUsedByPrincipal) -> {
+			sessionsUsedByPrincipal.remove(sessionId);
+			if (sessionsUsedByPrincipal.isEmpty()) {
+				sessionsUsedByPrincipal = null;
+			}
+			return sessionsUsedByPrincipal;
+		});
+	}
+            
+    @Override
+	public SessionInformation getSessionInformation(String sessionId) {
+		Assert.hasText(sessionId, "SessionId required as per interface contract");
+		return this.sessionIds.get(sessionId);
+	}
+
+}
+```
+
+其中声明了一个 principals对象，它是一个支持并发访问的Map集合，key为用户的用户对象（具体由登录成功的Authentication中来的），而集合的 value 则是一个 set 集合，这个 set 集合中保存了这个用户对应的 sessionid。
+
+当登录成功一个用户，新的 session 需要添加，就在 registerNewSession 方法中进行添加，具体是调用 principals.compute 方法进行添加，key 就是 principal。
+
+如果用户注销登录，sessionid 需要移除，相关操作在 removeSessionInformation 方法中完成，具体也是调用 principals.computeIfPresent 方法。
+
+### Spring Security Session与Vue前后端分离项目问题
+
+我们使用默认的Session作为Spring Security的身份认证的话，前后端分离的限制登录会没有作用。
+
+```java
+protected void configure(HttpSecurity http) throws Exception {
+    http.authorizeRequests()
+            ...
+            .and()
+            .formLogin()
+            .loginPage("/login.html")
+            .loginProcessingUrl("/doLogin")
+            ...
+            .and()
+            .sessionManagement()
+            .maximumSessions(1);
+}
+```
+
+打开多个浏览器，分别进行多端登录测试，就会发现每个浏览器都能登录成功，每次登录成功也不会踢掉已经登录的用户！
+
+因为前后端分离使用Session的话，我们通常会自己实现一个UserDetails（默认的User中没用一些自定义属性） 来进行Session存储。然而上面简绍了SessionRegistryImpl 中的principals对象中key就需要存储了它,所以如果没有重写自定义的UserDetails的equals和hashCode方法的话就会造成覆盖问题。
+
+所以我们需要重写自定义的UserDetails的equals和hashCode方法：
+
+```java
+public class MyUser implements UserDetails {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String username;
+    private String password;
+    private boolean accountNonExpired;
+    private boolean accountNonLocked;
+    private boolean credentialsNonExpired;
+    private boolean enabled;
+    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.PERSIST)
+    private List<Role> roles;
+    ...
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(username, user.username);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username);
+    }
+    ...
+    ...
+}
+```
+
+
+
+### Session集群共享
+
+在普通情况下/或者需要管理登录情况下，使用Spring Security自带的Session进行认证操作更加方便。
+
+在传统的单服务框架中，一般只有一个后台服务器，那么不存在Session共享问题。
+
+但是如今中大型项目中，都是采用的分布式集群设计，有多台服务器，那么由于需要实现负载均衡，每次访问的服务器都可能不一致，那么Session就需要实现互相共享。
+
+![](../picture/14-1.png)
+
+为了解决共享问题，目前主流的解决方案就是将其各个服务器需要共享的数据，统一保存在一个服务器中，通过这个服务器来实现统一保存。为了不影响用户的体验，通常这个服务器通常使用缓存服务器，如Redis等。
+
+![](../picture/14-2.png)
+
+当所有 Tomcat 需要往 Session 中写数据时，都往 Redis 中写，当所有 Tomcat 需要读数据时，都从 Redis 中读。这样，不同的服务就可以使用相同的 Session 数据了。
+
+这样的方案，可以由开发者编写代码手动实现，即往 Redis 中存储数据、从 Redis 中读取数据，相当于使用一些 Redis 工具来实现这样的功能，毫无疑问，这样工作量会增加，并且可能会有问题出现。
+
+目前一个简化的方案就是使用 Spring官方的`Spring Session` 来实现这一功能，`Spring Session` 就是使用 Spring 中的代理过滤器，将所有的 Session 操作拦截下来，自动的将数据 同步到 Redis 中，或者自动的从 Redis 中读取数据，从而操作Session和普通的方式一样。
+
+**具体操作：**
+
+向项目添加``spring-boot-starter-data-redis`和`spring-session-data-redis`依赖
+
+```java
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.session</groupId>
+    <artifactId>spring-session-data-redis</artifactId>
+</dependency>
+```
+
+在配置文件中配置Redis基本属性，这儿就不做讲述了。
+
+配置完成后 ，使用普通的 HttpSession 执行操作，那么 Spring Session就会自动将其 Session 操作同步到 Redis 等操作，这些操作框架已经自动帮你完成了：
+
+```java
+@RestController
+public class HelloController {
+    @Value("${server.port}")
+    Integer port;
+    @GetMapping("/set")
+    public String set(HttpSession session) {
+        session.setAttribute("user", "javaboy");
+        return String.valueOf(port);
+    }
+    @GetMapping("/get")
+    public String get(HttpSession session) {
+        return session.getAttribute("user") + ":" + port;
+    }
+}
+```
+
+这里设计了两个接口，一个用来向Session中写入内容，一个用来向Session中读取内容。考虑到项目会以集群方式启动，特意加上了端口号，来确定哪台服务器执行了接口。
+
+我们运行同样两个服务器（端口不一样），然后先访问 一台服务器的set接口向其Session中存一个变量，第一次访问时会自动跳转到SpringSecurity登录页面，输入用户名密码进行登录即可。访问成功后，数据就已经自动同步到 `Redis` 中 了 ：
+
+![](../picture/20200514104238.png)
+
+然后，再调用 另外一台服务器的get接口，就可以获取到Redis的 `session` 中的数据了，从而就实现了Session共享。
+
+
 
 
 

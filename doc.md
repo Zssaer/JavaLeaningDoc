@@ -12404,7 +12404,7 @@ clear 属性可设置以下值之一：
 
 
 
-### Flexbox 布局模块
+### Flexbox 弹性布局
 
 Flexbox是CSS3的新布局.
 
@@ -12414,7 +12414,7 @@ Flexbox是CSS3的新布局.
 
 它在 Internet Explorer 10 或更早版本中不起作用。
 
-本文的内容为阮一峰老师的博客:https://www.ruanyifeng.com/blog/2015/07/flex-grammar.html
+本文的内容来自阮一峰老师的博客:https://www.ruanyifeng.com/blog/2015/07/flex-grammar.html
 
 #### 概念
 
@@ -12604,6 +12604,385 @@ flex-grow: <number>; /* default 0 */
 ![](picture/bg2018101806.png)
 
 如果项目很多，一个个地设置`align-self`属性就很麻烦。这时，可以在容器元素上设置`align-items`属性，它的值被所有子项目的`align-self`属性继承。
+
+
+
+
+
+### Grid 网格布局
+
+本文的内容来自阮一峰老师的博客:https://www.ruanyifeng.com/blog/2019/03/grid-layout-tutorial.html
+
+网格布局（Grid）是最强大的 CSS 布局方案。
+
+它将网页划分成一个个网格，可以任意组合不同的网格，做出各种各样的布局。
+
+以前，只能通过表格组件结合复杂的 CSS 框架达到的效果，现在浏览器内置了。
+
+![](picture/1_bg2019032501.png)
+
+Grid 布局与 Flex 布局有一定的相似性，都可以指定容器内部多个项目的位置。但是，它们也存在重大区别。
+
+> Flex 布局是轴线布局，主要分为主轴和交叉轴，其组件只能指定"项目"针对轴线的位置，可以看作是一维布局。
+>
+> Grid 布局则是将容器划分成"行（row）"和"列"（column），产生单元格，然后指定"项目所在"的单元格，可以看作是二维布局。Grid 布局远比 Flex 布局强大。
+
+#### 容器基本概念
+
+采用网格布局的区域，称为"容器"（container）。
+
+容器内部采用网格定位的子元素，称为"项目"（item）。比如：
+
+```html
+<div>
+  <div><p>1</p></div>
+  <div><p>2</p></div>
+  <div><p>3</p></div>
+</div>
+```
+
+上面代码中，最外层的`<div>`元素就是容器，内层的三个`<div>`元素就是项目。
+
+**注意：项目只能是容器的顶层子元素，不包含项目的子元素，比如上面代码的`<p>`元素就不是项目。Grid 布局只对项目生效，不对其项目中的子元素生效。**
+
+##### 行和列
+
+容器里面的水平区域称为"行"（row），垂直区域称为"列"（column），简而言之，就是横行竖列。
+
+![](picture/1_bg2019032502.png)
+
+上图所示，共有2行2列。
+
+##### 单元格
+
+行和列之间的交叉区域，称为"单元格"（cell）。
+
+正常情况下，`n`行和`m`列会产生`n x m`个单元格。比如，3行3列会产生9个单元格。
+
+就像上图所示，具有4个单元格。
+
+##### 网格线
+
+划分网格的线，称为"网格线"（grid line）。
+
+水平网格线划分出行，垂直网格线划分出列。
+
+正常情况下，`n`行有`n + 1`根水平网格线，`m`列有`m + 1`根垂直网格线，比如三行就有四根水平网格线。
+
+![](picture/1_bg2019032503.png)
+
+上图所示，是一个 4 x 4 的网格，它共有5根水平网格线和5根垂直网格线。
+
+#### 主要属性
+
+Grid 布局的属性分成两类。
+
+一类定义在容器上面，称为容器属性；另一类定义在项目上面，称为项目属性。
+
+##### 容器属性
+
+###### display（设置布局）
+
+指定一个容器采用网格布局。
+
+```css
+div {
+  /*display: grid;*/
+  /*display: inline-grid;*/
+}
+```
+
+`display: grid`的效果:
+
+![](picture/bg2019032504.png)
+
+默认情况下，容器元素都是块级元素，但也可以设成行内元素。
+
+`display: inline-grid`的效果:
+
+![](picture/bg2019032505.png)
+
+
+
+注意，设为网格布局以后，容器子元素（项目）的`float`、`display: inline-block`、`display: table-cell`、`vertical-align`和`column-*`等设置都将失效。
+
+
+
+###### grid-template-columns\grid-template-rows(设置大小)
+
+使用`grid-template-columns`属性定义每一列的列宽，`grid-template-rows`属性定义每一行的行高。
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: 100px 100px 100px;
+  grid-template-rows: 100px 100px 100px;
+}
+```
+
+说的通俗点就是，grid-template-columns里面数组个数控制项目列数，数组大小控制项目长度。
+
+而grid-template-rows里面数组个数 控制项目的行数，数组大小 控制项目长度。
+
+除了使用绝对单位，也可以使用百分比。
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: 33.33% 33.33% 33.33%;
+  grid-template-rows: 33.33% 33.33% 33.33%;
+}
+```
+
+
+
+**repeat()：重复设置**
+
+有时候，重复写同样的值非常麻烦，尤其网格很多时。这时，可以使用`repeat()`函数，简化重复的值。
+
+上面的代码用`repeat()`改写如下。
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: repeat(3, 33.33%);
+  grid-template-rows: repeat(3, 33.33%);
+}
+```
+
+repeat()：第一个参数是重复的次数（上例是3），第二个参数是所要重复的值。
+
+当然，repeat（）还可以重复一个数组数值：
+
+```css
+grid-template-columns: repeat(2, 100px 20px 80px);
+```
+
+
+
+**auto-fill**：关键字
+
+有时，单元格的大小是固定的，但是容器的大小不确定。
+
+如果希望每一行（或每一列）容纳尽可能多的单元格，这时可以使用`auto-fill`关键字表示自动填充。
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 100px);
+}
+```
+
+![](picture/bg2019032508.png)
+
+上面代码表示每列宽度`100px`，然后自动填充，直到容器不能放置更多的列。
+
+
+
+**fr 关键字**
+
+为了方便表示比例关系，网格布局提供了`fr`关键字（fraction 的缩写，意为"片段"）。
+
+如果两列的宽度分别为`1fr`和`2fr`，就表示后者是前者的两倍。
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+```
+
+![](picture/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20211123162405.png)
+
+`fr`可以与绝对长度的单位结合使用，这时会非常方便。
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: 150px 1fr 2fr;
+}
+```
+
+上述代码表示，第一列的宽度为150像素，第二列的宽度是第三列的一半。
+
+
+
+**minmax()**:范围设置
+
+`minmax()`函数产生一个长度范围，表示长度就在这个范围之中。它接受两个参数，分别为最小值和最大值。
+
+```css
+grid-template-columns: 1fr 1fr minmax(100px, 1fr);
+```
+
+
+
+**网格线的名称**
+
+`grid-template-columns`属性和`grid-template-rows`属性里面，还可以使用方括号，指定每一根网格线的名字，方便以后的引用。
+
+```css
+.container {
+  display: grid;
+  grid-template-columns: [c1] 100px [c2] 100px [c3] auto [c4];
+  grid-template-rows: [r1] 100px [r2] 100px [r3] auto [r4];
+}
+```
+
+上面代码指定网格布局为3行 x 3列，因此有4根垂直网格线和4根水平网格线。方括号里面依次是这八根线的名字。
+
+另外网格布局允许同一根线有多个名字，比如`[fifth-line row-5]`。
+
+
+
+快速布局:
+
+`grid-template-columns`属性对于网页快速布局非常有用。两栏式布局只需要一行代码。
+
+```css
+.wrapper {
+  display: grid;
+  grid-template-columns: 70% 30%;
+}
+```
+
+上面代码将左边栏设为70%，右边栏设为30%。
+
+传统的十二网格布局，写起来也很容易。
+
+ ```css
+ grid-template-columns: repeat(12, 1fr);
+ ```
+
+
+
+###### grid-row-gap\grid-column-gap(设置间距)
+
+`grid-row-gap`属性设置行与行的间隔（行间距），`grid-column-gap`属性设置列与列的间隔（列间距）。
+
+```css
+.container {
+  grid-row-gap: 20px;
+  grid-column-gap: 20px;
+}
+```
+
+![](picture/bg2019032511.png)
+
+`grid-gap`属性是`grid-column-gap`和`grid-row-gap`的合并简写形式
+
+根据最新标准，上面三个属性名的`grid-`前缀已经删除，`grid-column-gap`和`grid-row-gap`写成`column-gap`和`row-gap`，`grid-gap`写成`gap`。
+
+
+
+###### grid-auto-flow(排序方式)
+
+Grid容器中的组件默认的放置顺序是"先行后列"，即先填满第一行，再开始放入第二行，即下图数字的顺序。
+
+![](picture/bg2019032506.png)
+
+这个顺序由`grid-auto-flow`属性决定，默认值是`row`，即"先行后列"。也可以将它设成`column`，变成"先列后行",那么就会从上到下竖着排列。
+
+![](picture/bg2019032512.png)
+
+除了设置成`row`和`column`，还可以设成`row dense`和`column dense`。这两个值主要用于，某些项目指定位置以后，剩下的项目怎么自动放置。
+
+###### justify-items (水平位置) align-items(垂直位置)
+
+`justify-items`属性设置单元格内容的水平位置（左中右）。
+
+`align-items`属性设置单元格内容的垂直位置（上中下）。
+
+```css
+.container {
+  justify-items: start;
+}
+```
+
+![](picture/bg2019032516.png)
+
+这两个属性的写法完全相同，都可以取下面这些值。
+
+> - start：对齐单元格的起始边缘。
+> - end：对齐单元格的结束边缘。
+> - center：单元格内部居中。
+> - stretch：拉伸，占满单元格的整个宽度（默认值）。
+
+`place-items`属性是`align-items`属性和`justify-items`属性的合并简写形式。
+
+```css
+place-items: <align-items> <justify-items>;
+```
+
+
+
+###### justify-content  (容器水平位置)\align-content (容器垂直位置)
+
+不同于上面的XXX-items，XXX-content主要是针对的这个Grid网格布局的容器的网格位置设置。
+
+```css
+.container {
+  justify-content: start | end | center | stretch | space-around | space-between | space-evenly;
+  align-content: start | end | center | stretch | space-around | space-between | space-evenly;  
+}
+```
+
+两个属性的写法完全相同，值的效果和Flexbox一样。
+
+- start - 对齐容器的起始边框。
+
+  ![](picture/bg2019032518.png)
+
+- center - 容器内部居中。
+
+  ![](picture/bg2019032520.png)
+
+  ###### grid-auto-columns\grid-auto-rows(网格的自动宽度高度设置)
+
+  grid-template-columns和grid-template-rows设置了网格布局固定规格，当超过这个规格，比如4*4的网格中设置了17个项目组件的话，浏览器就会自动生成多出来的网格，对于这些网格宽度、高度规格设置，我们使用`grid-auto-columns和grid-auto-rows`。当然如果不指定这两个属性，浏览器完全根据单元格内容的大小，决定新增网格的列宽和行高。
+
+  ```css
+  .container {
+    display: grid;
+    grid-template-columns: 100px 100px 100px;
+    grid-template-rows: 100px 100px 100px;
+    grid-auto-rows: 50px; 
+  }
+  ```
+  
+  上面代码，第10个项目组件的高度就会变为50px，而不是100px。
+
+  
+
+  ##### 项目属性
+
+  grid-column-start 属性， grid-column-end 属性， grid-row-start 属性， grid-row-end 属性：
+
+  
+
+  项目的位置是可以指定的，具体方法就是指定项目的四个边框，分别定位在哪根网格线。
+  
+  > - `grid-column-start`属性：左边框所在的垂直网格线
+  > - `grid-column-end`属性：右边框所在的垂直网格线
+  > - `grid-row-start`属性：上边框所在的水平网格线
+  > - `grid-row-end`属性：下边框所在的水平网格线
+  
+  ```css
+  .item-1 {
+    grid-column-start: 2;
+    grid-column-end: 4;
+  }
+  ```
+  
+  上面代码，1号项目的左边框是第二根垂直网格线，右边框是第四根垂直网格线。
+  
+  ![](picture/bg2019032526.png)
+
+上图中，只指定了1号项目的左右边框，没有指定上下边框，所以会采用默认位置，即上边框是第一根水平网格线，下边框是第二根水平网格线。
+
+除了1号项目以外，其他项目都没有指定位置，由浏览器自动布局，这时它们的位置由容器的`grid-auto-flow`属性决定，这个属性的默认值是`row`，因此会"先行后列"进行排列。
+
+
 
 
 
