@@ -1349,6 +1349,55 @@ SecurityContextHolder.getContext().setAuthentication(authentication);
 
 
 
+### 多个数据库登录
+
+有时候，可能需要多个平台的用户登录进服务器，比如A公司不仅可以使用A公司账户登录，还可以使用B公司账户登录等等。
+
+对于这种情况来说，我们或许会想到多个自己写一个登录接口还实现多次查询登录。
+
+其实通过自定义配置认证逻辑既可以实现这种功能。
+
+上面讲述默认认证逻辑的时候，提到了ProviderManager，它是一个可以拥有多个AuthenticationProvider的管理器，ProviderManager内的AuthenticationProvider都会被依次按照顺序来执行。所以我们可以自定义设置两个AuthenticationProvider，它们实现不一样的用户查询UserDetailsService即可。
+
+```java
+@Override
+public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+    ...
+    try {
+			this.preAuthenticationChecks.check(user);
+			additionalAuthenticationChecks(user, (UsernamePasswordAuthenticationToken) authentication);
+	}    
+    ...
+}
+```
+
+其实，还有更简单的，如果是使用的是DaoAuthenticationProvider父类的话，我们直接可以通过`setUserDetailsService`进行设定自己的UserDetailsService即可:
+
+```java
+@Configuration
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    ...
+	@Override
+    @Bean
+    protected AuthenticationManager authenticationManager() throws Exception {
+        DaoAuthenticationProvider dao1 = new DaoAuthenticationProvider();
+        dao1.setUserDetailsService(us1());
+
+        DaoAuthenticationProvider dao2 = new DaoAuthenticationProvider();
+        dao2.setUserDetailsService(us2());
+
+        ProviderManager manager = new ProviderManager(dao1, dao2);
+        return manager;
+    }
+    ...
+}
+
+```
+
+对于UserDetailsService中使用多个数据库查询，需要应用到切换连接池，这儿不做讲述。
+
+
+
 ### 使用注解进行权限控制
 
 Spring Security中可以在配置类的configure方法中进行设置权限控制：
