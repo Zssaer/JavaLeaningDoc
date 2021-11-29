@@ -1672,7 +1672,88 @@ public class HelloController {
 
 
 
+### 权限管理
 
+上述的认证是基于Role角色来进行的，在控制认证中也都是以用户角色为主。这对于一些小型系统来说足够了。
+
+但是对于一些中大型系统来说，这种仅依靠角色来进行认证操作是十分粗犷的，因为在中大型后台中，其中操作分的十分的细，XXX操作只能XXX来进行，XXX操作不能进行XXX操作，单靠角色来进行这样的操作，那么就会建立不知道多少角色，并且难以管理，所以我们这时务必使用角色-权限进行操作授权管理。
+
+这里就会出现一种模型：RBAC
+
+RBAC（Role-based access control），目前使用最多的权限模型。它使用角色进行基础归类，通过用户的角色来确定用户对某项资源是否具备操作权限。用白话说就是：用户拥有角色标识，角色拥有对应权限，通过对角色进行分配权限，用户就自动拥有对应权限。
+
+所以，实现RBAC模型，那么就必须至少拥有3个数据库表，role表、permission表（或者menu表）、role-permission表（或者role-menu表）。
+
+> - role表：管理用户角色列表。
+> - permission表：权限表，用于记录各个组件的权限信息。
+> - role-permission表：角色拥有的权限表，用于记录角色拥有的权限信息。
+
+整个授权操作就是-通过用户角色id去role-permission表查询拥有的permission，然后在permission表进行获取相关权限内容。
+
+对于对角色权限添加操作，我们可以通过UserDetailsService中，loadUserByUsername方法查询中进行添加对应逻辑：
+
+```java
+@Override
+public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
+	    ...
+        // 设置角色和权限
+        Integer roleId = userFromDatabase.get(0).getRole();
+        Role role = roleMapper.selectByPrimaryKey(roleId);
+        List<Permission> permissionList = rolePermissionService.getHasPermissionList(role.getId());
+
+        Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
+        for (Permission p : permissionList) {
+            if (p.getPermissionType() == 2) {
+                grantedAuthorities.add(new SimpleGrantedAuthority(p.getPath() + ":" + p.getMethod()));
+            }
+        }        
+    	grantedAuthorities.add(new SimpleGrantedAuthority(role.getRoleName()));
+    	...
+        return new User(login, allEncoded, grantedAuthorities);    
+}
+```
+
+前面的操作就是正常的CRUD，其中getHasPermissionList方法是通过角色ID获取拥有权限列表，这儿不概述。
+
+这里grantedAuthorities是一个GrantedAuthority集合，GrantedAuthority是Spring Security的权限接口，它也有一个常用的实现类SimpleGrantedAuthority，我们轮流将其权限表的权限安装 相应要求 加入grantedAuthorities集合中，代表对用户注入权限。
+
+最后不要忘记将角色名也同样方法添加进去。
+
+这里有些人会迷惑，为什么角色和权限都一起放进去？权限认证时如何进行区分呢？
+
+其实前面数据库实现用户登录 那儿 就说了，Spring Security在4.x版本后，角色都需要被加上“ROLE_”前缀，所以这里我们要在Role表中的角色设为“ROLE_XXX”，比如admin就得是“ROLE_admin”。拥有‘ROLE_ _ ’的前缀的权限会自动过滤识别为角色。
+
+当然对于一些较大型的系统的话，权限查询授权 就尽量不要放置在 UserDetailsService中了，因为前面在介绍默认认证流程说了，Spring Security在进行登录密码认证操作前就会查询用户，所以当用户即使认证错误也会进行用户授权查询操作，造成登录过程缓慢。
+
+我们可以自定义实现一个DaoAuthenticationProvider，去重写`authenticate(Authentication authentication)`方法，在其`additionalAuthenticationChecks`密码认证方法执行后，去实现用户授权操作，这样只有用户密码认证成功后，才进行用户授权查询。这些具体操作可以参考上面的 自定义认证逻辑。
+
+
+
+由于我们使用了JWT认证，我们为了保证每次权限认证时的流畅性，我们登录时生成JWT时，将其权限存储进JWT或者Ehcache中，以免每次都进行权限查询。
+
+对于其JAVA注解控制，我们就可以这样随意根据权限 使用了：
+
+```java
+//拥有write权限
+@GetMapping("/write")
+@PreAuthorize("hasAuthority('write')")
+public String getWrite() {
+    return "have a write authority";
+}
+
+//admin角色
+@GetMapping("/admin-role")
+@PreAuthorize("hasRole('admin')")
+public String readAdmin() {
+    return "have a admin role";
+}
+
+// 拥有USER角色并且还需要拥有datebase-setting:get权限
+@GetMapping("/info")
+@PreAuthorize("hasAuthority('datebase-setting:get') and hasRole('USER')")
+public Result info(){
+}
+```
 
 
 

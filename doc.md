@@ -645,8 +645,6 @@ private void swap(int[] nums, int index1, int index2) {
 
 <img src="picture\list1.png" style="zoom:95%;" />
 
-#### 
-
 #### 链表的类型
 
 1.单链表 同上图,单链表中的节点只能指向节点的下一个节点。

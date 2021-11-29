@@ -16,6 +16,8 @@
    /**
     * 转换器接口
     */
+   public interface RespCoverter<T> {
+       public Object covert(T t);
    }
    ```
 
