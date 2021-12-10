@@ -12803,6 +12803,10 @@ grid-template-columns: repeat(2, 100px 20px 80px);
 
 上述代码表示，第一列的宽度为150像素，第二列的宽度是第三列的一半。
 
+![](picture/bg2019032510.png)
+
+相对于第一列为固定像素，属于的部分进行按量分配。
+
 
 
 **minmax()**:范围设置
@@ -12811,6 +12815,14 @@ grid-template-columns: repeat(2, 100px 20px 80px);
 
 ```css
 grid-template-columns: 1fr 1fr minmax(100px, 1fr);
+```
+
+上面代码中，`minmax(100px, 1fr)`表示列宽不小于`100px`，不大于`1fr`。
+
+**auto**：表示由浏览器自己决定长度。
+
+```css
+grid-template-columns: 100px auto 100px;
 ```
 
 
