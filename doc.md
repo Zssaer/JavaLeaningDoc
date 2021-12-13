@@ -12964,7 +12964,7 @@ place-items: <align-items> <justify-items>;
 
   
 
-  ##### 项目属性
+  #### 项目属性
 
   grid-column-start 属性， grid-column-end 属性， grid-row-start 属性， grid-row-end 属性：
 
@@ -12994,7 +12994,123 @@ place-items: <align-items> <justify-items>;
 
 
 
+##### grid-column 属性和grid-row 属性
 
+`grid-column`属性是`grid-column-start`和`grid-column-end`的合并简写形式，grid-row同样，他们接受一个start-line和end-line属性，表示其项目的跨域长度：
+
+```css
+.item-1 {
+  grid-column: 1 / 3;
+  grid-row: 1 / 2;
+}
+/* 等同于 */
+.item-1 {
+  grid-column-start: 1;
+  grid-column-end: 3;
+  grid-row-start: 1;
+  grid-row-end: 2;
+}
+```
+
+![](picture/bg2019032529.png)
+
+如上图所示,项目`item-1`占据的区域，包括第一行 + 第二行、第一列 + 第二列。
+
+其中也可以省略其中的`end-line`属性，默认跨域一个网格。
+
+```css
+.item-1 {
+  grid-column: 1;
+  grid-row: 1;
+}
+```
+
+当然也可以使用`span`关键字，表示跨越多少个网格。
+
+```css
+.item-1 {
+  background: #b03532;
+  grid-column: 1 / span 2;
+  grid-row: 1 / span 2;
+}
+```
+
+##### grid-area 属性
+
+`grid-area`属性指定项目放在哪一个区域。
+
+```css
+.item-1 {
+  grid-area: e;
+}
+```
+
+区域为其`grid-template-columns`或者`grid-template-rows`定义的网格。
+
+当然`grid-area`属性还可用作`grid-row-start`、`grid-column-start`、`grid-row-end`、`grid-column-end`的合并简写形式，直接指定项目的位置。
+
+```css
+.item {
+  grid-area: <row-start> / <column-start> / <row-end> / <column-end>;
+}
+
+.item-1 {
+  grid-area: 1 / 1 / 3 / 3;
+}
+```
+
+
+
+##### justify-self 属性， align-self 属性
+
+它们的使用方法与其容器属性中的justify-items等属性完全一样，但是它只是作用于一个项目组件上。
+
+
+
+### 区块快速划分
+
+在前面的属性中，我们使用了项目组件属性中的grid-column 属性和grid-row 属性在进行控制 指定项目的显示位置。
+
+我们还可以使用其项目区块来进行快速控制位置：
+
+`grid-area`:在控制项目位置前,我们需要对其项目组件添加区块名
+
+```css
+.item1 {
+    background: LightSkyBlue;
+    grid-area: header;
+  }
+.item2 {
+    background: LightSalmon;
+    grid-area: advert;
+ }
+.item3 {
+    background: PaleTurquoise;
+    grid-area: content;
+  }
+.item4 {
+    background: lightpink;
+    grid-area: footer;
+  }
+```
+
+随后我们在其容器中进行安装设置的行列 来进行控制位置:
+
+```css
+@media (min-width: 300px){
+    .container{
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas:
+        "advert header"
+        "advert content"
+        "advert footer";
+}
+```
+
+上述显示后，为下图效果：
+
+![](picture/%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_20211213114503.png)
 
 
 
