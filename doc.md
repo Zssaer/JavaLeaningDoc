@@ -1,4 +1,4 @@
-# <font color=red>ZSSAER学习日志</font>
+<font color=red>ZSSAER学习日志</font>
 
 [toc]
 
@@ -11751,7 +11751,7 @@ $ docker run -d -P \
 $ docker inspect web
 ```
 
-`挂载主机目录` 的配置信息在 "Mounts" Key 下面。
+`挂载主机目录` 的配置信息在 "Mounts" Key 下面。其中的容器挂载点为Destination，而主机目录为Source。
 
 ```json
 "Mounts": [

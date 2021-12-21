@@ -144,7 +144,6 @@ http {
 其他更多说明，见下配置：
 
 ```nginx
-// nginx.conf文件内容，
 user  nginx; #设置nginx服务的系统使用用户
 worker_processes  1; #工作进程数
 
