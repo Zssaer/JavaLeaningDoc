@@ -420,15 +420,15 @@ tools.sh org.apache.rocketmq.example.quickstart.Producer
 作为生产者端 ，需要配置以下内容在SpringBoot配置中：
 
 ```xml-dtd
-spring
-  rocketmq
-	# 绑定name Server服务器地址
-    name-server: localhost:9876
-	# 定义生产者发布 组名
-    producer
-      group: my-group1
-	# 定义要发送的信息的主题集合
-	topic: string-topic
+
+rocketmq
+  # 绑定name Server服务器地址
+  name-server: localhost:9876
+  # 定义生产者发布 组名
+  producer
+    group: my-group1
+  # 定义要发送的信息的主题集合
+  topic: string-topic
 ```
 
 ##### 发送信息操作
@@ -437,7 +437,7 @@ spring
 @Autowired
 private RocketMQTemplate rocketMQTemplate;
 // 注入定义的主题-topci
-@Value("spring.rocketmq.topic")
+@Value("rocketmq.topic")
 private String topic;
 
 /**
@@ -483,9 +483,8 @@ RocketMQTemplate是rocketMQ-SpringBoot-starter这个依赖直接封装好了的�
 作为消费者端 ，需要配置以下内容在SpringBoot配置中：
 
 ```xml-dtd
-spring:
-  rocketmq:
-    name-server: 127.0.0.1:9876
+rocketmq:
+  name-server: 127.0.0.1:9876
 ```
 
 ##### 接受消费消息操作
@@ -522,6 +521,296 @@ RocketMQ消费者监听器实现RocketMQListener类，它接受一个泛型，�
 @RocketMQMessageListener(topic = "test-topic-4", consumerGroup = "my-consumer_test-topic-6",
     consumeMode = ConsumeMode.ORDERLY, reconsumeTimes = -1)
 ```
+
+它的所有说明属性如下：
+
+```java
+/**
+ * Consumer 所属消费者分组
+ *
+ * Consumers of the same role is required to have exactly same subscriptions and consumerGroup to correctly achieve
+ * load balance. It's required and needs to be globally unique.
+ *
+ * See <a href="http://rocketmq.apache.org/docs/core-concept/">here</a> for further discussion.
+ */
+String consumerGroup();
+
+/**
+ * 消费的 Topic
+ *
+ * Topic name.
+ */
+String topic();
+
+/**
+ * 选择器类型。默认基于 Message 的 Tag 选择。
+ *
+ * Control how to selector message.
+ *
+ * @see SelectorType
+ */
+SelectorType selectorType() default SelectorType.TAG;
+/**
+ * 选择器的表达式。
+ * 设置为 * 时，表示全部。
+ *
+ * 如果使用 SelectorType.TAG 类型，则设置消费 Message 的具体 Tag 。
+ * 如果使用 SelectorType.SQL92 类型，可见 https://rocketmq.apache.org/rocketmq/filter-messages-by-sql92-in-rocketmq/ 文档
+ *
+ * Control which message can be select. Grammar please see {@link SelectorType#TAG} and {@link SelectorType#SQL92}
+ */
+String selectorExpression() default "*";
+
+/**
+ * 消费模式。可选择并发消费，还是顺序消费。
+ *
+ * Control consume mode, you can choice receive message concurrently or orderly.
+ */
+ConsumeMode consumeMode() default ConsumeMode.CONCURRENTLY;
+
+/**
+ * 消息模型。可选择是集群消费，还是广播消费。
+ *
+ * Control message mode, if you want all subscribers receive message all message, broadcasting is a good choice.
+ */
+MessageModel messageModel() default MessageModel.CLUSTERING;
+
+/**
+ * 消费的线程池的最大线程数
+ *
+ * Max consumer thread number.
+ */
+int consumeThreadMax() default 64;
+
+/**
+ * 消费单条消息的超时时间
+ *
+ * Max consumer timeout, default 30s.
+ */
+long consumeTimeout() default 30000L;
+```
+
+
+
+### 事务消费
+
+关于RocketMQ-SpringBoot-Starter默认的消费模式是 按顺序消费，意思就是 “通过消息的发送顺序来进行依次消费处理”，这一种默认的消费模式满足大部分设计要求，但是它对于 一些重要业务来说则显得不足。
+
+一款买票软件，它的买票服务通常逻辑是这样的：订票 -》选择票类型-》生成订单-》支付-》完成购票。
+
+这种涉及到钱的操作一般设计就要十分严谨，如果不使用事务处理的话，当用户订票未付款就会发生订单一直保留，这样不满足原子性（要么同时成功要么全部失败）。
+
+所以我们来使用RocketMQ进行事务消费操作：
+
+**生产者：**
+
+```java
+@Component 
+public class SpringTransactionProducer { 
+
+	@Autowired 
+	private RocketMQTemplate rocketMQTemplate;
+	
+	 /**
+	 * 发送消息 
+	 * @param topic  
+	 * @param msg 
+	 */ 
+	 public void sendMsg(String topic, String msg) { 
+	 	/**
+	 	 * 这里的Message不是rocketmq.commen的 
+	 	 * 是springframework的接口
+	 	 * /
+		 Message message = MessageBuilder.withPayload(msg).build(); 
+		 
+		 /**
+		  * myTransactionGroup要和@RocketMQTransactionListener(txProducerGroup = "myTransactionGroup")定义的Group一致 
+		  * 消息会通过TransactionGroup找到事务消费者、通过topic普通消费者 只有事务消费者commit 普通消费者的结果才会执行 
+		  * /
+		 this.rocketMQTemplate.sendMessageInTransaction("myTransactionGroup", topic, message, null); 
+		 
+		 System.out.println("发送消息成功"); 
+	 } 
+ }
+```
+
+这里使用了RocketMQTemplate的sendMessageInTransaction方法进行发送事务消息。
+
+这里它第一个参数需要一个Transaction组参数，用于存放在其业务组下，在消费者中根据TransactionGroup进行额外操作。
+
+我们还要在**生产者(这里是生产者!)**中创建一个RocketMQ业务监听器：
+
+```java
+@RocketMQTransactionListener(txProducerGroup = "myTransactionGroup") 
+public class TransactionListenerImpl implements RocketMQLocalTransactionListener { 
+
+	/**
+	 * 可以定义一个static final的Map 用来保存返回unknown要回查消息的一些属性 那么所有对象都可以获取该消息回滚前的一些信息
+	 * private static Map<String, Object> INFO_MAP = new HashMap<>();
+	 */
+    
+	@Override 
+	public RocketMQLocalTransactionState executeLocalTransaction(Message message, Object o) { 
+		 /**
+		   * 该Message是springframework包下的 其获取事务消息的唯一id的方法
+		   * String transId = (String)message.getHeaders().get(RocketMQHeaders.TRANSACTION_ID); 
+		   * /
+		try {
+			System.out.println("执行操作1"); 
+			Thread.sleep(500); 
+			
+			System.out.println("执行操作2"); 
+			Thread.sleep(800); 
+			
+
+	   	    if(...) return LocalTransactionState.COMMIT_MESSAGE
+
+            if(...) return LocalTransactionState.ROLLBACK_MESSAGE
+
+            //如果在检查事务时数据库出现宕机可以让broker过一段时间回查 和return null 效果相同
+             if(...) return LocalTransactionState.UNKNOW 
+
+		} catch (Exception e) { 
+			e.printStackTrace(); 
+			/**
+			 * 回滚
+			 * 
+			 * 可以在该处给 INFO_MAP放一些信息 以便会查时调用
+			 * INFO_MAP.put(transId,...);
+			 * /
+			return RocketMQLocalTransactionState.ROLLBACK;
+		}
+		
+	}
+
+	@Override 
+	public RocketMQLocalTransactionState checkLocalTransaction(Message message) { 
+		/**
+		 * 只去返回commit或者rollback
+		 * 
+		 * 可以用INFO_MAP取得一些回滚前的信息
+		 * String transId = (String)message.getHeaders().get(RocketMQHeaders.TRANSACTION_ID); 
+		 * INFO_MAP.get(transId);
+		 * /
+    } 
+}
+```
+
+其中RocketMQ业务监听器需要实现RocketMQLocalTransactionListener，其中包含两个重要方法：
+
+executeLocalTransaction：*用来执行本地事务*，用来执行业务逻辑的地方，返回事务运行状态。
+
+checkLocalTransaction：只是检测事务运行状态，不做处理，处理事务回查的代码部分。
+
+
+
+其中`LocalTransactionState.COMMIT_MESSAGE` 为本地事务提交，代表事务过程中没有错误，消费者可以消费到该值。
+
+`LocalTransactionState.ROLLBACK_MESSAGE`为本地事务回滚，代表事务过程中出错，该消息将被删除，消费者无法消费该消息。
+
+`LocalTransactionState.Unknown`: 中间状态，它代表需要检查消息队列来确定状态，最终决定这个消息的是checkLocalTransaction这个方法。
+
+消费者的内容基本不变。
+
+
+
+RocketMQ它的具体事务逻辑就是 生产者发送消息成功接受后，生产者执行RocketMQ事务监听器中的executeLocalTransaction方法，根据返回的状态，来决定消息是否被消费者消费。
+
+如果状态为Unknown则为待定，那么RocketMQ会每隔一段时间调用一次checkLocalTransaction方法，来决定这个消息的最终归宿。至于这个时间取决于Broker配置文件中的`transactionCheckInterval`，它的默认值是60*1000，也就是1分钟。其中还有`transactionCheckMax `,它规定了最大次数，超过这个次数，如果还返回UNKNOW，这个消息将被删除。
+
+RocketMQ的事务简单来说就是，发送后检查是否将其发送前的业务完成，最终确认的操作。
+
+
+
+这而举个例子：
+
+```mysql
+CREATE TABLE `s_term` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `term_year` year(4) NOT NULL ,
+  `type` int(1) NOT NULL DEFAULT '1' ,
+  PRIMARY KEY (`id`)
+) 
+```
+
+这是一张订单表（假如）
+
+那么我们的生产者在创建订单后将其发送消息，提醒消费者去进行核对表，然后购买...等等操作。
+
+```java
+@Transactional(rollbackFor = Exception.class)
+public void sendTransactionMQ() throws Exception {
+    Term term = new Term();
+    term.setTermYear(2020);
+    term.setType(1);
+    int insert = termMapper.insert(term);
+    
+    Message message = MessageBuilder.withPayload(term).build(); 
+	rocketMQTemplate.sendMessageInTransaction("myTransactionGroup", topic, message, null); 
+    
+}
+```
+
+```java
+   @Override
+    public LocalTransactionState executeLocalTransaction(Message msg, Object arg) {
+
+        Integer termId = (Integer)arg;
+        Term term = termMapper.selectById(termId);
+        System.out.println("executeLocalTransaction termId="+termId+" term:"+term);
+        if (term != null) return COMMIT_MESSAGE;
+
+        return LocalTransactionState.UNKNOW;
+    }
+```
+
+如果前置订单创建成功这儿就会返回COMMIT_MESSAGE，该消息即可被消费者进行消费处理；
+
+
+
+### 事务消费的优化
+
+上面的事务消费通常是正常的写法，但是它存在一个问题，那就是消息消费不对等。
+
+当我们在生产者中发送消息后报出操作，因为Spring的@Transactional存在，那么就会导致所有的该方法内所有内容滚回。
+
+但是生产者在发送消息后就自动会执行事务监听器的executeLocalTransaction方法，从而导致消息依旧可能被发送出去，并且被消费者消费...而该业务方法后抛错，导致@Transactional滚回。从而就出现了消息发送了并被消费，而订单却没被提交的情况。。。
+
+
+
+对此我有个方法修护这个问题。
+
+那就是**将其executeLocalTransaction中的内容不要，直接返回`LocalTransactionState.UNKNOW`**;
+
+```java
+@Override
+public LocalTransactionState executeLocalTransaction(Message msg, Object arg) {
+    return LocalTransactionState.UNKNOW;
+}
+```
+
+由于是UNKNOW自然 就会等待周期性的触发checkLocalTransaction方法，然后进行核查。这样当业务方法发送操作后，其抛出错误，依旧可以根据周期性的触发checkLocalTransaction方法来进行 消息滚回，放置消息被发送出去。
+
+但是这也有个缺点，那就是会造成消息业务处理的速度降低，因为它需要等待周期性的触发checkLocalTransaction方法。
+
+
+
+### 关于消费者组
+
+我们在设置消费者服务器监听器时，在其`@RocketMQMessageListener`中往往需要加上一个自定义的`consumerGroup`这个参数。
+
+它的作用其实是分流处理，相对于管道，3个不同的consumerGroup就有3个管道，1条消息就会同时被3个consumerGroup的消费者消费。
+
+当多个同业务消费者 定义为同一个 consumerGroup下，那么消息会被平均分摊处理，比如发送4条消息，2个消费者会分别处理2个消息。
+
+
+
+一般情况下，我们建议一个消费者分组，仅消费一个 Topic 。，比如做订单处理的，消费者就在订单消费者组中。这样做会有两个好处：
+
+- 每个消费者分组职责单一，只消费一个 Topic 类型，不干其他活。
+- 每个消费者分组是独占一个线程池，这样能够保证多个 Topic 隔离在不同线程池，保证隔离性，从而避免一个 Topic 消费很慢，影响到另外的 Topic 的消费。
+
+
 
 
 

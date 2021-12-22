@@ -9899,6 +9899,8 @@ public class UserServiceImpl extends AbstractService<User> implements UserServic
 
 ## Ehcache 缓存
 
+![](picture/dcc451da81cb39db483084ebd6160924aa18309f.png)
+
 EhCache 是一个纯Java的进程内缓存框架，具有快速、精干等特点，是Hibernate中默认CacheProvider。Ehcache是一种广泛使用的开源Java分布式缓存。主要面向通用缓存,Java EE和轻量级容器。它具有内存和磁盘存储，缓存加载器,缓存扩展,缓存异常处理程序,一个gzip缓存servlet过滤器,支持REST和SOAP api等特点。
 
 ###  ehcache 和 redis 比较
