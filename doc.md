@@ -10995,7 +10995,7 @@ public class FeignApplication {
 ```java
 @FeignClient(value = "provide")
 public interface UserRemoteClient {
-    @GetMapping("/user/hello")
+    @RequestMapping(value ="/user/hello", method = RequestMethod.GET)
     String hello();
 }
 ```
@@ -11003,6 +11003,10 @@ public interface UserRemoteClient {
 其中的@FeignClient注释中的value值对应的服务发现中心(服务注册中心)的提供方ID.
 
 接口里面的的内容完全对应其提供方接口内容的方法,并且包含路径注释.
+
+
+
+这里需要注意的是其中Feign默认是使用的POST请求，所以对于GET、PUT等等请求的话，方法参数需要使用 @RequestParam，否则Feign就不能够正常调用接口。
 
 4.在Controller中进行注入Feign接口,调用其方法,其自动负载均衡调用接口（利用的是Ribbon的负载均衡）
 
