@@ -12,6 +12,22 @@ Stream是JDK8中的全新特性，Stream API（java.util.stream） 把真正的�
 
 Stream中文翻译过来叫做流，顾名思义就是以类似于输出方式来进行的函数。Stream目前主要应用于列表、集合中。通过对列表、集合获取对应的流来进行各种操作（比如过滤操作等）。
 
+对于Java 7来说*stream*完全是个陌生东西，*stream*并不是某种数据结构，它只是数据源的一种视图。这里的数据源可以是一个数组，Java容器或I/O channel等。正因如此要得到一个*stream*通常不会手动创建，而是调用对应的工具方法，比如：
+
+- 调用`Collection.stream()`或者`Collection.parallelStream()`方法
+- 调用`Arrays.stream(T[] array)`方法
+
+## Stream与Collections的区别
+
+虽然大部分情况下stream是容器调用`Collection.stream()`方法得到的，但*stream*和*collections*有以下不同：
+
+- **无存储**。*stream*不是一种数据结构，它只是某种数据源的一个视图，数据源可以是一个数组，Java容器或I/O channel等。
+- **为函数式编程而生**。对*stream*的任何修改都不会修改背后的数据源，比如对*stream*执行过滤操作并不会删除被过滤的元素，而是会产生一个不包含被过滤元素的新*stream*。
+- **惰式执行**。*stream*上的操作并不会立即执行，只有等到用户真正需要结果的时候才会执行。
+- **可消费性**。*stream*只能被“消费”一次，一旦遍历过就会失效，就像容器的迭代器那样，想要再次遍历必须重新生成。
+
+
+
 ## Stream使用
 
 ### 创建Stream
@@ -51,8 +67,15 @@ Stream中文翻译过来叫做流，顾名思义就是以类似于输出方式�
 
 
 
+目前常见的*stream*接口继承关系如图：
 
-其中Stream和Collection的区别就是：Collection只是负责存储数据，不对数据做其他处理，主要是和内存打交道。但是Stream主要是负责计算数据的，主要是和CPU打交道。
+![](../picture/Java_stream_Interfaces.png)
+
+*stream*接口继承自`BaseStream`，其中`IntStream, LongStream, DoubleStream`对应三种基本类型（`int, long, double`，注意不是包装类型），`Stream`对应所有剩余类型的*stream*视图。为不同数据类型设置不同*stream*接口，可以有下好处：1.提高性能，2.增加特定接口函数。
+
+
+
+
 
 ### 操作Stream
 
@@ -153,6 +176,26 @@ Set<Integer> integerSet = list.stream()..collect(Collectors.toSet());
 
 接下来详细讲解下Stream的进阶玩法以及思路：
 
+### Stream操作解析
+
+对*stream*的操作分为为两类，**中间操作(intermediate operations)和结束操作(terminal operations)**，二者特点是：
+
+1. **中间操作总是会惰式执行**，调用中间操作只会生成一个标记了该操作的新*stream*，仅此而已。
+2. **结束操作会触发实际计算**，计算发生时会把所有中间操作积攒的操作以*pipeline*的方式执行，这样可以减少迭代次数。计算完成之后*stream*就会失效。
+
+如果你熟悉Apache Spark RDD，对*stream*的这个特点应该不陌生。
+
+下表汇总了`Stream`接口的部分常见方法的类型：
+
+| 操作类型 | 接口方法                                                     |
+| -------- | ------------------------------------------------------------ |
+| 中间操作 | concat() distinct() filter() flatMap() limit() map() peek() skip() sorted() parallel() sequential() unordered() |
+| 结束操作 | allMatch() anyMatch() collect() count() findAny() findFirst() forEach() forEachOrdered() max() min() noneMatch() reduce() toArray() |
+
+当然区分中间操作和结束操作最简单的方法，就是看方法的返回值，返回值为*stream*的大都是中间操作，否则是结束操作。
+
+
+
 ### 约规操作
 
 规约操作（*reduction operation*）又被称作折叠操作（*fold*），是通过某个连接动作将所有元素汇总成一个汇总结果的过程。元素求和、求最大值或最小值、求出元素总个数、将所有元素转换成一个列表或集合，都属于规约操作。
@@ -233,7 +276,7 @@ String joined = stream.collect(Collectors.joining(",", "{", "}"));// "{I,love,yo
 
 
 
-## 方法引用
+### 方法引用
 
 从上面可以看见像"xxx::xxx"语句,其实这时JDK8中的方法引用。
 
