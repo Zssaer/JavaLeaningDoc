@@ -59,9 +59,9 @@ PS：由于该md文件内容过于繁多，导致编写速度严重下降，所�
 
 :pager:[查看Flyway教程](./page/Flyway.md)  2021-12-31 新增Flyway教程
 
-:pager:[查看JDK8-Stream教程](./page/JDK8-Stream.md)  2021-01-26 新增JDK8-Stream教程
+:pager:[查看JDK8-Stream教程](./page/JDK8-Stream.md)  2022-01-26 新增JDK8-Stream教程
 
-:pager:[查看Lambda教程](./page/Lambda.md)  2021-01-27 新增Lambda教程
+:pager:[查看Lambda教程](./page/Lambda.md)  2022-01-27 新增Lambda教程
 
 ...
 
