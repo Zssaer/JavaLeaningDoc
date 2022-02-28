@@ -435,60 +435,54 @@ public int[] sortArray(int[] nums) {
 
 
 ```java
-	/**
-     * 对数组 nums 的子区间 [left, right] 进行归并排序
-     * @param nums
-     * @param left
-     * @param right
-     * @param temp
-     */
-    private void mergeSort(int[] nums, int left, int right, int[] temp) {
-        // 对小区域的数组进行插入排序
-        if (right - left <= INSERTION_SORT_THRESHOLD) {
-            insertionSort(nums, left, right);
-            return;
-        }
-        int mid = left + (right - left) / 2;
-        // 分成两部分进行继续归并排序
-        mergeSort(nums, left, mid, temp);
-        mergeSort(nums, mid + 1, right, temp);
-        // 如果第一部分的尾部 小于或等于 第二部分的头部 则无需合并排序
-        if (nums[mid] <= nums[mid + 1]) {
-            return;
-        }
-        //合并小区域数组排序
-        mergeOfTwoSortedArray(nums, left, mid, right, temp);
+public static void sortIntArray(int[] target) {
+        mergeSort(target, 0, target.length - 1);
     }
-    
-	/**
-     * 合并两个有序数组：先把值复制到临时数组，再合并回去
-     * @param nums
-     * @param left
-     * @param mid
-     * @param right
-     * @param temp
+
+    /**
+     * 对数组 nums 的子区间 [left, right] 进行归并排序
+     *
      */
-    public void mergeOfTwoSortedArray(int nums[], int left, int mid, int right, int[] temp) {
-        System.arraycopy(nums, left, temp, left, right + 1 - left);  // 备份原数组至temp数组
-        int i = left; //指针i从已排序第一部分头部开始
-        int j = mid + 1;  //指针i从已排序第二部分头部开始
-        for (int k = left; k <= right; k++) {
-            if (i == mid + 1) {  //指针i到达已排序第一部分尾部
-                nums[k] = temp[j];
-                j++;
-            } else if (j == right + 1) {  //指针i到达已排序第二部分尾部
-                nums[k] = temp[i];
-                i++;
-            }else if (temp[i]<=temp[j]){
-                // 注意写成 < 就丢失了稳定性（相同元素原来靠前的排序以后依然靠前）
-                nums[k]=temp[i];
-                i++;
-            }else {
-                // temp[i] > temp[j]
-                nums[k] = temp[j];
-                j++;
+    private static void mergeSort(int[] nums, int left, int right) {
+        if (left < right) {
+            int mid = left + (right - left) / 2;
+            mergeSort(nums, left, mid);
+            mergeSort(nums, mid + 1, right);
+            //合并小区域数组排序
+            mergeOfTwoSortedArray(nums, left, mid, right);
+        }
+    }
+
+    /**
+     * 合并两个有序数组：先把值复制到临时数组，再合并回去
+     *
+     */
+    private static void mergeOfTwoSortedArray(int[] arr, int left, int mid, int right) {
+        /** 第一步，定义一个新的临时数组 **/
+        int[] tempArr = new int[right - left + 1];
+        // 两个数列的指针
+        int temp1 = left, temp2 = mid + 1;
+        int index = 0;
+        /** 第二步，比较每个指针指向的值，小的存入大集合 **/
+        while (temp1 <= mid && temp2 <= right) {
+            if (arr[temp1] <= arr[temp2]) {
+                tempArr[index] = arr[temp1];
+                index++;
+                temp1++;
+            } else {
+                tempArr[index] = arr[temp2];
+                index++;
+                temp2++;
             }
         }
+        /** 第三步，将未全部存入的小集合剩余元素存到大集合中 **/
+        if (temp1 <= mid) {
+            System.arraycopy(arr, temp1, tempArr, index, mid - temp1 + 1);
+        }
+        if (temp2 <= right) {
+            System.arraycopy(arr, temp2, tempArr, index, right - temp2 + 1);
+        }
+        System.arraycopy(tempArr,0,arr,0+left,right-left+1);
     }
 ```
 
