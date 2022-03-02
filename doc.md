@@ -644,7 +644,7 @@ while (nums[greater]>pivot){
 }
 ```
 
-**快速排序详解**
+###### **快速排序详解**
 
 上述的快速排序描述为《算法四》中的，可能依然不是很清楚。
 
@@ -692,7 +692,7 @@ while (nums[greater]>pivot){
 下面使用Java代码表示整个过程：
 
 ```java
-private static void sort(int[] a, int low, int high) {
+private static void quickSort(int[] a, int low, int high) {
     // 终止递归
     if (high <= low) {
         return;
@@ -750,6 +750,133 @@ private static void exchange(int[] a, int i, int j) {
     a[i] = a[j];
     a[j] = temp;
 }
+```
+
+这里我们着重对 **切分方法partition** 做解读:
+
+1. partition主要是以两部分组成： 外部while循环和两个并列的内部while循环。
+
+2. 两个内部while循环的作用是使得左右游标移动，最终相互靠近。
+
+   这里使用的【--】【++】运算符号，表明在进行循环表达式判断时，先进行-1、+1操作。
+
+   由于从左向右的指针是以头部开始的，所以这里while判断先+1，使得第一次判断位置在数列第二个数上（因为我们这里用第一个数为基准元素，所以不需要判断）。那么从右向左的指针为了平衡，也需要在while判断先-1，但这样最后一个数就无法在内了，这就是为什么上面 j 指针为什么初始化需要+1的原因。
+
+3. 外部While循环的作用是不断通过调用exchange方法使得指针停止下的元素相交换，从而让两指针 不断趋势靠近。
+
+   这里的`if (i >= j) {} `表示两个指针最终相遇，跳出循环。
+
+这里在***第一个从右向左的循环的过程中***，其实还可以再优化。里面的` if(j == low) break；`这个判读是完全多余的，因为当j = low + 1的时候再执行判断时，j=pivotkey（因为--j，加上第一个数为基准元素），这时这一步判断根本不可能有执行的可能性的。
+
+
+
+***优化-切换到插入排序：***
+
+快速排序在Java.Util的DualPivotQuicksort.clss类中定义了推荐使用长度为（47-286）之间：
+
+![](picture/20220302170946.png)
+
+DualPivotQuicksort中定义了其排序数组长度在 小于 47时，使用插入排序方式排序，而长度大于286的时候。
+
+这时或许有人会想到，在其外部排序的时候做判断 长度，来进行两种不同方式的排序。
+
+然而这样对于快速排序没有本质上的优化，主要是在快速排序内部的数量优化。
+
+所以这儿可以在其快速排序外部切分 递归时进行判断，如果递归下来的长度小于这个阈值就在该递归中执行快速排序即可。
+
+只要把quickSort方法中的
+
+```java
+if(high<= low) { return; }
+```
+
+替换为：
+
+```java
+if(high<= low + 47) {  Insertion.sort(a,low, high) return; } // Insertion表示一个插入排序类
+```
+
+
+
+***优化-基准元素选取*：**
+
+在上面的代码中我们的直接将其数列的首位元素作为了基准元素，这只是为了简单流程。
+
+但是在大多数情况下，需要排序的数值或许不是随机生成的，而是存在一些顺序规则的，比如最糟糕的是 完全正序或完全逆序，我们如果始终还是以第一个为元素为基准元素的话，那么两个指针将会遍历所有步骤，快速排序的时间就会大大的加长，甚至沦为“慢速排序”。
+
+为了解决这个问题，目前科学界上有三个优化方法：
+
+1. ***排序前打乱数组的顺序***
+2. ***通过随机数保证取得的基准元素的随机性***
+3. ***三数取中法取得基准元素（推荐）***
+
+
+
+1、排序前打乱数组的顺序：
+
+```java
+public static void sort (int [] a){
+  XXXRandom.shuffle(a)  // 外部导入的乱序算法，打乱数组的分布
+  sort(a, 0, a.length - 1);
+}
+```
+
+当然这种执行一个乱序方法，这也会带来一部分耗时，这是需要注意的。
+
+
+
+2、通过随机数保证取得的基准元素的随机性：
+
+```java
+private static int getRandom (int []a, int low, int high) {
+    // 随机取出其中一个数组元素的下标
+    int RdIndex = (int) (low + Math.random()* (high - low)); 
+    // 将其和最左边的元素互换
+    exchange(a, RdIndex, low);  
+    return a[low];
+  }
+ 
+  private static int partition (int[] a, int low, int high) {
+    int i = low, j = high+1;
+    // 基准元素随机化  
+    int pivotkey = getRandom (a, low, high); 
+    ...
+  }
+```
+
+这种方法通过随机取基准元素，来进行优化。它和第一个方法优势就是它不用随机全部数组元素，而是取随机长度即可。
+
+
+
+3、**三数取中法（推荐）**：
+
+一般认为， **当取得的基准元素是数组元素的中位数的时候，排序效果是最好的**，但是要筛选出待排序数组的中位数的不管是 时间成本还是资源成本都太高了， 所以只能从待排序数组中选取一部分元素出来再取中位数， **经大量实验显示： 当筛选的数组的长度为3时候，排序效果是比较好的**， 所以由此发展出了三数取中法。
+
+所谓**三数取中法**定义： 分别取出数组的**最左端元素，最右端元素和中间元素**， 在这**三个数中取出中位数**，作为**基准元素。**
+
+```java
+  // 选取左中右三个元素，求出中位数， 放入数组最左边的a[low]中
+  private static int selectMiddleOfThree(int[] a, int low, int high) {
+    int middle = low + (high -  low)/2;  // 取得位于数组中间的元素middle
+    if(a[low]>a[high])    { 
+      exchange(a, low, high);  //此时有 a[low] < a[high]
+    }
+    if(a[middle]>a[high]){
+      exchange(a, middle, high); //此时有 a[low], a[middle] < a[high]
+    }
+    if(a[middle]>a[low]) {
+      exchange(a, middle, low); //此时有a[middle]< a[low] < a[high]
+    }
+    return a[low];  // a[low]的值已经被换成三数中的中位数， 将其返回
+  }
+
+  private static int partition (int[] a, int low, int high) {
+    int i = low, j = high+1;
+    // 三数取中法 获取 基准元素
+    int pivotkey = selectMiddleOfThree (a, low, high); 
+    ...
+  }
+
 ```
 
 
