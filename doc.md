@@ -9140,6 +9140,63 @@ provide("geolocation", readonly(geolocation))
 
 
 
+##### 更新（2022/03/08）
+
+从[Vue3.0.0-beta.21](https://github.com/vuejs/core/compare/v3.0.0-beta.20...v3.0.0-beta.21) 中Vue3正式支持`<script setup>`这个语法组件。
+
+`<script setup>`是一个简化版的<script>，它里面的内容直接对应的setup。
+
+不用再像上面那样setup最后还需要返回数据，框架将会自动返回数据，不需要再返回了。
+
+对于创建响应式变量完全和这前一样，但对于其设定Props、emit 参数时，Vue3还专门设定了一个`defineProps()`语句和`defineEmits()`。
+
+```vue
+<script setup>
+const props = defineProps({
+  foo: String
+})
+const emit = defineEmits(['change', 'delete'])
+</script>
+```
+
+但是， `defineProps` 声明的一个缺点是，它没有办法为属性提供一个默认值。为了解决这个问题，Vue3在后续版本中，还提供了 `withDefaults()` 语句,用作给Props设置默认值。
+
+```vue
+<script setup>
+const props = withDefaults(
+defineProps({
+  foo: String
+}), {
+  foo: 'hello'
+})
+</script>
+```
+
+
+
+当然使用`script setup`需要适应一段时间，Vue3还依旧允许我们在使用`script setup`的同时使用原版的`script`，只需要在原版script中进行一些设置即可。
+
+```vue
+<script>
+// normal <script>, executed in module scope (only once)
+runSideEffectOnce()
+
+// declare additional options
+export default {
+  inheritAttrs: false,
+  customOptions: {}
+}
+</script>
+
+<script setup>
+// executed in setup() scope (for each instance)
+</script>
+```
+
+
+
+
+
 #### 深入slot插槽
 
 Vue 实现了一套内容分发的 API,将 `<slot>` 元素作为承载分发内容的出口。
