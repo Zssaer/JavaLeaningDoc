@@ -549,6 +549,519 @@ QLayout拥有一个独特的一个布局概率，使您可以通过简单地更�
 
 
 
+#### QPageContainer下的嵌套路由
+
+现在网页界面通常由嵌套在多个级别的组件组成。 URL的段对应于嵌套组件的某种结构也很常见，例如：
+
+![](../picture/20220310102630.png)
+
+我们打开两个页面（profile、posts）就会发现，其实两个页面都是基于User这个布局来进行，切换页面时User内容不会被重新加载，而是中间的内容进行单独加装。这个就是路由的另外一个功能（前一个功能是跳转切换）-嵌套路由。
+
+如果之前了解过Vue-Router的，可能会知道，Vue-Router的嵌套路由的实现是使用`<router-view></router-view>`
+
+而Quasar也是这样的，只不过在Quarsar中，在使用QLayout做整个页面布局时，**它还提供了一个`QPageContainer`这个组件，它的作用就是做页面的主要内容展示的**，所以在它的内部时加入嵌套路由的好方法。
+
+```html
+<!-- /src/layouts/User.vue -->
+<template>
+  <q-layout>
+    ...
+
+    <!-- 这是页面被注入的地方 -->
+    <q-page-container>
+      <router-view></router-view>
+    </q-page-container>
+
+    ...
+  </q-layout>
+</template>
+```
+
+对于其嵌套路由的组件，Quasar也提供了一个`Qpage`这个组件:
+
+```html
+<!-- /src/pages/Profile.vue 或 Posts.vue -->
+<template>
+  <q-page>
+    ...page content...
+  </q-page>
+</template>
+```
+
+对于嵌套路由的设置，这个或许都是了解的，只需要在其父路由下添加子路由即可。
+
+```js
+import User from 'layouts/User'
+import Profile from 'pages/Profile'
+import Posts from 'pages/Posts'
+
+const routes = [
+  {
+    path: '/user',
+    // 我们使用上面导入的/src/layouts/User组件
+    component: User,
+
+    // 嘿，它有子路由，并且在它里面用户具有<router-view>；
+    // 那真的是一个布局！
+    children: [
+      // Profile page
+      {
+        path: 'profile', // 在这里，路由/user/profile
+        component: Profile // 我们参考上面导入的/src/pages/Profile.vue
+      },
+
+      // Posts page
+      {
+        path: 'posts', // 在这里，路由/user/posts
+        component: Posts // 我们参考上面导入的/src/pages/Posts.vue
+      }
+    ]
+  }
+]
+
+export default routes
+```
+
+这里以`/`开头的嵌套路径将被视为根路径。 这使您可以利用组件嵌套，而不必使用嵌套的URL。
+
+当然上面使用的是直接加载组件方式，如果你的网站/应用程序很小，那么你可以不使用延迟加载，因为使用它可能会增加比它的价值更多的开销。但更多情况下我们改成懒加载\按需加载的形式：
+
+```js
+    children: [
+      {
+        path: 'feed',
+        component: () => import('pages/user-feed')
+      },
+      {
+        path: 'profile',
+        component: () => import('pages/user-profile')
+      }
+    ]
+```
+
+
+
+#### QHeader-页面头部
+
+Quasar给使用QLayout的布局的用户提供了一个新的头部导航组件。
+
+```html
+<q-layout view="lHh Lpr lFf">
+    <q-header>
+    ...
+    </q-header>
+</q-layout>    
+```
+
+#### QFooter-页面头部
+
+Quasar给使用QLayout的布局的用户同样提供了一个新的页尾组件。
+
+```html
+<q-layout view="lHh Lpr lFf">
+	<q-footer elevated class="bg-grey-8 text-white">
+	...
+	</q-footer>
+</q-layout>    
+```
+
+
+
+## 组件
+
+Quasar目前拥有基本上市面上所有的UI组件库。
+
+### Toolbar-工具栏
+
+QToolbar通常是用在布局页眉和页脚上的一部分，但它也可以在页面上的任何位置使用。
+
+```html
+<q-layout view="lHh Lpr lFf">
+    <q-header>
+      <q-toolbar>
+      ...
+      </q-toolbar>
+    </q-header>
+</q-layout>
+```
+
+它本身只是一个有颜色的横条，通常需搭配如`q-btn`、`q-toolbar-title`、`q-breadcrumbs`等使用。
+
+![](../picture/20220310151601.png)
+
+它拥有一个特别的属性`inset` : 运行带有这个属性的工具类嵌入上面主工具栏上，从而实现多层工具栏。
+
+```html
+<q-toolbar>
+...
+</q-toolbar>
+<q-toolbar inset>
+...
+</q-toolbar>
+```
+
+![](../picture/20220310151331.png)
+
+
+
+工具栏内还有个特殊标签`<q-space>` ：工具栏内部元素默认在左边开始，从左到右依次插入。在该标签后续的元素将会至于工具栏右侧开始。效果如上图的左右的按钮一样。
+
+```html
+<q-toolbar>
+	...
+	<q-space />
+	...
+</q-toolbar>
+```
+
+### QBtn-按钮
+
+QBtn是Quasar的按钮组件。它主要拥有两种形状：矩形（默认）和圆形。还具有内嵌的material风格和扁平风格以及质感风格设计。
+
+color为按钮颜色的属性，label为按钮显示文字。
+
+默认material风格，glossy 则为质感设计风格，outline 为扁平设计。
+
+```
+<q-btn color="white" text-color="black" label="Standard" />
+<q-btn color="deep-orange" glossy label="Deep Orange" />
+<q-btn outline color="primary" label="Outline" />
+```
+
+![](../picture/20220310153138.png)![](../picture/20220310153231.png)![](../picture/20220310153409.png)
+
+当然和其他UI库一样，它设置`round `即可是圆形按钮。
+
+QBtn拥有 icon属性，支持设置按钮图标。当然这个图标可以选择外部图标，也可以选择Quasar的扩展图标库内的内置图标。
+
+```html
+<q-btn color="primary" icon="mail" label="On Left" />
+```
+
+![](../picture/20220310153632.png)
+
+除了公式化的这些设计以外，QBtn还支持自定义设计图标内容，只需要在标签内部添加元素即可。
+
+```html
+    <q-btn color="deep-orange" push>
+      <div class="row items-center no-wrap">
+        <q-icon left name="map" />
+        <div class="text-center">
+          Custom<br>Content
+        </div>
+      </div>
+    </q-btn>
+
+    <q-btn round>
+      <q-avatar size="42px">
+        <img src="https://cdn.quasar.dev/img/avatar2.jpg">
+      </q-avatar>
+    </q-btn>
+```
+
+![](../picture/20220310153944.png)![](../picture/20220310153958.png)
+
+使用size属性可以确认确认其图标大小，如果使用的标准屏幕字母来设置大小（如XS、SM、MD、LG、XL）的话需要使用`:size`来设置。
+
+
+
+一些按钮动作涉及与服务器联系，异步响应，会在按下后通知用户正在进行的后台处理。QBtn通过`loading`属性提供了这种可能性。 此属性将显示QSpinner（默认情况下），而不显示按钮的图标和/或标签。 
+
+使用<template v-slot:loading> 可以设置其按钮处理中的 显示内容。不设置的话，默认为转圈动画。
+
+```html
+<q-btn :loading="loading1" color="secondary" @click="simulateProgress(1)" label="Button" />
+<q-btn :loading="loading4" color="primary" @click="simulateProgress(4)" style="width: 150px">
+      Button
+      <template v-slot:loading>
+        <q-spinner-hourglass class="on-left" />
+        Loading...
+      </template>
+</q-btn>
+```
+
+![](../picture/GIF%202022-3-10%2015-49-57.gif)![](../picture/GIF%202022-3-10%2015-50-40.gif)
+
+甚至你还可以在图标中设置附加的`percentage`属性以显示处理的进度。
+
+
+
+QBtn按钮支持href和to的连接方式。当然尽可能使用 Vue Router 而不是 href，因为使用 href 将触发一个窗口导航，而不是页内的 Vue Router 导航。
+
+```html
+<div class="q-pa-md q-gutter-sm">
+    <q-btn to="/start/pick-quasar-flavour" label="To Docs index" outline color="purple" />
+    <q-btn to="/start/pick-quasar-flavour" label="To Docs index in 2s" @click="linkClick" glossy color="purple" />
+
+    <q-btn href="start/pick-quasar-flavour" label="With href" push color="purple" />
+    <q-btn href="start/pick-quasar-flavour" target="_blank" label="With href - open in new window" color="purple" />
+</div>
+```
+
+对于更为复杂的用例情况下，可以直接使用原生的Vue的<router-link>来进行封装QBtn按钮。
+
+```html
+<router-link
+      :to="{ path: '/register', query: { search: '1', test: '1' } }"
+      custom
+      v-slot:default="props"
+    >
+      <q-btn v-bind="buttonProps(props)" />
+</router-link>
+...
+<script>
+export default {
+  setup () {
+    function linkClick (e, go) {
+      e.preventDefault() // we choose when we navigate
+
+      // console.log('triggering navigation in 3s')
+      setTimeout(() => {
+        // console.log('navigating as promised 3s ago')
+        go()
+      }, 3000)
+    }
+
+    function buttonProps ({ href, route, isActive, isExactActive }) {
+      const props = {
+        color: 'black',
+        noCaps: true,
+        label: `To "${route.fullPath}"`,
+        outline: true,
+        to: href
+      }
+
+      if (isActive === true) {
+        props.color = isExactActive === true ? 'primary' : 'amber-9'
+      }
+      else {
+        props.color = 'black'
+      }
+
+      return props
+    }
+
+    return {
+      linkClick,
+      buttonProps
+    }
+  }
+}
+</script>
+```
+
+### QBtnDropdown-下拉按钮
+
+QBtnDropdown是一个非常方便的下拉按钮。 与 [QList](https://quasar.dev/vue-components/list-and-list-items)作为下拉内容配合得很好，但绝不仅限于此。
+
+```html
+<q-btn-dropdown color="primary" label="Dropdown Button">
+      <q-list>
+        <q-item clickable v-close-popup @click="onItemClick">
+          <q-item-section>
+            <q-item-label>Photos</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item clickable v-close-popup @click="onItemClick">
+          <q-item-section>
+            <q-item-label>Videos</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item clickable v-close-popup @click="onItemClick">
+          <q-item-section>
+            <q-item-label>Articles</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+</q-btn-dropdown>
+```
+
+QBtnDropdown内部常常跟QList 选择列表结合。
+
+
+
+当然也可以自定义设计下拉内容：
+
+```html
+    <q-btn-dropdown
+      class="glossy"
+      color="purple"
+      label="Account Settings"
+    >
+      <div class="row no-wrap q-pa-md">
+        <div class="column">
+          <div class="text-h6 q-mb-md">Settings</div>
+          <q-toggle v-model="mobileData" label="Use Mobile Data" />
+          <q-toggle v-model="bluetooth" label="Bluetooth" />
+        </div>
+
+        <q-separator vertical inset class="q-mx-lg" />
+
+        <div class="column items-center">
+          <q-avatar size="72px">
+            <img src="https://cdn.quasar.dev/img/boy-avatar.png">
+          </q-avatar>
+
+          <div class="text-subtitle1 q-mt-md q-mb-xs">John Doe</div>
+
+          <q-btn
+            color="primary"
+            label="Logout"
+            push
+            size="sm"
+            v-close-popup
+          />
+        </div>
+      </div>
+    </q-btn-dropdown>
+```
+
+![](../picture/20220310161240.png)
+
+
+
+### QCard-卡片
+
+QCard组件是显示重要分组内容的好方法。 这种模式正在迅速成为应用、网站预览和电子邮件内容的核心设计模式。 它通过包含和组织信息来帮助观看者，同时还设置可预测的期望。
+
+卡片具有一次可显示的大量内容，能够归纳内容,使得内容流可读性高，因此，卡片已迅速成为许多公司（包括Google和Twitter之类）的首选设计模式。
+
+QCard组件特意是轻巧的，并且实质上是一个布局包含元素，该元素能够“容纳”任何其他合适的组件。
+
+```html
+<q-card
+      class="my-card text-white"
+      style="background: radial-gradient(circle, #35a2ff 0%, #014a88 100%)"
+    >
+      <q-card-section>
+        <div class="text-h6">Our Changing Planet</div>
+        <div class="text-subtitle2">by John Doe</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        {{ lorem }}
+      </q-card-section>
+</q-card>
+```
+
+![](../picture/20220310161831.png)
+
+其中<q-card-section>是一个强制性封格元素，默认使上下产生间距，内部元素以水平显示。甚至可以在里面添加按钮，以实现某些操作。
+
+```html
+    <q-card class="my-card bg-secondary text-white">
+      <q-card-section>
+        <div class="text-h6">Our Changing Planet</div>
+        <div class="text-subtitle2">by John Doe</div>
+      </q-card-section>
+
+      <q-card-section>
+        {{ lorem }}
+      </q-card-section>
+
+      <q-separator dark />
+
+      <q-card-actions>
+        <q-btn flat>Action 1</q-btn>
+        <q-btn flat>Action 2</q-btn>
+      </q-card-actions>
+    </q-card>
+```
+
+![](../picture/20220310165737.png)
+
+### QCarousel-滚动栏(Banner)
+
+QCarousel 是Quasar中的滚动栏组件，常常用作首页的Banner图使用。
+
+```
+<q-carousel
+      v-model="slide"
+      transition-prev="slide-right"
+      transition-next="slide-left"
+      animated
+      control-color="primary"
+      class="rounded-borders"
+    >
+      <q-carousel-slide name="style" class="column no-wrap flex-center">
+        <q-icon name="style" color="primary" size="56px" />
+        <div class="q-mt-md text-center">
+          {{ lorem }}
+        </div>
+      </q-carousel-slide>
+      <q-carousel-slide name="tv" class="column no-wrap flex-center">
+        <q-icon name="live_tv" color="primary" size="56px" />
+        <div class="q-mt-md text-center">
+          {{ lorem }}
+        </div>
+      </q-carousel-slide>
+      ...
+</q-carousel>
+```
+
+QCarousel 内部的内容由多个<q-carousel-slide>组件组成，它们即使滚动栏里面滚动的内容。
+
+其中的v-model 绑定的当前的滚动的位置,这个位置 是 指的是 <q-carousel-slide>组件的name属性。
+
+![](../picture/20220310170912.png)
+
+QCarousel  内部属性 swipeable表示 能够滑动切换内容，navigation则是下方导航显示为点。
+
+可以定义内部的transition-prev、transition-next来控制其前进后退的动画效果。
+
+大多数事件时我们都会在内部添加图片内容的，<q-carousel-slide>组件有个img-src属性就是设置图片的地方。
+
+```html
+<q-carousel
+      animated
+      v-model="slide"
+      arrows
+      navigation
+      infinite
+    >
+      <q-carousel-slide :name="1" img-src="https://cdn.quasar.dev/img/mountains.jpg" />
+      <q-carousel-slide :name="2" img-src="https://cdn.quasar.dev/img/parallax1.jpg" />
+      <q-carousel-slide :name="3" img-src="https://cdn.quasar.dev/img/parallax2.jpg" />
+</q-carousel>
+```
+
+![](../picture/20220310172139.png)
+
+同样内部也可以放置其他元素,比如更多文字。
+
+```html
+      <q-carousel-slide name="first" img-src="https://cdn.quasar.dev/img/mountains.jpg">
+        <div class="absolute-bottom custom-caption">
+          <div class="text-h2">First stop</div>
+          <div class="text-subtitle1">Mountains</div>
+        </div>
+      </q-carousel-slide>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
