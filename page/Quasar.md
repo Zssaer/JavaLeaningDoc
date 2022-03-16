@@ -780,7 +780,7 @@ QBtn拥有 icon属性，支持设置按钮图标。当然这个图标可以选�
 </q-btn>
 ```
 
-![](../picture/GIF%202022-3-10%2015-49-57.gif)![](../picture/GIF%202022-3-10%2015-50-40.gif)
+![](../picture/qqqq.gif)![](../picture/qqqq2.gif)
 
 甚至你还可以在图标中设置附加的`percentage`属性以显示处理的进度。
 
