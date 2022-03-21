@@ -299,6 +299,89 @@ public void reviewPassed(String approved, String taskId) {
 }
 ```
 
+当TaskService给指定task 发出complete指令后，则完成userTask步骤，由箭头继续下个步骤；
+
+由于下一步是一个exclusiveGateway指令，属于自动属性，它的定义中判断了`approved`属性，决定下一步的流程方向；
+
+```xml
+<exclusiveGateway id="decision"/>
+        <sequenceFlow sourceRef="decision" targetRef="externalSystemCall">
+            <!--顺序流条件：以表达式(expression)的形式定义了条件(condition) -->
+            <conditionExpression xsi:type="tFormalExpression">
+                <!--条件表达式：是${approved == true}的简写-->
+                <![CDATA[
+                  ${approved}
+                ]]>
+            </conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow sourceRef="decision" targetRef="sendRejectionMail">
+            <conditionExpression xsi:type="tFormalExpression">
+                <![CDATA[
+                  ${!approved}
+                ]]>
+            </conditionExpression>
+        </sequenceFlow>
+```
+
+上方定义中`conditionExpression`顺序流条件定义 导向到 `externalSystemCall`、`sendRejectionMail`两个 `serviceTask`服务标签中。
+
+
+
+服务标签定义了一个类，用作自动执行该类的作用。
+
+要创建一个这样的一个类，需要实现JavaDelegate接口，实现execute方法，这个方法可以写很多业务逻辑，比如这里我们只是是在控制台打印输出一些内容：
+
+```java
+public class CallExternalSystemDelegate implements JavaDelegate {
+    public void execute(DelegateExecution delegateExecution) {
+        System.out.println("Calling the external system for employee "
+                + delegateExecution.getVariable("employee"));
+    }
+}
+```
+
+DelegateExecution参数 可以获取到流程的相关参数信息。
+
+这样一个简单的审核流程就完成了。
+
+
+
+### 使用历史数据
+
+对应审核系统来说，那么自然审核流程的查看自然也非常重要。
+
+比如说点击一个请求，会遍历出它的所有审核流程信息，包括什么时间审核通过、哪位审核员审核的等等信息。
+
+选择使用Flowable这样的流程引擎的原因之一，是它可以自动存储所有流程实例的审计数据或历史数据。这些数据可以用于创建报告，深入展现组织运行的情况，瓶颈在哪里，等等...
+
+从ProcessEngine获取HistoryService，并创建历史活动(historical activities)的查询。
+
+```java
+ 	   //获取HistoryService实例
+        HistoryService historyService=processEngine.getHistoryService();
+        //添加查询条件
+        List<HistoricActivityInstance> activities =
+                historyService.createHistoricActivityInstanceQuery()
+                        //选择特定实例
+                        .processInstanceId(processInstance.getId())
+                        //选择已完成的
+                        .finished()
+                        //根据实例完成时间升序排列
+                        .orderByHistoricActivityInstanceEndTime().asc()
+                        .list();
+
+        for (HistoricActivityInstance activity : activities) {
+            System.out.println(activity.getActivityId() + " 花费了 "
+                    + activity.getDurationInMillis() + " 毫秒时间处理完!");
+        }
+```
+
+
+
+
+
+
+
 
 
 
