@@ -369,12 +369,360 @@ DelegateExecution参数 可以获取到流程的相关参数信息。
                         //根据实例完成时间升序排列
                         .orderByHistoricActivityInstanceEndTime().asc()
                         .list();
-
-        for (HistoricActivityInstance activity : activities) {
-            System.out.println(activity.getActivityId() + " 花费了 "
-                    + activity.getDurationInMillis() + " 毫秒时间处理完!");
+		// 使用stream过滤掉没有名称的活动
+        List<HistoricActivityInstance> activites = allActivites.stream().filter(a -> a.getActivityName() != null).collect(Collectors.toList());
+		
+        for (HistoricActivityInstance activity : activites) {
+            System.out.print("\n" + activity.getActivityId() + ":" + activity.getActivityName() + ":处理时间-" + DateUtils.format(activity.getEndTime(), DateUtils.DATE_TIME_PATTERN));
         }
 ```
+
+
+
+### 生成实时流程进行图
+
+Flowable可以在正在进行的流程中 生成一幅流程进行图。
+
+要使用Flowable生成实时流程进行图的话，就需要引入一个bpmn处理依赖。
+
+```xml
+<dependency>
+    <groupId>org.flowable</groupId>
+    <artifactId>flowable-bpmn-layout</artifactId>
+    <version>6.7.2</version>
+</dependency>
+```
+
+这个依赖包等级需要与你的Flowable一样，否则项目运行就要出错。
+
+下面就是代码：
+
+```java
+@GetMapping("/{processId}")
+public void genProcessDiagram(HttpServletResponse httpServletResponse,
+                              @PathVariable("processId") String processId) throws Exception {
+    RuntimeService runtimeService = processEngine.getRuntimeService();
+    ProcessInstance pi = runtimeService.createProcessInstanceQuery().processInstanceId(processId).singleResult();
+
+    //流程走完的不显示图
+    if (pi == null) {
+        return;
+    }
+    TaskService taskService = processEngine.getTaskService();
+    Task task = taskService.createTaskQuery().processInstanceId(pi.getId()).singleResult();
+    //使用流程实例ID，查询正在执行的执行对象表，返回流程实例对象
+    String InstanceId = task.getProcessInstanceId();
+    List<Execution> executions = runtimeService
+            .createExecutionQuery()
+            .processInstanceId(InstanceId)
+            .list();
+
+    //得到正在执行的Activity的Id
+    List<String> activityIds = new ArrayList<>();
+    List<String> flows = new ArrayList<>();
+    for (Execution exe : executions) {
+        List<String> ids = runtimeService.getActiveActivityIds(exe.getId());
+        activityIds.addAll(ids);
+    }
+
+    //获取流程图
+    RepositoryService repositoryService = processEngine.getRepositoryService();
+    BpmnModel bpmnModel = repositoryService.getBpmnModel(pi.getProcessDefinitionId());
+    ProcessEngineConfiguration engconf = processEngine.getProcessEngineConfiguration();
+    ProcessDiagramGenerator diagramGenerator = engconf.getProcessDiagramGenerator();
+
+    BpmnAutoLayout bpmnAutoLayout = new BpmnAutoLayout(bpmnModel);
+    bpmnAutoLayout.setTaskHeight(120);
+    bpmnAutoLayout.setTaskWidth(120);
+    bpmnAutoLayout.execute();
+
+    InputStream in = diagramGenerator.generateDiagram(bpmnModel, "png",
+            activityIds, flows, "宋体", "宋体", "宋体", null, 1.0, true);
+    OutputStream out = null;
+    byte[] buf = new byte[1024];
+    int legth = 0;
+    try {
+        out = httpServletResponse.getOutputStream();
+        while ((legth = in.read(buf)) != -1) {
+            out.write(buf, 0, legth);
+        }
+    } finally {
+        if (in != null) {
+            in.close();
+        }
+        if (out != null) {
+            out.close();
+        }
+    }
+}
+```
+
+请求需要一个流程ID，生成的图片大概如下：
+
+![](../picture/20220322112245.png)
+
+
+
+## BPMN详解
+
+上面教程中，我们创建了一个简单的审核流程BPMN文件，它只是使用了几个元素来构成，下面详解BPMN的更多内容。
+
+### BPMN简介
+
+BPMN是业务流程模型和标记法（BPMN, Business Process Model and Notation）的常用缩写，是一套图形化表示法，它主要是用于以业务流程模型详细说明各种业务流程。
+
+它最初由业务流程管理倡议组织（BPMI, Business Process Management Initiative）开发，名称为"Business Process Modeling Notation"，即“业务流程建模标记法”。BPMI于2005年与对象管理组织（OMG, Object Management Group）合并。2011年1月OMG发布2.0版本，同时改为现在的名称。所以说现在使用的是BPMN2.0。在实际BPMN文件中后缀名标记为`.bpmn20.xml`。
+
+### 基础要素
+
+BPMN包含四种要素。
+
+* **流对象（Flow Object）**:
+
+  - 事件（Events）
+
+  - 活动（Activities）
+
+  - 网关（Gateways）
+
+* **连接对象（Connecting Objects）:**
+
+  - 顺序流（Sequence Flow）
+  - 消息流（Message Flow）
+  - 关联（Association）
+
+- **泳道（Swimlanes）：**
+  - 池（Pool）
+  - 道（Lane）
+
+- **附加工件（Artifacts/Artefacts）:**
+  - 数据对象（Data Object）
+  - 组（Group）
+  - 注释（Annotation）
+
+上面的基础对象元件中，其实大部分时间，我们只需要关注这4个基本对象：
+
+- 事件（Event）：用来表明流程的生命周期中发生了什么。常见的主要是 开始事件、结束事件
+- 活动（Activity）：活动（Activities）是业务流程定义的核心元素，中文称为“活动”、“节点”、“步骤”。一个活动可以是流程的基本处理单元（如人工任务、服务任务），也可以是一个组合单元（如外部子流程、嵌套子流程）。 上面教程中，我们的审核步骤就是一个 活动,属于人工任务活动。
+- 网关（Gateway）：用来控制流程的流向。
+- 流向/顺序流（Flow）：是连接两个流程节点的连线。
+
+![](../picture/20200505090826334.png)
+
+### 流程根元素
+
+一个BPMN 2.0 XML流程的根是definitions元素。 在命名状态，子元素会包含真正的业务流程定义。 
+
+每个process子元素 可以拥有一个id（必填）和 name（可选）。下面是一个空的BPMN 2.0业务流程 。
+
+```xml
+<definitions id="myProcesses"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://schema.omg.org/spec/BPMN/2.0 BPMN20.xsd"
+  xmlns="http://schema.omg.org/spec/BPMN/2.0"
+  typeLanguage="http://www.w3.org/2001/XMLSchema"
+  expressionLanguage="http://www.w3.org/1999/XPath"
+  targetNamespace="http://jbpm.org/example/bpmn2">
+
+  <process id="My business processs" name="myBusinessProcess">
+```
+
+### BPMN结构
+
+![](../picture/20200504220425967.png)
+
+#### 事件
+
+事件包含 启动事件、结束事件、中间事件，还有一类边界事件，属于中间中间事件的一种。
+
+**启动事件（startEvent）**:（有的译为开始时间）是流程的起点。启动事件的类型（例如流程在消息到达时启动，在指定的时间间隔后启动，等等），定义了流程如何启动，并显示为启动事件中的小图标。 启动事件随时捕获：启动事件（保持）等候，直到特定的触发器被触发。
+
+
+
+##### 空启动事件
+
+空”启动事件（none Start Event），指的是未指定启动流程实例触发器的启动事件。引擎将无法预知何时启动流程实例。
+
+```xml
+<startEvent id="start" name="my start event" />
+```
+
+空启动事件用于流程实例通过调用下列startProcessInstanceByXXX API方法启动的情况。上面教程中的审核流程中也是空启动事件。
+
+```java
+ProcessInstance processInstance = runtimeService.startProcessInstanceByXXX();
+```
+
+空启动事件用空心圆圈表示，中间没有图标（也就是说，没有触发器）: 空启动事件通常是用户手动来进行启动。
+
+
+
+##### 定时启动事件
+
+定时器启动事件（timer start event）能在指定时间创建流程实例。
+
+在流程只需要启动一次，或者流程需要在特定的时间间隔重复启动时，可以使用定时器启动事件。
+
+示例：流程会启动4次，间隔5分钟，从2011年3月11日，12:13开始
+
+```xml
+<startEvent id="theStart">
+  <timerEventDefinition>
+    <timeCycle>R4/2011-03-11T12:13/PT5M</timeCycle>
+  </timerEventDefinition>
+</startEvent>
+```
+
+又比如 流程会在设定的时间启动一次 
+
+```xml
+<startEvent id="theStart">
+  <timerEventDefinition>
+    <timeDate>2011-03-11T12:13:14</timeDate>
+  </timerEventDefinition>
+</startEvent>
+```
+
+**注意**：定时器启动事件，在流程部署的同时就开始计时。不需要调用startProcessInstanceByXXX就会在时间启动。调用startProcessInstanceByXXX时会在定时启动之外额外启动一个流程。 当部署带有定时器启动事件的流程的更新版本时，上一版本的定时器作业会被移除。
+
+定时器启动事件，用其中有一个钟表图标的圆圈来表示。
+
+![](../picture/20220322161627.png)
+
+
+
+##### 消息启动事件
+
+消息启动事件（message start event）使用具名消息启动流程实例。消息名用于选择正确的启动事件。
+
+当部署具有一个或多个消息启动事件的流程定义时，会做如下判断：
+
+\>> 给定流程定义中，消息启动事件的名字必须是唯一的。一个流程定义不得包含多个同名的消息启动事件。如果流程定义中有两个或多个消息启动事件引用同一个消息，或者两个或多个消息启动事件引用了具有相同消息名字的消息，则Flowable会在部署这个流程定义时抛出异常。
+
+\>> 在所有已部署的流程定义中，消息启动事件的名字必须是唯一的。如果在流程定义中，一个或多个消息启动事件引用了已经部署的另一流程定义中消息启动事件的消息名，则Flowable会在部署这个流程定义时抛出异常。
+
+\>> 流程版本：在部署流程定义的新版本时，会取消上一版本的消息订阅，即使新版本中并没有这个消息事件）。
+
+```xml
+<definitions id="definitions"
+  xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+  xmlns:flowable="http://flowable.org/bpmn"
+  targetNamespace="Examples"
+  xmlns:tns="Examples">
+
+  <message id="newInvoice" name="newInvoiceMessage" />
+
+  <process id="invoiceProcess">
+
+    <startEvent id="messageStart" >
+    	<messageEventDefinition messageRef="tns:newInvoice" />
+    </startEvent>
+    ...
+  </process>
+
+</definitions>
+```
+
+消息启动事件用其中有一个消息事件标志的圆圈表示。这个标志并未填充，用以表示捕获（接收）行为。
+
+![](../picture/20220322164112.png)
+
+
+
+##### 错误启动事件
+
+错误启动事件（error start event），可用于触发事件子流程（Event Sub-Process）。错误启动事件不能用于启动流程实例。
+
+错误启动事件总是中断。
+
+```xml
+<startEvent id="messageStart" >
+	<errorEventDefinition errorRef="someError" />
+</startEvent>
+```
+
+错误启动事件用其中有一个错误事件标志的圆圈表示。这个标志并未填充，用以表示捕获（接收）行为。
+
+![](../picture/20220322164438.png)
+
+
+
+##### 结束事件
+
+结束事件（end event）标志着流程或子流程中一个分支的结束。
+
+结束事件总是抛出（型）事件。这意味着当流程执行到达结束事件时，会抛出一个结果。结果的类型由事件内部的黑色图标表示。在XML表示中，类型由子元素声明给出。
+
+错误事件与 启动事件 的外观区别就是，**错误事件使用粗圆圈表示，而启动事件是用细圆圈表示的。**
+
+它一样有 "空"结束事件，就是意味着当到达这个事件时，没有特别指定抛出的结果，除了结束当前执行分支之外，不会多做任何事情。这里就不多做简绍了。
+
+##### 错误结束事件
+
+当流程执行到达错误结束事件（error end event）时，结束执行的当前分支，并抛出错误。
+
+这个错误可以由匹配的错误启动事件捕获。如果找不到匹配的错误边界事件，将会抛出异常。
+
+错误结束事件事件用内部有一个错误图标的标准结束事件（粗圆圈）表示。
+
+![](../picture/20220322170531.png)
+
+```xml
+<endEvent id="myErrorEndEvent">
+  <errorEventDefinition errorRef="myError" />
+</endEvent>
+```
+
+errorRef属性可以引用在流程外定义的error元素：
+
+```xml
+<error id="myError" errorCode="123" />
+...
+<process id="myProcess">
+...
+```
+
+##### 终止结束事件
+
+当到达终止结束事件（terminate end event）时，当前的流程实例或子流程会被终止。也就是说，当执行到达终止结束事件时，会判断第一个范围 scope（流程或子流程）并终止它。在BPMN 2.0中，子流程可以是嵌入式子流程，调用活动，事件子流程，或事务子流程。有一条通用规则：当存在多实例的调用过程或嵌入式子流程时，只会终止一个实例，其他的实例与流程实例不会受影响。
+
+可以添加一个可选属性terminateAll。当其为true时，无论该终止结束事件在流程定义中的位置，也无论它是否在子流程（甚至是嵌套子流程）中，都会终止（根）流程实例。
+
+终止结束事件用内部有一个全黑圆的标准结束事件（粗圆圈）表示。
+
+![](../picture/20220322170753.png)
+
+```java
+<endEvent id="myEndEvent >
+  <terminateEventDefinition flowable:terminateAll="true"></terminateEventDefinition>
+</endEvent>
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
