@@ -700,6 +700,209 @@ errorRef属性可以引用在流程外定义的error元素：
 
 
 
+##### 边界事件
+
+边界事件（boundary event）是捕获型事件，它依附在活动（activity）上。
+
+边界事件永远不会抛出。这意味着当活动运行时，事件将监听特定类型的触发器。当捕获到事件时，会终止活动，并沿该事件的出口顺序流继续。
+
+```xml
+<boundaryEvent id="xxx" attachedToRef="xxx">
+	<XXXEventDefinition/>
+</boundaryEvent>
+```
+
+边界事件 由attachedToRef属性定义的，对该事件所依附的活动的引用。
+
+##### 定时器边界事件
+
+定时器边界事件（timer boundary event）的行为像是跑表与闹钟。
+
+当执行到达边界事件所依附的活动时，将启动定时器。当定时器触发时（例如在特定时间间隔后），可以中断活动，并沿着边界事件的出口顺序流继续执行。
+
+定时器边界事件用内部有一个定时器图标的标准边界事件（圆圈）表示。
+
+![](../picture/20200505085730198.png)
+
+定时器边界事件与一般边界事件一样定义。其中类型子元素为timerEventDefinition元素。
+
+```xml
+<boundaryEvent id="escalationTimer" cancelActivity="true" attachedToRef="firstLineSupport">
+  <timerEventDefinition>
+    <timeDuration>PT4H</timeDuration>
+  </timerEventDefinition>
+</boundaryEvent>
+```
+
+
+
+### 顺序流
+
+顺序流（sequence flow）是流程中两个元素间的连接器。
+
+在流程执行过程中，一个元素被访问后，会沿着其所有出口顺序流继续执行。这意味着BPMN 2.0的默认是并行执行的：两个出口顺序流就会创建两个独立的、并行的执行路径。
+
+#### 条件顺序流
+
+在顺序流上可以定义条件（conditional sequence flow）。
+
+当离开BPMN 2.0活动时，默认行为是计算其每个出口顺序流上的条件。当条件计算为true时，选择该出口顺序流。
+
+如果该方法选择了多条顺序流，则会生成多个执行，流程会以并行方式继续。
+
+不同类型的网关，会用不同的方式处理带有条件的顺序流。
+
+```xml
+<sequenceFlow id="flow" sourceRef="theStart" targetRef="theTask">
+  <conditionExpression xsi:type="tFormalExpression">
+    <![CDATA[${order.price > 100 && order.price < 250}]]>
+  </conditionExpression>
+</sequenceFlow>
+```
+
+目前conditionalExpressions只能使用UEL。使用的表达式需要能解析为boolean值，否则当计算条件时会抛出异常。
+
+#### 默认顺序流
+
+只有当没有其他顺序流可以选择时，才会选择默认顺序流作为活动的出口顺序流。流程会忽略默认顺序流上的条件。
+
+所有的BPMN 2.0任务与网关都可以使用默认顺序流（default sequence flow）。
+
+默认顺序流用起点带有“斜线”标记的一般顺序流表示。
+
+```xml
+<exclusiveGateway id="exclusiveGw" name="Exclusive Gateway" default="flow2" />
+
+<sequenceFlow id="flow1" sourceRef="exclusiveGw" targetRef="task1">
+    <conditionExpression xsi:type="tFormalExpression">${conditionA}</conditionExpression>
+</sequenceFlow>
+
+<sequenceFlow id="flow2" sourceRef="exclusiveGw" targetRef="task2"/>
+
+<sequenceFlow id="flow3" sourceRef="exclusiveGw" targetRef="task3">
+    <conditionExpression xsi:type="tFormalExpression">${conditionB}</conditionExpression>
+</sequenceFlow>
+```
+
+![](../picture/20220323104331.png)
+
+
+
+### 网关
+
+网关（gateway）用于控制执行的流向（或者按BPMN 2.0的用词：执行的“标志（token）”）。
+
+网关可以消费（consuming）与生成（generating）标志。
+
+网关用其中带有图标的菱形表示。该图标显示了网关的类型。
+
+![](../picture/20220323105420.png)
+
+**一般情况下，在网关下会选择所有条件计算为true的顺序流，并行执行。**
+
+#### 排他网关
+
+排他网关（exclusive gateway）（也叫异或网关 XOR gateway，或者更专业的，基于数据的排他网关 exclusive data-based gateway），用于对流程中的决策建模。当执行到达这个网关时，会按照所有出口顺序流定义的顺序对它们进行计算。选择第一个条件计算为true的顺序流（当没有设置条件时，认为顺序流为true）继续流程。排他网关是我们大部分情况使用的判断。
+
+**注意:使用排他网关时，只会选择一条顺序流。当多条顺序流的条件都计算为true时，会且仅会选择在XML中最先定义的顺序流继续流程。如果没有可选的顺序流，会抛出异常。**
+
+排他网关用内部带有’X’图标的标准网关（菱形）表示，'X’图标代表异或的含义。
+
+**请注意内部没有图标的网关默认为排他网关。BPMN 2.0规范不允许在同一个流程中混合使用有及没有X的菱形标志。**
+
+例如：
+
+```xml
+<exclusiveGateway id="exclusiveGw" name="Exclusive Gateway" />
+
+<sequenceFlow id="flow2" sourceRef="exclusiveGw" targetRef="theTask1">
+  <conditionExpression xsi:type="tFormalExpression">${input == 1}</conditionExpression>
+</sequenceFlow>
+
+<sequenceFlow id="flow3" sourceRef="exclusiveGw" targetRef="theTask2">
+  <conditionExpression xsi:type="tFormalExpression">${input == 2}</conditionExpression>
+</sequenceFlow>
+
+<sequenceFlow id="flow4" sourceRef="exclusiveGw" targetRef="theTask3">
+  <conditionExpression xsi:type="tFormalExpression">${input == 3}</conditionExpression>
+</sequenceFlow>
+```
+
+![](../picture/20200505094206684.png)
+
+#### 并行网关
+
+并行网关可以建模流程中的并行执行。定义并行网关只需要一行XML：
+
+```xml
+<parallelGateway id="myParallelGateway" />
+```
+
+在流程模型中引入并行的最简单的网关，就是并行网关（parallel gateway）。它可以将执行分支（fork）为多条路径，也可以合并（join）多条入口路径的执行。
+
+- 分支：所有的出口顺序流都并行执行，为每一条顺序流创建一个并行执行。
+- 合并：所有到达并行网关的并行执行都会在网关处等待，直到每一条入口顺序流都到达了有个执行。然后流程经过该合并网关继续，也就是需要等待同步。
+
+**与其他网关类型有一个重要区别：并行网关不计算条件。如果连接到并行网关的顺序流上定义了条件，会直接忽略该条件。**
+
+并行网关，用内部带有’加号’图标的网关（菱形）表示，代表与（AND）的含义。
+
+![](../picture/20220323110235.png)
+
+并行网关不需要“平衡”（也就是说，前后对应的两个并行网关，其入口/出口顺序流的数量不需要一致）,也就是不一定顺序流最终返回到一起。每个并行网关都会简单地等待所有入口顺序流，并为每一条出口顺序流创建并行执行，而不受流程模型中的其他结构影响。
+
+例如:
+
+![](../picture/2020050509504170.png)
+
+
+
+#### 包容网关
+
+包容网关（inclusive gateway）看做排他网关与并行网关的组合。
+
+它与排他网关一样，可以在包容网关的出口顺序流上定义条件，包容网关会计算条件。
+
+然而主要的区别是，包容网关与并行网关一样，也可以同时选择多于一条出口顺序流，就像Switch命令。
+
+```xml
+<inclusiveGateway id="fork" />
+<sequenceFlow sourceRef="fork" targetRef="receivePayment" >
+  <conditionExpression xsi:type="tFormalExpression">${paymentReceived == false}</conditionExpression>
+</sequenceFlow>
+<sequenceFlow sourceRef="fork" targetRef="shipOrder" >
+  <conditionExpression xsi:type="tFormalExpression">${shipOrder == true}</conditionExpression>
+</sequenceFlow>
+```
+
+
+
+包容网关的汇聚行为比并行网关更复杂。所有到达包容网关的并行执行，都会在网关等待，直到所有“可以到达”包容网关的执行都“到达”包容网关。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
