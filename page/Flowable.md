@@ -881,6 +881,63 @@ errorRef属性可以引用在流程外定义的error元素：
 
 
 
+### 任务
+
+任务表示工作需要被外部实体完成， 比如人工或自动服务。
+
+任务被描绘成一个圆角矩形，一般内部包含文字。 
+
+任务的类型（用户任务，服务任务，脚本任务，等等）显示在矩形的左上角，用小图标区别。 根据任务的类型， 引擎会执行不同的功能。
+
+#### 用户任务
+
+“用户任务（user task）”，也叫人工任务，见名知意，是用于在业务流程中对需要人工执行的任务进行建模。
+
+当流程执行到达用户任务时，会为指派至该任务的用户或组的任务列表创建一个新任务。
+
+![](../picture/20220329100742.png)
+
+也可以为用户任务添加描述（description）。事实上任何BPMN 2.0元素都可以有描述。描述由documentation元素定义。
+
+```xml
+<userTask id="theTask" name="Schedule meeting" >
+  <documentation>
+      Schedule an engineering meeting for next week with the new hire.
+  </documentation>
+```
+
+用户任务可以设置一个到期日期。
+每个任务都可以使用一个字段标志该任务的到期日期（due date）。可以使用查询API，查询在给定日期前或后到期的任务。
+
+可以在任务定义中使用扩展指定表达式，以在任务创建时设定到期日期。
+
+该表达式必须解析为java.util.Date，java.util.String (ISO8601格式)，ISO8601时间长度（例如PT50M），或者null。
+
+例如，可以使用在流程里前一个表单中输入的日期，或者由前一个服务任务计算出的日期。如果使用的是时间长度，则到期日期基于当前时间加上给定长度计算。例如当dueDate使用“PT30M”时，任务在从现在起30分钟后到期。
+
+```xml
+<userTask id="theTask" name="Important task" flowable:dueDate="${dateVariable}"/>
+```
+
+任务的到期日期也可以使用TaskService，或者在TaskListener中使用传递的DelegateTask修改。
+
+- 用户指派：
+  用户任务可以直接指派（assign）给用户。可以定义humanPerformer子元素来实现。humanPerformer需要resourceAssignmentExpression来实际定义用户。目前，只支持formalExpressions。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
