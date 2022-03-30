@@ -924,6 +924,119 @@ errorRef属性可以引用在流程外定义的error元素：
 - 用户指派：
   用户任务可以直接指派（assign）给用户。可以定义humanPerformer子元素来实现。humanPerformer需要resourceAssignmentExpression来实际定义用户。目前，只支持formalExpressions。
 
+```xml
+<process >
+
+  ...
+
+  <userTask id='theTask' name='important task' >
+    <humanPerformer>
+      <resourceAssignmentExpression>
+        <formalExpression>kermit</formalExpression>
+      </resourceAssignmentExpression>
+    </humanPerformer>
+  </userTask>
+```
+
+只能指定一个用户作为任务的humanPerformer。在Flowable术语中，这个用户被称作办理人（assignee）。拥有办理人的任务，在其他人的任务列表中不可见，而只能在该办理人的个人任务列表中看到。这个通常用在一些提交申请给指定人审核的情况下使用。
+
+可以在实际代码中通过TaskService获取特定用户办理的任务：
+
+```xml
+List<Task> tasks = taskService.createTaskQuery().taskAssignee("kermit").list();
+```
+
+很明显，当指派关系不复杂时，这种用户与组的指派方式十分笨重。为避免这种复杂性，可以在用户任务上使用自定义扩展。
+
+Flowable拥有以下几种人物选择:
+
+- assignee（办理人）属性：这个自定义扩展用于直接将用户指派至用户任务。
+
+```xml
+<userTask id="theTask" name="my task" flowable:assignee="kermit" />
+```
+
+- candidateUsers（候选用户）属性：这个自定义扩展用于为任务指定候选用户。
+
+```xml
+<userTask id="theTask" name="my task" flowable:candidateUsers="kermit, gonzo" />
+```
+
+- candidateGroups（候选组）attribute：这个自定义扩展用于为任务指定候选组。
+
+```xml
+<userTask id="theTask" name="my task" flowable:candidateGroups="management, accountancy" />
+```
+
+可以定义在一个用户任务上同时定义candidateUsers与candidateGroups。
+
+
+
+#### 脚本任务
+
+脚本任务（Script Task）是一个自动化任务。当流程到达脚本任务时，自动执行编写的脚本，完毕后继续执行后继路线。
+
+脚本任务用左上角有一个小“脚本”图标的标准BPMN 2.0任务（圆角矩形）表示。![](../picture/20220330175120.png)
+
+
+
+脚本任务中的脚步内容使用script与scriptFormat元素定义。
+
+```xml
+<scriptTask id="theScriptTask" name="Execute script" scriptFormat="groovy">
+  <script>
+    sum = 0
+    for ( i in inputArray ) {
+      sum += i
+    }
+  </script>
+</scriptTask>
+```
+
+其中scriptFormat属性的值，必须是兼容JSR-223（Java平台脚本）的名字。默认情况下，JavaScript包含在每一个JDK中，因此不需要添加任何JAR文件。如果想使用其它（兼容JSR-223的）脚本引擎，则需要在classpath中添加相应的jar，并使用适当的名字。例如，Flowable单元测试经常使用Groovy，因为其语法与Java十分相似。
+
+请注意Groovy脚本引擎与groovy-all JAR捆绑在一起。在Groovy 2.0版本以前，脚本引擎是Groovy JAR的一部分。因此，必须添加如下依赖：
+
+```xml
+<dependency>
+    <groupId>org.codehaus.groovy</groupId>
+    <artifactId>groovy-all</artifactId>
+    <version>2.x.x<version>
+</dependency>
+```
+
+到达脚本引擎的执行中，所有的流程变量都可以在脚本中使用。在这个例子里，脚本变量'inputArray'实际上就是一个流程变量（一个integer的数组）。
+
+也可以简单地调用execution.setVariable("variableName", variableValue)，在脚本中设置流程变量。默认情况下，变量不会自动储存（请注意，在一些早期版本中是会储存的！）。
+
+在脚本中设置变量的例子：
+
+```xml
+<script>
+    def scriptVar = "test123"
+    execution.setVariable("myVar", scriptVar)
+</script>
+```
+
+- 脚本任务的结果:
+  脚本任务的返回值，可以通过为脚本任务定义的'flowable:resultVariable'属性设置为流程变量。可以是已经存在的，或者新的流程变量。如果指定为已存在的流程变量，则流程变量的值会被脚本执行的结果值覆盖。如果不指定结果变量名，则脚本结果值将被忽略。
+
+```xml
+<scriptTask id="theScriptTask" name="Execute script" scriptFormat="juel" flowable:resultVariable="myVar">
+  <script>#{echo}</script>
+</scriptTask>
+```
+
+在上面的例子中，脚本执行的结果（解析表达式'#{echo}'的值），将在脚本完成后，设置为名为'myVar'的流程变量。
+
+
+
+
+
+
+
+
+
 
 
 
