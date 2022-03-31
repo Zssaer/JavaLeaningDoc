@@ -10,9 +10,27 @@
 
 Flowable是一个使用Java编写的轻量级业务流程引擎。Flowable流程引擎可用于部署BPMN 2.0流程定义（用于定义流程的行业XML标准）， 创建这些流程定义的流程实例，进行查询，访问运行中或历史的流程实例与相关数据，等等。这个章节将用一个可以在你自己的开发环境中使用的例子，逐步介绍各种概念与API。
 
-为什么推荐使用Flowable？因为Flowable时Activiti原班人马打造的Activiti升级版，它修复了Activiti的上古错误问题。目前时最受欢迎和关注的新型业务流程引擎，未来Flowable一定会是业务流程引擎的趋势。
+为什么推荐使用Flowable？因为Flowable时Activiti原班人马打造的Activiti升级版，它修复了Activiti的上古错误问题。目前时最受欢迎和关注的新型业务流程引擎，未来Flowable也会是业务流程引擎的趋势。
 
 ![](../picture/20200502180527295.png)
+
+
+
+## 声明
+
+本教程所参考资料：
+
+【1】：[Flowable BPMN 用户手册 (v 6.3.0)](https://tkjohn.github.io/flowable-userguide/#bpmn20)
+【2】：[第 3 章 BPMN 2.0](http://www.mossle.com/docs/jbpm4devguide/html/bpmn2.html)
+【3】：[BPMN 2.0 / Flowable](http://bpmn20inaction.blogspot.com/)
+【4】：[业务流程模型和标记法](https://zh.wikipedia.org/wiki/业务流程模型和标记法)
+【5】：[BPMN2.0十分钟就够了](https://blog.51cto.com/2702712/2350148?source=dra)
+【6】：[基于BPMN2.0的工作流（Workflow）](https://www.jianshu.com/p/a8a21870986a)
+【7】：[ AWS BPMN2 Event参考指南](https://docs.awspaas.com/reference-guide/aws-paas-process-event-reference-guide/boundaryevents/README.html)
+【8】：[【activiti 入门】activiti6.0的中间事件，包含信号事件(捕获与抛出)](https://blog.csdn.net/qq_33333654/article/details/101366454)
+【9】：[AWS BPMN2 Activity参考指南](https://docs.awspaas.com/reference-guide/aws-paas-process-activity-reference-guide/activities/README.html)
+【10】：[AWS BPMN2 Gateway参考指南](https://docs.awspaas.com/reference-guide/aws-paas-process-gateway-reference-guide/inclusive_gateway/README.html)
+【11】：[activiti与flowable的区别](https://blog.csdn.net/qq_30739519/article/details/82493456)
 
 
 
@@ -1028,6 +1046,133 @@ Flowable拥有以下几种人物选择:
 ```
 
 在上面的例子中，脚本执行的结果（解析表达式'#{echo}'的值），将在脚本完成后，设置为名为'myVar'的流程变量。
+
+
+
+#### 服务任务
+
+服务任务（Service Task）是一个自动化任务。当流程到达系统任务时，它会调用一些Java类服务（例如web service，java service等等），完毕后继续执行后继路线。
+
+服务任务用左上角有一个小齿轮图标的圆角矩形表示。
+
+![](../picture/20220331100207.png)
+
+有四种方法声明如何调用Java逻辑：
+
+- 指定实现了JavaDelegate或ActivityBehavior的类
+- 调用解析为委托对象（delegation object）的表达式
+- 调用方法表达式（method expression）
+- 对值表达式（value expression）求值
+
+使用flowable:class属性提供全限定类名（fully qualified classname），指定流程执行时调用的类。
+
+```xml
+<serviceTask id="javaService"
+             name="My Java Service Task"
+             flowable:class="org.xxx.ToUppercase" />	
+```
+
+要实现可以在流程执行中调用的类，需要实现org.flowable.engine.delegate.JavaDelegate接口，并在execute方法中提供所需逻辑。
+
+下面是一个Java类的示例，用于将流程变量String改为大写。这个类需要实现org.flowable.engine.delegate.JavaDelegate接口，因此需要实现execute(DelegateExecution)方法。这个方法就是引擎将调用的方法，需要实现业务逻辑。可以通过DelegateExecution接口（点击链接获取该接口操作的详细Javadoc）访问流程实例信息，如流程变量等。
+
+```java
+public class ToUppercase implements JavaDelegate {
+  public void execute(DelegateExecution execution) {
+    String var = (String) execution.getVariable("input");
+    var = var.toUpperCase();
+    execution.setVariable("input", var);
+  }
+}
+```
+
+**不论在流程定义中声明的是什么类型的值，注入对象的setter/私有字段的类型，总是`org.flowable.engine.delegate.Expression`。解析表达式后，可以被转型为合适的类型。**
+
+如果需要在JavaDelegate中声明一个私有字段的话，*flowable:class'*也是支持字段注入。也可以在使用*flowable:delegateExpression*属性时，进行字段注入。
+
+请注意按照BPMN 2.0 XML概要的要求，**在实际字段注入声明前，需要先声明’extensionElements’XML元素**。
+
+```xml
+<serviceTask id="javaService"
+    name="Java service invocation"
+    flowable:class="org.flowable.examples.bpmn.servicetask.ToUpperCaseFieldInjected">
+    <extensionElements>
+      <flowable:field name="text" stringValue="Hello World" />
+  </extensionElements>
+</serviceTask>
+```
+
+这里我们向这个服务任务中注入了一个私有字段text，值为“Hello World”。
+
+随后仅限在该flowable:class中定义的类中获取。
+
+```java
+public class ToUpperCaseFieldInjected implements JavaDelegate {
+  private Expression text;
+  public void execute(DelegateExecution execution) {
+    // 这里text.getValue(execution)) 获取为Hello World
+    execution.setVariable("var", ((String)text.getValue(execution)).toUpperCase());
+  }
+}
+```
+
+当然如果这个注入的私有字段非常长的话，也可以使用*flowable:string* 子元素。
+
+```xml
+<serviceTask id="javaService"
+    name="Java service invocation"
+    flowable:class="org.flowable.examples.bpmn.servicetask.ToUpperCaseFieldInjected">
+  <extensionElements>
+    <flowable:field name="text">
+        <flowable:string>
+          This is a long string with a lot of words and potentially way longer even!
+      </flowable:string>
+    </flowable:field>
+  </extensionElements>
+</serviceTask>
+```
+
+
+
+#### 邮件任务
+
+在一些流程中，往往需要实现一些自动发送邮件的功能，比如要求审核员审核或是审核通过后的提示。
+
+Flowable让你可以通过自动的邮件服务任务（email task），增强业务流程。可以向一个或多个收信人发送邮件，支持cc，bcc，HTML文本，等等。请注意邮件任务**不是**BPMN 2.0规范的“官方”任务（所以也没有专用图标）。因此，在Flowable中，邮件任务实现为一种特殊的服务任务。
+
+配置邮件服务器参数：
+
+Flowable引擎使用支持SMTP的外部邮件服务器发送邮件。为了发送邮件，引擎需要了解如何连接邮件服务器。可以在*flowable.cfg.xml*配置文件中设置下面的参数：
+
+| 参数                  | 必填?                  | 描述                                                         |
+| :-------------------- | :--------------------- | :----------------------------------------------------------- |
+| mailServerHost        | 否                     | 邮件服务器的主机名（如mail.mycorp.com）。默认为`localhost`   |
+| mailServerPort        | 是，如果不使用默认端口 | 邮件服务器的SMTP端口。默认值为*25*                           |
+| mailServerDefaultFrom | 否                     | 若用户没有提供地址，默认使用的邮件发件人地址。默认为*flowable@flowable.org* |
+| mailServerUsername    | 若服务器需要           | 部分邮件服务器发信时需要进行认证。默认为空。                 |
+| mailServerPassword    | 若服务器需要           | 部分邮件服务器发信时需要进行认证。默认为空。                 |
+| mailServerUseSSL      | 若服务器需要           | 部分邮件服务器要求ssl通信。默认设置为false。                 |
+| mailServerUseTLS      | 若服务器需要           | 部分邮件服务器要求TLS通信（例如gmail）。默认设置为false。    |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
