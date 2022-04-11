@@ -988,6 +988,47 @@ Flowable拥有以下几种人物选择:
 
 可以定义在一个用户任务上同时定义candidateUsers与candidateGroups。
 
+对于用户任务中的人物选择上，对应到其到实际操作人。
+
+***通过任务监听器自定义指派：***
+
+当流程中出现两种类型的角色，一种角色只处理A情况的信息，一种角色只处理B情况的信息，这时我们可以使用任务监听器将任务自定义指派不同角色。
+
+```xml
+<userTask id="task1" name="My task" >
+  <extensionElements>
+    <flowable:taskListener event="create" class="org.flowable.MyAssignmentHandler" />
+  </extensionElements>
+</userTask>
+```
+
+其中任务监听器*包含下列属性：
+
+- **event（事件）**（必填）：触发任务监听器的任务事件类型。可用的事件有：
+  - **create（创建）**：当任务已经创建，并且**所有任务参数都已经设置**时触发。
+  - **assignment（指派）**：当任务已经指派给某人时触发。请注意：当流程执行到达用户任务时，在触发*create*事件**之前**，会首先触发*assignment*事件。这顺序看起来不太自然，但是有实际原因的：当收到*create*事件时，我们通常希望能看到任务的所有参数，包括办理人。
+  - **complete（完成）**：当任务已经完成，从运行时数据中删除前触发。
+  - **delete（删除）**：在任务即将被删除前触发。请注意任务由completeTask正常完成时也会触发。
+- **class**：需要调用的委托类。这个类必须实现`org.flowable.engine.delegate.TaskListener`接口。
+
+```java
+public class MyAssignmentHandler implements TaskListener {
+
+  public void notify(DelegateTask delegateTask) {
+    // 在这里执行自定义身份查询
+
+    // 然后调用如下命令：
+    delegateTask.setAssignee("kermit");
+    delegateTask.addCandidateUser("fozzie");
+    delegateTask.addCandidateGroup("management");
+    ...
+  }
+
+}
+```
+
+
+
 
 
 #### 脚本任务
@@ -1153,6 +1194,198 @@ Flowable引擎使用支持SMTP的外部邮件服务器发送邮件。为了发�
 | mailServerPassword    | 若服务器需要           | 部分邮件服务器发信时需要进行认证。默认为空。                 |
 | mailServerUseSSL      | 若服务器需要           | 部分邮件服务器要求ssl通信。默认设置为false。                 |
 | mailServerUseTLS      | 若服务器需要           | 部分邮件服务器要求TLS通信（例如gmail）。默认设置为false。    |
+
+下面为配置案例:
+
+```properties
+flowable.mail.server.host=smtp.gmail.com
+flowable.mail.server.port=587
+flowable.mail.server.username=testemail@some.com
+flowable.mail.server.password=****
+flowable.mail.server.use-tls=true
+```
+
+
+
+邮件任务实现为特殊的**服务任务**，将服务任务的*type*定义为*'mail'*进行设置。
+
+```
+1<serviceTask id="sendMail" flowable:type="mail">
+```
+
+邮件任务通过字段注入方式配置。这些参数的值可以使用EL表达式，并将在流程执行运行时解析。可以设置下列参数：
+
+| 参数                  | 必填? | 描述                                                         |
+| :-------------------- | :---- | :----------------------------------------------------------- |
+| to                    | 是    | 邮件的收信人。可以使用逗号分隔的列表定义多个接收人           |
+| from                  | 否    | 邮件的发信人地址。如果不设置，会使用默认配置即 Flowable中的mailServerHost的地址 |
+| subject               | 否    | 邮件的主题                                                   |
+| cc                    | 否    | 邮件的抄送人。可以使用逗号分隔的列表定义多个接收人           |
+| bcc                   | 否    | 邮件的密送人。可以使用逗号分隔的列表定义多个接收人           |
+| charset               | 否    | 可以指定邮件的字符集，对许多非英语语言很必要。               |
+| html                  | 否    | 邮件的HTML文本                                               |
+| text                  | 否    | 邮件的内容，用于纯文本邮件。对于不支持富文本内容的客户端，可以与*html*一起使用。邮件客户端可以回退为显式纯文本格式。 |
+| htmlVar               | 否    | 存储邮件HTML内容的流程变量名。与*html*参数的最大区别，是这个参数会在邮件任务发送前，使用其内容进行表达式替换。 |
+| textVar               | 否    | 存储邮件纯文本内容的流程变量名。与*text*参数的最大区别，是这个参数会在邮件任务发送前，使用其内容进行表达式替换。 |
+| ignoreException       | 否    | 处理邮件失败时，是忽略还是抛出FlowableException。默认设置为false。 |
+| exceptionVariableName | 否    | 如果设置*ignoreException = true*，而处理邮件失败时，则使用给定名字的变量保存失败信息 |
+
+下面的XML代码片段是使用邮件任务的示例。
+
+```xml
+<serviceTask id="sendMail" flowable:type="mail">  
+  <extensionElements>
+    <flowable:field name="from" stringValue="order-shipping@thecompany.com" />
+    <flowable:field name="to" expression="${recipient}" />
+    <flowable:field name="subject" expression="Your order ${orderId} has been shipped" />
+    <flowable:field name="html">
+      <flowable:expression>
+        <![CDATA[
+          <html>
+            <body>
+              Hello ${male ? 'Mr.' : 'Mrs.' } ${recipientName},<br/><br/>
+              As of ${now}, your order has been <b>processed and shipped</b>.<br/><br/>
+              Kind regards,<br/>
+              TheCompany.
+            </body>
+          </html>
+        ]]>
+      </flowable:expression>
+    </flowable:field>
+  </extensionElements>
+</serviceTask>
+```
+
+
+
+#### 执行监听器
+
+执行监听器（execution listener），它可以在流程执行中发生特定的事件时，触发外部Java类或 计算表达式。
+
+它可以被捕捉的事件有：
+
+- 流程实例的启动和结束。
+- 流程执行转移。
+- 活动的启动和结束。
+- 网关的启动和结束。
+- 中间事件的启动和结束。
+- 启动事件的结束，和结束事件的启动。
+
+比如下面的流程定义包含了三个执行监听器：
+
+```xml
+<process id="executionListenersProcess">
+
+  <extensionElements>
+    <flowable:executionListener
+      class="org.flowable.examples.bpmn.executionlistener.ExampleExecutionListenerOne"
+      event="start" />
+  </extensionElements>
+
+  <startEvent id="theStart" />
+  <sequenceFlow sourceRef="theStart" targetRef="firstTask" />
+
+  <userTask id="firstTask" />
+  <sequenceFlow sourceRef="firstTask" targetRef="secondTask">
+    <extensionElements>
+      <flowable:executionListener
+        class="org.flowable.examples.bpmn.executionListener.ExampleExecutionListenerTwo" />
+    </extensionElements>
+  </sequenceFlow>
+
+  <userTask id="secondTask" >
+    <extensionElements>
+      <flowable:executionListener
+        expression="${myPojo.myMethod(execution.event)}"
+        event="end" />
+    </extensionElements>
+  </userTask>
+  <sequenceFlow sourceRef="secondTask" targetRef="thirdTask" />
+
+  <userTask id="thirdTask" />
+  <sequenceFlow sourceRef="thirdTask" targetRef="theEnd" />
+
+  <endEvent id="theEnd" />
+</process>
+```
+
+其中第一个`flowable:executionListener` 监听器的event(事件)为start，即流程启动时，就会被执行ExampleExecutionListenerOne该Java类，这个类需要实现`ExecutionListener`接口。
+
+```java
+public class ExampleExecutionListenerOne implements ExecutionListener {
+
+  public void notify(ExecutionListenerExecution execution) throws Exception {
+    execution.setVariable("variableSetInExecutionListener", "firstValue");
+    execution.setVariable("eventReceived", execution.getEventName());
+  }
+}
+```
+
+相当于我们一开始流程就 向事件中添加了两个变量，variableSetInExecutionListener和eventReceived。
+
+而第二个执行监听器在流程执行转移时被调用。请注意`listener`元素并未定义`event`，因为在顺序流上 上只会触发转移`take`事件，即使设置event值也不会有效的。
+
+最后一个执行监听器出现在一个用户任务中，它的event定义为“end”，所以它在`secondTask`活动结束时才会被调用。该监听器声明中没有使用`class`，而是定义了`expression`。这个表达式将在事件触发时计算/调用。
+
+
+
+除此之外，执行监听器还和其他任务一样支持字段注入。
+
+```xml
+<extensionElements>
+    <flowable:executionListener
+        class="org.flowable.examples.bpmn.executionListener.ExampleFieldInjectedExecutionListener"
+        event="start">
+
+      <flowable:field name="fixedValue" stringValue="Yes, I am " />
+      <flowable:field name="dynamicValue" expression="${myVar}" />
+
+    </flowable:executionListener>
+  </extensionElements>
+```
+
+其中`fixedValue` 为固定注入值，`dynamicValue`为动态注入值。
+
+相对应ExampleFieldInjectedExecutionListener如下：
+
+```java
+public class ExampleFieldInjectedExecutionListener implements ExecutionListener {
+
+  private Expression fixedValue;
+
+  private Expression dynamicValue;
+
+  public void notify(ExecutionListenerExecution execution) throws Exception {
+    execution.setVariable("var", fixedValue.getValue(execution).toString() +
+        dynamicValue.getValue(execution).toString());
+  }
+}
+```
+
+这里又将其中的两个值拼装为一起，生产了一个var值。可以简单测试一下:
+
+```java
+public void testExecutionListenerFieldInjection() {
+  Map<String, Object> variables = new HashMap<String, Object>();
+  variables.put("myVar", "listening!");
+
+  ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(
+      "executionListenersProcess", variables);
+	Object varSetByListener = runtimeService.getVariable(processInstance.getId(), "var");    
+	assertNotNull(varSetByListener);
+	assertTrue(varSetByListener instanceof String);
+	// 结果为固定注入字段及注入表达式的连接
+  	assertEquals("Yes, I am listening!", varSetByListener);   
+}
+```
+
+
+
+
+
+
+
+
 
 
 

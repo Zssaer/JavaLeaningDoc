@@ -160,7 +160,7 @@ RocketMQ 在任何一个环境都是可扩展的，**生产者（Producer）必�
 
 由于RocketMQ由JAVA语言编辑而来，务必确保安装JAVA，并且正确配置JAVA环境。
 
---Windows操作：--
+--Windows操作--
 
 由于其默认JAVA配置大小为默认2G，对于我们来说明显大了，所以我们需要先修改内存使用大小,用编辑器修改一下`runserver.cmd`脚本：
 
@@ -247,7 +247,7 @@ listenPort=10950
 
 因为RocketMQ中自带的配置文件时用于多台主机的集群搭建的，所以自然不会将其存储路径固定，端口也都是默认的10911。在单机下进行搭建必须要进行修改，否则启动会报出`RocketMq Lock failed,MQ already started`错误，表明端口 以及路径被占用。
 
-然后再执行‘start mqbroker.cmd -n 127.0.0.1:9876 -c ../conf/2m-noslave/broker-b.properties’，启动BROKER-B。
+然后再执行‘start mqbroker.cmd -n 127.0.0.1:9877 -c ../conf/2m-noslave/broker-b.properties’，启动BROKER-B。
 
 
 
