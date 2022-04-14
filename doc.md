@@ -2941,6 +2941,18 @@ BEGIN
 	RETURN i;
 END;
 
+
+CREATE PROCEDURE addoder()
+	BEGIN
+		DECLARE num int DEFAULT 1;
+		WHILE (num<10000) DO
+			-- 插入语句
+			INSERT INTO sys_config VALUES(CONCAT('值1',num),"OFF","2021-04-14 14:14:36","333");
+			SET num=num+1;
+		END WHILE;
+	END;
+
+CALL addoder();
 ```
 
 #### 索引原则
