@@ -90,3 +90,298 @@ public class XXXTest {
 
 @Before -> @Test -> @After;
 
+
+
+## SpringBoot单元测试写法
+
+现在正式开始写单元测试了，但是对于单元测试，SpringBoot中需要测试Dao层、Service层、Controller层。
+
+### Dao层测试
+
+对于Dao层的测试来说，我们通常用来测试里面所实现的新的SQL操作能否成功。
+
+比如在Mybatis中，某个mapper文件中新增了一个自定义操作，如
+
+```xml
+  <select id="selectAll" resultMap="BaseResultMap">
+    SELECT * FROM user
+  </select>
+```
+
+自然在Mapper类也多了一个selectAll这个方法，这时我们就可以写一个测试它的测试。
+
+```java
+@RunWith(SpringRunner.class)
+@MybatisTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+public class UserDaoTest {
+	@Autowired
+	private UserDao userDao;
+	
+	@Test
+	@Rollback
+	public void findAllTest(){
+		...
+		Assert.assertFalse(userDao.selectAll().isEmpty());
+	}
+}
+```
+
+其中@SpringBootTest被替换为了@MybatisTest，这样的话就可以直接在测试时跳过启动多余的整个系统了，而是直接测试Mybatis的操作。
+
+**注意：使用@MybatisTest 默认会使用虚拟的数据源替代你配置的，如果想使用你配置的数据源操作真正的数据库则还需要加上`@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)`注解。**这里的Replace.NONE表示不替换数据源配置。
+
+这里方法上的@Rollback则是表示仅仅只是测试，不直接进行保存，测试完成后回滚数据库操作。
+
+### Service层测试
+
+在日常的开发中，我们一般会定义一个service层，用于实现业务逻辑，并且针对service层会有与之对应的齐全的覆盖率高的单元测试。
+
+这是因为主要的核心业务逻辑都在`service`层里，所以service层的单元测试比较常见。
+
+在测试用例中直接注入真实的Repository，这时就可以使用@SpringBootTest 注解中的 SpringBootTest.WebEnvironment.`RANDOM_PORT` 选项，RANDOM_PORT表示项目以随机端口启动。
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class TestServiceNoMock {
+	@Resource
+    private UserService userService;
+    
+    @Test
+    @Transactional
+    public void testGetById() throws Exception {
+        Long id = 1L;
+        User user = userService.findById(id);
+        Assert.assertNotNull(user);
+        Assert.assertEquals("Jone", user.getName());
+    }
+}
+```
+
+在测试环境下，使用@Transactional会默认的Rollback，所以不用担心数据提交上去。
+
+
+
+## Mockito
+
+在这之前，需要简单了解下Mockito，它是一款Java测试对象伪造框架，可以创建出一个任意类型的伪造对象，并且继承伪造对象所有方法以及将方法操作进行修改。用于在测试中将其他层面的操作进行屏蔽掉，更好的进行测试。
+
+```java
+// 使用Mockito.mock(类名.class) 生成出对应的伪造对象
+List mockList = Mockito.mock(ArrayList.class);
+// 伪造对象拥有原类所有的方法,但是其继承的方法都没实际意义
+mockList.add("one");
+// Mockito.verify(伪造对象).伪造对象的方法  : 表示检查伪造类是否之前发生了某些行为
+// 如果之前使用了该方法，则通过，否则拦截抛出错误。
+Mockito.verify(mockList).add("one");
+assertEquals(0, mockList.size());
+// Mockito.when(伪造对象.方法).thenReturn(yyyy)
+// 表示指定伪造对象当执行了这个方法的时候，返回 thenReturn 的值
+// 相当于给该方法设置预期的返回值。
+// 注意对于 static 和 final 方法没法这样做。
+Mockito.when(mockList.size()).thenReturn(100);
+assertEquals(100, mockList.size());
+```
+
+上面Mockito.when这种设置返回预期，这种做法又叫`Stud打桩`。
+
+打桩支持迭代风格的返回值，意思就是当对应的方法多次使用后返回不同的值。
+
+```java
+// 第一种方式 ，都是等价的
+when(i.next()).thenReturn("Hello").thenReturn("World");
+// 第二种方式，都是等价的
+when(i.next()).thenReturn("Hello", "World");
+// 第三种方式，都是等价的
+when(i.next()).thenReturn("Hello"); when(i.next()).thenReturn("World");
+```
+
+上面当i第一次执行next方法，返回一个“Hello”字符串，第二次执行则会返回一个“World”字符串。
+
+### BDDMockito
+
+上面Mockito使用的是原始Mockito，而在目前Mockito拥有一个全新版本 - BDDMockito。
+
+其中BDD是Behavier Driven Development（行为驱动开发）的缩写，它属于敏捷开发的一种开发模式。
+
+Mockito 中的传统模拟是使用*when(obj)*执行的。*then\*()*在排列步骤中。
+
+而BDDMockito为各种\**Mockito\*方法提供 它的BDD 别名，因此在BDDMockito中使用\*given\*（而不是\*when\*）编写Stud打桩 步骤，同样，我们可以使用\*then\*（而不是\*verify\*）编写 Assert 步骤。
+
+```java
+// 相当于when(xxx.ddd).xxx
+BDDMockito.given(phoneBookRepository.contains(momContactName))
+  .willReturn(false);
+// verify(xxx).ddd
+ BDDMockito.then(phoneBookRepository)
+  .should()
+  .add("one"); 
+```
+
+### MockBean
+
+对于一些注入类的情况下，比如在Service、Controller中就会存在大量注入元素。
+
+对于这类的模拟对象，只需要将其注入注解`@Autowried`，替换为`@MockBean`即可，该对象就成为了模拟对象。
+
+
+
+### Controller层测试
+
+再次回到Controller层的测试中来。
+
+正常情况下`controller`层只是做转发，调用`service`层接口而已。所以对于Controller层的测试则是十分少见的。
+
+但是还是建议使用单元测试简单的将`controller`的方法跑一下，看看转发和数据转换的代码是否能正常工作。
+
+在`Spring Boot`里对`controller`层进行单元测试非常简单，只需要配合几个Mockito注解和一点点辅助代码即可搞定。
+
+```java
+//由 Junit 4 启动 Mockito，不使用Springboot框架
+@RunWith(MockitoJUnitRunner.class)
+@AutoConfigureRestDocs
+public class TestSpringBootTestController {
+   	
+    private MockMvc mvc;
+    
+    @MockBean
+    private UserService userService;
+    
+    @InjectMocks
+  	// Mock 要注入的类
+  	UserController userController;
+    
+    @Before
+  	public void setUp()   {
+    	mvc = MockMvcBuilders.standaloneSetup(userController)
+        	//指定 Exception 处理器
+        	.setControllerAdvice(new UserExceptionAdvice())
+        	//.addFilters(new UserFilter())  //你也可以指定 filter , interceptor 之类的, 看 StandaloneMockMvcBuilder 源码
+        	.build();
+  	}
+    
+    @Test
+    public void testGetById() throws Exception {
+        Long userId = 55L;
+        //模拟实现
+        BDDMockito.given(this.userService.findById(userId))
+                .willReturn(new User(55L, "MockBean", 55, "TestWebMvcTestController@qq.com"));
+         /**
+     	* MockMvc 类提供的基础方法分为以下 6 种：
+	     * Perform：执行一个 RequestBuilder 请求，会自动执行 SpringMVC 流程并映射到相应的 Controller 进行处理。
+	     * get/post/put/delete：声明发送一个 HTTP 请求的方式，根据 URI 模板和 URI 变量值得到一个 HTTP 请求，支持 GET、POST、PUT、DELETE 等 HTTP 方法。
+    	 * param：添加请求参数，发送 JSON 数据时将不能使用这种方式，而应该采用 @ResponseBody 注解。
+	     * andExpect：添加 ResultMatcher 验证规则，通过对返回的数据进行判断来验证 Controller 执行结果是否正确。
+    	 * andDo：添加 ResultHandler 结果处理器，比如调试时打印结果到控制台。
+	     * andReturn：最后返回相应的 MvcResult，然后执行自定义验证或做异步处理。
+    	 *
+	     * @throws Exception
+    	 */
+        this.mvc.perform(
+            MockMvcRequestBuilders.get("/user").param(userId.toString)
+            	.accept(MediaType.APPLICATION_JSON))
+            	.andExpect(status().isOk()
+        );
+    }
+
+}
+```
+
+这里先使用BDDMockito的given将其 模拟对象userService的findById(55L)方法返回为 一个User对象。
+
+随后使用了MockMvc这个类，类似于*TestRestTemplate* 类，它可以进行模拟一个Http请求。
+
+这里的如果数据库使用的是Druid的话，这里的@SpringBootTest注解还需要加上RANDOM_PORT随机端口参数，否则将会报出NPE空指针异常。
+
+这里为了方便快捷，我们选择使用MockitoJUnitRunner的方法，也就是直接使用Mockito来进行测试，不加载Springboot框架，减少大量时间！
+
+
+
+
+
+对于Post请求的话，可以这样做：
+
+```java
+	@Test
+    void test() throws Exception {
+        User param = new User();
+        param.setUserId(1111);
+        
+
+        MvcResult mvcResult = mockMvc.perform(
+                MockMvcRequestBuilders.post("/xxx/test")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JSON.toJSONString(param)))
+                .andReturn();
+        
+        System.out.println(mvcResult.getResponse().getContentAsString());
+    }
+```
+
+post下的content是以jSON的方式传入进去的，所以这里使用Json转化器来进行将数据转为Json传入。
+
+返回结果为mvcResult类，使用getResponse().getContentAsString()获取为返回文本数据。
+
+
+
+下面是一些常见的测试写法：
+
+1. 得到MvcResult自定义验证，进行断言测试
+
+   ```java
+   MvcResult result = mockMvc.perform(get("/user/{id}", 1))//执行请求  
+           .andReturn(); //返回MvcResult  
+   Assert.assertNotNull(result.getModelAndView().getModel().get("user")); //自定义断言
+   ```
+
+2. 测试普通Controller
+
+   ```java
+   mockMvc.perform(get("/user/{id}", 1)) //执行请求  
+               .andExpect(model().attributeExists("user")) //验证存储模型数据  
+               .andExpect(view().name("user/view")) //验证viewName  
+               .andExpect(forwardedUrl("/WEB-INF/jsp/user/view.jsp"))//验证视图渲染时forward到的jsp  
+               .andExpect(status().isOk())//验证状态码  
+               .andDo(print()); //输出MvcResult到控制台
+   ```
+
+3. 文件上传
+
+   ```java
+   byte[] bytes = new byte[] {1, 2};  
+   mockMvc.perform(fileUpload("/user/{id}/icon", 1L).file("icon", bytes)) //执行文件上传  
+           .andExpect(model().attribute("icon", bytes)) //验证属性相等性  
+           .andExpect(view().name("success")); //验证视图
+   ```
+
+4. Json请求/响应认证
+
+   ```java
+   String requestBody = "{\"id\":1, \"name\":\"zhang\"}";  
+       mockMvc.perform(post("/user")  
+               .contentType(MediaType.APPLICATION_JSON).content(requestBody)  
+               .accept(MediaType.APPLICATION_JSON)) //执行请求  
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON)) //验证响应contentType  
+               .andExpect(jsonPath("$.id").value(1)); //使用Json path验证JSON 请参考http://goessner.net/articles/JsonPath/  
+       String errorBody = "{id:1, name:zhang}";  
+       MvcResult result = mockMvc.perform(post("/user")  
+               .contentType(MediaType.APPLICATION_JSON).content(errorBody)  
+               .accept(MediaType.APPLICATION_JSON)) //执行请求  
+               .andExpect(status().isBadRequest()) //400错误请求  
+               .andReturn();  
+       Assert.assertTrue(HttpMessageNotReadableException.class.isAssignableFrom(result.getResolvedException().getClass()));//错误的请求内容体
+   ```
+
+
+
+
+
+
+
+
+
+
+
+
+
