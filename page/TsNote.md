@@ -285,7 +285,7 @@ tom.id = 9527;
 
 **只读的限制，是给予在对象创建的时候的，所以自作聪明，在其对象创建中忽略该属性，后续再赋值也是会报错的。**
 
-### 数值
+### 数组
 
 在 TypeScript 中，数组类型有多种定义方式。
 
@@ -310,6 +310,454 @@ interface NumberArray {
 }
 let fibonacci: NumberArray = [1, 1, 2, 3, 5];
 ```
+
+当然这种方式不推荐使用，这会引起他人的困惑，小题大做。
+
+结合`any`类型可以使得数组中出现任意类型，而不至于限制死类型：
+
+```typescript
+let list1: any[] = ['zssaer', 22, { website: 'https://zssaer.cn' }];
+let list2: Array<any> = ['zssaer', 22, { website: 'https://zssaer.cn' }];
+```
+
+### 函数
+
+众所周知，[函数是JavaScript重要的一部分](https://llh911001.gitbooks.io/mostly-adequate-guide-chinese/content/ch2.html#为何钟爱一等公民)，那么在TypeScript中函数也一样。
+
+在JS中定义函数的方式主要为两种，函数声明（Function Declaration）和函数表达式（Function Expression）。
+
+```js
+// 函数声明（Function Declaration）
+function sum(x, y) {
+    return x + y;
+}
+
+// 函数表达式（Function Expression）
+let mySum = function (x, y) {
+    return x + y;
+};
+```
+
+在TS的函数就和其他语言一样，也需要相应类型约束，主要表现在输入参数类型、输出值类型上。
+
+```ts
+// Function Declaration
+function sum(x: number, y: number): number {
+    return x + y;
+}
+// Function Expression
+let sum: (x: number, y: number) => number = function (x: number, y: number): number {
+    return x + y;
+}
+```
+
+这里的函数表达式，有点特别，其中`=>` 与ES6的`=>`的作用不一样。
+
+ES6中叫做箭头函数，主要用作简化回调`return`的写法,直接回调。或者简化结构。可以参考 [ES6 中的箭头函数](http://es6.ruanyifeng.com/#docs/function#箭头函数)。
+
+```javascript
+// ES6箭头函数
+var sum = (num1, num2) => num1 + num2;
+// 等同于
+var sum = function(num1, num2) {
+  return num1 + num2;
+};
+```
+
+而TS的`=>`则主要是用作函数的定义，左边是输入类型，需要用括号括起来，右边是输出类型。
+
+在TS中除了直接定义函数外，还可以使用接口定义函数，这或许有点难以理解：
+
+```ts
+interface SearchFunc {
+    (source: string, subString: string): boolean;
+}
+
+let mySearch: SearchFunc;
+mySearch = function(source: string, subString: string) {
+    return source.search(subString) !== -1;
+}
+```
+
+采用函数表达式结合接口定义函数的方式时，对等号左侧进行类型限制，可以保证以后对函数名赋值时保证参数个数、参数类型、返回值类型不变。
+
+上述定义的函数的输入参数都是固定的，在使用函数的时候，不能缺少响应的参数。有时对于输入参数也不必要这么苛刻，可以在定义时也使用可选参数。
+
+```ts
+function buildName(firstName: string, lastName?: string) {
+    if (lastName) {
+        return firstName + ' ' + lastName;
+    } else {
+        return firstName;
+    }
+}
+```
+
+如果可选参数在函数使用时未必 输入的话，那么函数内部处理中，这个可选参数将会以undefined值出现。利用这点可以在函数内部进行判断，从而实现各种要求。
+
+当然，**在函数定义时，输入的 可选函数必须在所有正常函数定义后定义，否则会报错。**
+
+ES6中，允许函数定义中设置入参的默认值，这点在TypeScript中也被允许：
+
+```ts
+function buildName(firstName: string, lastName: string = 'Cat') {
+    return firstName + ' ' + lastName;
+}
+```
+
+ES6中，还允许定义函数时设置 入参接受其他参数（rest参数），利用`...函数名`表示。当然在TS中这个其他函数 也可以使用一个数组类型来定义：
+
+```ts
+function push(array: any[], ...items: any[]) {
+    items.forEach(function(item) {
+        array.push(item);
+    });
+}
+```
+
+**函数定义时，rest参数只能位于最后一个参数。**
+
+TypeScript中，函数允许根据内部逻辑，返回多种类型的返回值（利用联合类型），这种方式被称为*重载*。
+
+```ts
+function reverse(x: number | string): number | string | void {
+    if (typeof x === 'number') {
+        return Number(x.toString().split('').reverse().join(''));
+    } else if (typeof x === 'string') {
+        return x.split('').reverse().join('');
+    }
+}
+```
+
+### 声明文件
+
+#### 什么是TS声明文件
+
+在进行TS编写时，常常遇见如下情况：
+
+> 使用第三方库
+>
+> 需要使用一个参数，但这个参数定义在其他文件下
+
+这时你就会发现，你不能在你的TS文件下随便使用外部库了，因为你按常规的方式引入进来后，TS会疯狂的报错，原因是TS不知道这个外部数据时是什么类型。这一点在JS修改为TS文件时的时候尤其明显。
+
+这时你需要创建一个TS声明文件，用来声明XXX是什么类型，这样TS才能正常识别。
+
+所谓TS声明文件，就是以`.d.ts`为后缀的文件。
+
+一般来说，TS 会解析项目中所有的 `*.ts` 文件，当然也包含以 `.d.ts` 结尾的文件。所以当我们将 声明文件`xxx.d.ts` 放到项目中时，其他所有 `*.ts` 文件就都可以获得 到这个声明文件下 的类型定义了。
+
+TS声明文件不仅用作与对其他外部JS文件的定义，也用作与对自己的全局定义，相当于一个全局文件，在内部定义一个变量，那么在自己的项目中所有TS文件都可以直接使用。
+
+#### 定义TS声明文件
+
+比如在项目中定义一个全局接口，在项目中创建一个`.d.ts`后缀文件：
+
+```typescript
+// src/index.d.ts
+interface inputfile{
+    fileName:string
+    filedir:string
+}
+// src/index.ts
+function getFile(file:inputfile):void{
+    ...
+}
+```
+
+`declare` 表示全局声明，它有很多种可声明的类型：
+
+- declare var : 声明全局变量
+- declare function：声明全局函数
+- declare class：声明全局类
+- declare enum：声明全局枚举
+- declare namespace：声明全局对象（含有子属性）
+- interface：声明全局接口
+- declare module：声明全局模块
+
+**注意interface接口的全局声明，前面没有declare。**
+
+需要注意的是，**声明语句中只能定义类型，即使是全局函数也一样，切勿在声明语句中定义具体的实现。**
+
+其中`namespace`是 TS 早期时为了解决模块化而创造的关键字，中文称为命名空间。
+
+由于历史遗留原因，在早期还没有 ES6 的时候，TS 提供了一种模块化方案，使用 `module` 关键字表示内部模块。但由于后来 ES6 也使用了 `module` 关键字，TS 为了兼容 ES6，使用 `namespace` 替代了自己的 `module`，更名为命名空间。但随着 ES6 的广泛应用，现在已经不建议再使用 TS 中的 `namespace`，而推荐使用 ES6 的模块化方案了，故我们不再需要学习 `namespace` 的使用了。
+
+虽然`namespace` 被淘汰了，但是在声明文件中，`declare namespace` 还是比较常用的，它用来表示全局变量是一个对象，包含很多子属性。
+
+比如 `jQuery` 是一个全局变量，它是一个对象，提供了一个 `jQuery.ajax` 方法可以调用，那么就应该使用 `declare namespace jQuery` 来声明这个拥有多个子属性的全局变量：
+
+```ts
+// src/jQuery.d.ts
+declare namespace jQuery {
+    function ajax(url: string, settings?: any): void;
+}
+// src/index.ts
+jQuery.ajax('/api/get_something');
+```
+
+看上去是不是和定义全局class一样，当然除了一层的之外，`namespace`是可以在内部迭代的：
+
+```ts
+// src/jQuery.d.ts
+declare namespace jQuery {
+    function ajax(url: string, settings?: any): void;
+    namespace fn {
+        function extend(object: any): void;
+    }
+}
+// src/index.ts
+jQuery.ajax('/api/get_something');
+jQuery.fn.extend({
+    check: function() {
+        return this.each(function() {
+            this.checked = true;
+        });
+    }
+});
+```
+
+当然，这里如果Jquery下只使用`fn`下的属性的话，直接可以在写在外层：
+
+```ts
+// src/jQuery.d.ts
+declare namespace jQuery.fn {
+    function extend(object: any): void;
+}
+// src/index.ts
+jQuery.fn.extend({
+    check: function() {
+        return this.each(function() {
+            this.checked = true;
+        });
+    }
+});
+```
+
+当不同类型的声明拥有同样的名称，也不会产生冲突。
+
+```ts
+declare function jQuery(selector: string): any;
+declare namespace jQuery {
+    function ajax(url: string, settings?: any): void;
+}
+```
+
+#### 外部NPM包解决方案
+
+当我们项目引入外部NPM包时，如果该包没有内置声明文件的话，该怎么办？
+
+这时就需要自己为它写声明文件了。由于是通过 `import` 语句导入的模块，所以声明文件存放的位置也有所约束，一般有两种方案：
+
+1. 创建一个 `node_modules/@types/外部项目包名/index.d.ts` 文件，存放 它的 模块的声明文件。这种方式不需要额外的配置，但是 `node_modules` 目录不稳定，代码也没有被保存到仓库中，无法回溯版本，有不小心被删除的风险，故不太建议用这种方案，一般只用作临时测试。
+2. 创建一个 `types` 目录，专门用来管理自己写的声明文件，将它的放到 `types/外部包名/index.d.ts` 中。这种方式需要配置下 `tsconfig.json` 中的 `paths` 和 `baseUrl` 字段。
+
+比如我们导入的是一个hook NPM项目，那么就应该在项目下创建 `types/hook/index.d.ts`文件。
+
+随后在项目下`tsconfig.json`下添加如下内容，定义TS的文件范围：
+
+```json
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "baseUrl": "./",
+        "paths": {
+            "*": ["types/*"]
+        }
+    }
+}
+```
+
+如此配置之后，通过 `import` 导入 `hook ` 的时候，也会去 `types` 目录下寻找对应的模块的声明文件了。
+
+和一般的项目内的声明文件不一样，NPM包的声明文件主要使用导出相关的语句，一般不使用`declare`语句。
+
+npm 包的声明文件与全局变量的声明文件有很大区别。在 npm 包的声明文件中，使用 `declare` 不再会声明一个全局变量，而只会在当前文件中声明一个局部变量。（ps：这也很好理解，不然都用declare的话，导入几百个包后，项目中全局变量岂不是一大堆...）
+
+npm包的常用以下导出语句：
+
+- export 导出变量
+- export namespace 导出（含有子属性的）对象
+- export default ES6 默认导出
+- export = common js的导出模块
+
+`export` 的语法与普通的 ts 中的语法类似，区别仅在于声明文件中禁止定义具体的实现。
+
+比如hook中拥有name, getName, Animal, Directions, Options内容需要使用，那么在其声明文件中：
+
+```ts
+// types/hook/index.d.ts
+export const name: string;
+export function getName(): string;
+export class Animal {
+    constructor(name: string);
+    sayHi(): string;
+}
+export enum Directions {
+    Up,
+    Down,
+    Left,
+    Right
+}
+export interface Options {
+    data: any;
+}
+```
+
+这样项目中导入模块时，就不会因为找不到这些内容的类型而报错了。
+
+```ts
+// src/index.ts
+import { name, getName, Animal, Directions, Options } from 'hook';
+console.log(name);
+let myName = getName();
+let cat = new Animal('Tom');
+let directions = [Directions.Up, Directions.Down, Directions.Left, Directions.Right];
+let options: Options = {
+    data: {
+        name: 'hook'
+    }
+};
+```
+
+上面是导入外部NPM包的时候。
+
+但如果碰巧你要自己创建一个包发布到NPM上的话，你要写一个全局变量声明文件，用作项目的编写使用。又有写一个导出声明文件，用作发布到NPM让其它人项目识别。这样就显得麻烦起来了，其实可以混用 `declare` 和 `export`，让其又为自己作为全局变量，又导出声明。
+
+以上面编写hook项目为例：
+
+```ts
+// types/hook/index.d.ts
+declare const name: string;
+declare function getName(): string;
+declare class Animal {
+    constructor(name: string);
+    sayHi(): string;
+}
+declare enum Directions {
+    Up,
+    Down,
+    Left,
+    Right
+}
+interface Options {
+    data: any;
+}
+export default function foo(): string;
+export { name, getName, Animal, Directions, Options };
+```
+
+这里的`export default`是ES6的默认导出，可以使导入方不再局限使用`{}`来选择而是直接输入任意名称来获取。但**只有 `function`、`class` 和 `interface` 可以直接在声明时默认导出，其他的变量需要先定义出来，再默认导出。**针对这种默认导出，我们一般会将导出语句放在整个声明文件的最前面（这是为了让浏览者更醒目查阅到）：
+
+```ts
+export default Directions;
+
+declare enum Directions {
+    Up,
+    Down,
+    Left,
+    Right
+}
+```
+
+当然 编写导出声明文件时，肯定不会只顾及自己的感受吧，也要考虑下他人使用吧（如果只是自用除外）。你使用ES6这样导入顾然没错，假如他人使用CommonJs导入不就会报错吗？
+
+```typescript
+// es6导入
+import hook from 'xxx/hook'
+// commonjs 导入
+import hook = require('xxx/hook')
+```
+
+对于这种使用 commonjs 规范的库，假如要为它写类型声明文件的话，就需要使用到 `export =` 语法：
+
+```ts
+// types/foo/index.d.ts
+export = foo;
+declare function foo(): string;
+declare namespace foo {
+    const bar: number;
+}
+```
+
+需要注意的是，上例中使用了 `export =` 之后，就不能再写单个导出 `export { bar}` 了。所以需要通过声明合并，使用 `declare namespace foo` 来将 `bar`合并，变相导出。
+
+#### NPM包中扩展全局变量
+
+上面说了，在NPM包中的声明文件只有导出声明是有效地，NPM包中的全局变量声明是不会对项目产生作用的。
+
+那么如果你在编写一个准备发布到NPM的插件时，想给引用者（即安装此包）的项目中带来一些你的插件上的全局变量（即拓展他们的全局变量）怎么办？
+
+TS中拥有一个`declare global`语句，它可以实现这样的效果：
+
+```ts
+// hook包中的types/hook/index.d.ts
+declare global {
+    interface String {
+        prependHello(): string;
+    }
+}
+export {};
+
+// src/index.ts
+'bar'.prependHello();
+```
+
+注意即使此声明文件不需要导出任何东西，仍然需要导出一个空对象，用来告诉编译器这是一个模块的声明文件，而不是一个全局变量的声明文件。
+
+#### 声明文件依赖导入（模块插件）
+
+声明文件中，可以导入其他声明文件中的类型。比如在自己的项目中重新扩展原有的导出模块声明：
+
+```ts
+// types/moment-plugin/index.d.ts
+import * as moment from 'moment';
+
+declare module 'moment' {
+    export function foo(): moment.CalendarKey;
+}
+
+// src/index.ts
+import * as moment from 'moment';
+import 'moment-plugin';
+moment.foo();
+```
+
+在上面例子中，我们声明了一个自己的moment模块，内部使用了 外部的一个类型。相当于我们在其moment导出拓展了一些内容，导入时需要在额外导入 这个声明文件，否则会报错。
+
+#### 自动生成声明文件
+
+如果本身项目使用的TS，那么对于自己的项目代码在进行编译的时候，可以自动生成声明文件。
+
+方法就是在`tsconfig.json`文件下面添加`declaration` 选项。
+
+```json
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "outDir": "lib",
+        "declaration": true,
+    }
+}
+```
+
+### 内置对象类型
+
+TS除了内置了一些常用的原始数据类型以外，还内置了一些其他的对象类型，方便编写使用。
+
+TS拥有ECMAScript定义的标准类型：`Boolean`、`Error`、`Date`、`RegExp` 等。更多的内置对象，可以查看 [MDN 的文档](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects)。
+
+TS还定义了DOM、BOM类型：`Document`、`HTMLElement`、`Event`、`NodeList` 等：
+
+```ts
+let body: HTMLElement = document.body;
+let allDiv: NodeList = document.querySelectorAll('div');
+document.addEventListener('click', function(e: MouseEvent) {
+  // Do something
+});
+```
+
+
 
 
 
