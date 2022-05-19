@@ -32,6 +32,60 @@ TypeScript 的拥有两个最重要的特性——类型系统、适用于任何
 
   因为TS是基于类型的语言，所以在IDE编写TS时，会拥有补全提示功能，非常便于编程。在VSCode中编写JS文件时，弹出的代码补全也是基于TS语言服务实现的。
 
+## 项目中使用TypeScript
+
+目前各个流行框架已经支持了TypeScript了，如React、Vue3等等。直接创建它们的脚手架后，就可以直接使用TypeScript编码了，无需额外配置。
+
+而对于普通的项目来说，比如WebPack项目来说，需要给项目安装TypeScript插件：
+
+```bash
+// npm安装
+npm install -dev typescript 
+// yarn安装
+yarn add -D typescript 
+```
+
+安装后，即可在项目中编写TS文件了。使用 TypeScript 编写的文件以 `.ts` 为后缀。
+
+TypeScript项目需要编译为JS文件才能运行，所以可以手动编译下Ts文件看看：
+
+```bash
+tsc TS文件路径
+```
+
+便会在TS文件后生成一个编译后的JS文件。
+
+当然，项目中自然不能这样一个一个去编译单个文件，TS在项目中还需要配置一个配置文件`tsconfig.json`。
+
+在项目根目录下创建一个`tsconfig.json`文件，它表示项目的TS配置文件。`tsconfig.json`通过在没有输入文件的情况下调用 tsc，在这种情况下，编译器会从当前目录开始搜索文件，并继续沿父目录链向上，从而达到将整个项目的TS文件全部编译的效果。
+
+它的大致内容如下：
+
+```json
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "allowJs": true,
+    // 输出 Source Map 方便调试
+    "sourceMap": true 
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts","src/**/*.d.ts","src/**/*.tsx"],
+  // 不编译这些目录里的文件
+  "exclude": [
+    "node_modules"
+  ]
+}
+```
+
+其中`include`内表示了存在ts的地址，TypeScript在受到tsc指令后，会以里面的地址来进行查询。
+
+而`compilerOptions`下的`outDir`为tsc编译后导出的js文件的地址。其中`sourceMap`打开的话，生成的JS文件将会按照原码文件规范，方便浏览器的调试（不然的话，生成的JS非常杂乱，在浏览器上难以找到原处代码）。
+
+这里的内容很多，具体不做过多描述，详细可查看https://www.typescriptlang.org/tsconfig
 
 ## 基础内容
 
