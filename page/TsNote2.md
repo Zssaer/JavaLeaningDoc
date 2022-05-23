@@ -282,5 +282,139 @@ class Cat extends Animal {
 }
 ```
 
+### 泛型
 
+泛型（Generics）是指在定义函数、接口或类的时候，不预先指定具体的类型，而在使用的时候再指定类型的一种特性。
+
+比如:
+
+```ts
+function createArray(length: number, value: any): Array<any> {
+    let result = [];
+    for (let i = 0; i < length; i++) {
+        result[i] = value;
+    }
+    return result;
+}
+
+createArray(3, 'x'); // ['x', 'x', 'x']
+```
+
+上述`createArray`函数虽然是正常编译，没有什么问题。但是它其实并没有准确的定义返回值的类型，而是投机取巧的使用了`Array<any>` 类型，对数组内部的类型并没有特别规定。对于这种情况其实可以使用泛型方式来确认数组内部类型：
+
+```ts
+function createArray<T>(length: number, value: T): Array<T> {
+    let result: T[] = [];
+    for (let i = 0; i < length; i++) {
+        result[i] = value;
+    }
+    return result;
+}
+
+createArray<string>(3, 'x'); // ['x', 'x', 'x']
+```
+
+在函数类型后添加了 `<T>`，其中 `T` 用来指代任意输入的类型，在输入 `value: T` 和输出 `Array<T>` 中即可使用了。这时TS就会根据输入的类型来赋值到输出的上面了。
+
+当硬件内部有指定类型函数特有的方法被执行的时候，单单靠纯 泛型就有问题了。
+
+比如：
+
+```ts
+function loggingIdentity<T>(arg: T): T {
+    console.log(arg.length);
+    return arg;
+}
+// index.ts(2,19): error TS2339: Property 'length' does not exist on type 'T'.
+```
+
+这儿的`length`属性只有在特定的类型上才存在，所以对于泛型，也需要加以约束。在 泛型T后使用 extends继承 上对应的 接口，即可对泛型进行约束：
+
+```ts
+interface Lengthwise {
+    length: number;
+}
+
+function loggingIdentity<T extends Lengthwise>(arg: T): T {
+    console.log(arg.length);
+    return arg;
+}
+```
+
+上面这个 泛型就被约束为 只能输入number 类型了。
+
+### ESLint代码检测
+
+代码检查主要是用来发现代码错误、统一代码风格。主要是对代码的编写规范进行规定，当在多人团队中尤其重要。
+
+有人会觉得，JavaScript 非常灵活，所以需要代码检查。而 TypeScript 已经能够在编译阶段检查出很多问题了，为什么还需要代码检查呢？
+
+因为 TypeScript 关注的重心是类型的检查，而不是代码风格。当团队的人员越来越多时，同样的逻辑不同的人写出来可能会有很大的区别：
+
+- 缩进应该是四个空格还是两个空格？
+- 是否应该禁用 `var`？
+- 接口名是否应该以 `I` 开头？
+- 是否应该强制使用 `===` 而不是 `==`？
+
+在自己项目中安装ESLint：
+
+```bash
+$ npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/parser
+$ yarn add -D eslint @typescript-eslint/parser @typescript-eslint/parser
+```
+
+其中`@typescript-eslint/parser`和`@typescript-eslint/eslint-plugin`使用相同的版本号很重要。
+
+在项目中安装后，ESLint 需要一个配置文件来决定对哪些规则进行检查，配置文件的名称一般是 `.eslintrc.js` 或 `.eslintrc.json`。当运行 ESLint 的时候检查一个文件的时候，它会首先尝试读取该文件的目录下的配置文件，然后再一级一级往上查找，将所找到的配置合并起来，作为当前被检查文件的配置。
+
+在项目的根目录下创建一个 `.eslintrc.js`，内容如下：
+
+```js
+module.exports = {
+    parser: '@typescript-eslint/parser',
+    plugins: ['@typescript-eslint'],
+    rules: {
+        // 禁止使用 var
+        'no-var': "error",
+        // 优先使用 interface 而不是 type
+        '@typescript-eslint/consistent-type-definitions': [
+            "error",
+            "interface"
+        ]
+    }
+}
+```
+
+有了ESLint配置文件后，ESLint就可以运作起来了，对于任意一个TS文件来测试看看：
+
+```bash
+./node_modules/.bin/eslint index.ts
+```
+
+这里使用的是内部的ESLint，不是全局的。对于这个检测，可以把它集成到package内部作为npm script来随时运行：
+
+```json
+{
+    "scripts": {
+		"eslint": "./node_modules/.bin/eslint src --ext .ts"
+	}
+}
+```
+
+这里使用`src --ext .ts`来检查项目`src`下的所有后缀为`.ts`文件。
+
+当然，除了默认的检测脚本来显示错误，IDE能够直接显示错误是最方便的事。在VSCode中安装ESLint插件即可。但是ESLint默认的插件设置中不会默认检查`.ts`后缀的文件，所有需要「文件 => 首选项 => 设置 => 工作区」中（也可以在项目根目录下创建一个配置文件 `.vscode/settings.json`），添加以下配置：
+
+```json
+{
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript"
+    ],
+    "typescript.tsdk": "node_modules/typescript/lib"
+}
+```
+
+这样VSCode的ESLint插件就能成功检测TS文件格式了。
 
