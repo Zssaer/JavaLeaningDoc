@@ -1,4 +1,6 @@
-# TypeScript
+# **渐进式学习TypeScript(上篇)**
+
+<img src="../picture/tslogo.png" style="zoom:200%;" />
 
 ## 何为TypeScript
 
