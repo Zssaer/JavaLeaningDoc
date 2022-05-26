@@ -541,6 +541,63 @@ def person(name, age, *args, city, job):
 
 
 
+### 函数类型
+
+在Python 3.5版本及之后，Python函数支持函数的属性、返回类型。
+
+```python
+def greeting(name: str) -> str:
+    return 'Hello ' + name
+```
+
+在输入参数名后使用`:数据类型`即可声明该参数的类型。在函数的换行冒号前 使用`->数据类型`即可定义该函数的返回值类型。
+
+
+
+与其他语言的不同的是，Python支持为属性、返回值 定义两种类型，表示其会出现两种类型情况：
+
+```python
+def mytest(a:str or int)->str or int:
+　　return a*2
+```
+
+也可以使用Python内置库typing 中Union函数来表示，效果是一样的：
+
+```python
+from typing import Union
+def mytest(a:Union[str,int])->Union[str,int]:
+　　return a*2
+```
+
+注意的是：**Python 运行时不强制执行函数和变量类型注释。它们可以被第三方工具使用，例如类型检查器、IDE、linter 等。**
+
+也就是说Python的类型定义只是为了IDE或者其他框架来进行动态判断而已。
+
+Python中常用类型有：
+
+- int,long,float: 整型,长整形,浮点型
+- bool,str: 布尔型，字符串类型
+- List, Tuple, Dict, Set:列表，元组，字典, 集合
+- Iterable,Iterator:可迭代类型，迭代器类型
+- Generator：生成器类型
+
+其中高级类型需要引用typing包内容。
+
+除了上述的基本类型外，Python支持创建特殊的复杂类型：
+
+```python
+from typing import List
+# 定义一个Vector类型，它是List，内部元素只能为浮点数
+Vector = List[float]
+
+def scale(scalar: float, vector: Vector) -> Vector:
+    return [scalar * num for num in vector]
+
+new_vector = scale(2.0, [1.0, -4.2, 5.4])
+```
+
+
+
 ### 参数顺序
 
 在Python中定义函数，可以用必选参数、默认参数、可变参数、关键字参数和命名关键字参数，这5种参数都可以组合使用。
