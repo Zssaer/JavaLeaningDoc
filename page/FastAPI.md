@@ -151,6 +151,169 @@ async def get2(id: int = 10,limit:Union[int, None] = None):
     ...
 ```
 
+除了查询参数的可选设置，还可以设置响应的检验：
+
+```python
+from fastapi import FastAPI, Query
+
+@app.get("/items/")
+async def read_items(q: Union[str, None] = Query(default=None, max_length=50)):
+    results = {"items": [{"item_id": "Foo"}, {"item_id": "Bar"}]}
+    if q:
+        results.update({"q": q})
+    return results
+```
+
+​	这里的`q: Union[str, None] = Query(default=None, max_length=50)`，表示这个参数时一个可选参数并且最大长度为50。除了Query中有 max_length外，还拥有最小值检验`min_length`。
+
+也可以在正则表达式检验：
+
+```python
+q: Union[str, None] = Query(
+        default=None, regex="^fixedquery$"
+)
+```
+
+上述Query中都带有default，表明这个是可选输入参数。对于必须参数的话，不要带有default：
+
+```python
+q: str = Query(min_length=3)
+```
+
+除此之外，Query还支持下面这些内容定义：
+
+* default：参数的默认值。
+* title：参数的标题。用作在 OpenAPI 和自动 API 文档用户界面中作为 API 的标题/名称使用。
+* description：参数的说明。用作在 OpenAPI 和自动 API 文档用户界面中对该参数的描述。
+* gt：要求参数大于这个值，必须为数字。
+
+
+
+#### POST方法请求
+
+如上所描述，FastAPI的POST方法请求使用的`@app.post()`注解。同样PUT方法使用`@app.put()`注解。
+
+```python
+@app.post("/items/")
+async def create_item(name: str,description: Union[str, None] = None):
+    ...
+    return ...
+```
+
+#### 请求模型
+
+在项目中通常是将请求内容封装为请求模型，当做请求的模型。
+
+要将其请求参数组装为模型的话，这个请求模型要继承`pydantic` 的 `BaseModel`。
+
+```python
+from typing import Union
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+class Item(BaseModel):
+    name: str
+    description: Union[str, None] = None
+    price: float
+    tax: Union[float, None] = None
+
+app = FastAPI()
+
+@app.post("/items/")
+async def create_item(item: Item):
+    item_dict = item.dict()
+    if item.tax:
+        price_with_tax = item.price + item.tax
+        item_dict.update({"price_with_tax": price_with_tax})
+    return item_dict
+```
+
+在请求函数内部，还可以利用`dict`函数提取到对应dict，然后使用update可以向提交的请求体中添加内容。
+
+**注意：你不能使用 `GET` 操作（HTTP 方法）发送请求体。**
+
+要发送数据，你必须使用下列方法之一：`POST`（较常见）、`PUT`、`DELETE` 或 `PATCH`。
+
+
+
+对于同时请求链接中拥有路径参数时，FastAPI 将识别出与路径参数匹配的函数参数应**从路径中获取**，而声明为 Pydantic 模型的函数参数应**从请求体中获取**。
+
+```python
+class Item(BaseModel):
+    name: str
+    description: Union[str, None] = None
+    price: float
+    tax: Union[float, None] = None
+
+app = FastAPI()
+
+@app.put("/items/{item_id}")
+async def create_item(item_id: int, item: Item):
+    return {"item_id": item_id, **item.dict()}
+```
+
+我们除了定义请求模型之外，通常情况下还需要对每个参数在接口文档中进行说明，否则接口文档中的参数很难被其他人所明白。
+
+对请求模型的参数使用 Pydantic 的 `Field` 即可对参数进行声明校验和元数据等。
+
+```python
+class Item(BaseModel):
+    name: str
+    description: Union[str, None] = Field(
+        default=None, title="说明", max_length=300
+    )
+    price: float = Field(gt=0, description="这个金额必须大于0!")
+    tax: Union[float, None] = None
+```
+
+使用Fileld就和前面提到的Query一样。
+
+#### GET查询参数拼装
+
+前面提到了创建BaseModel作为请求体可以大幅减少请求重复使用的问题，以及规范化请求。但是也提到了只能使用到POST相关的请求接口上，GET相关请求无法使用。
+
+对于GET请求的请求体创建使用，官方称之为使用依赖注入机制。它有2种实现方式：
+
+* 第一种实现方法：依赖项就是一个函数，且可以使用与*路径操作函数*相同的参数，它返回对应的GET查询请求的内容：
+
+  ```python
+  async def common_parameters(
+      q: Union[str, None] = None, skip: int = 0, limit: int = 100
+  ):
+      return {"q": q, "skip": skip, "limit": limit}
+  
+  
+  @app.get("/items/")
+  async def read_items(commons: dict = Depends(common_parameters)):
+      return commons
+  ```
+
+  这里创建了一个`common_parameters`函数当做依赖项。在请求接口的输入参数中输入dict，使用Depends函数。
+
+  这样这个请求接口输入参数就会有 依赖项返回的内容了。
+
+* 第二种实现方法：创建一个请求类，继承BaseModel，内部参数遵循查询参数写法：
+
+  ```python
+  class Student(BaseModel):
+      name: str
+      age: Union[int, None] = None
+  
+  
+  @app.get(&quot;/&quot;)
+  def read_root(student: Student = Depends()):
+      return {&quot;name&quot;: student.name, &quot;age&quot;: student.age}是
+  ```
+
+  直接在GET请求入参下输入对应请求类，默认值上使用`Depends()`。这样既可将其请求类以查询参数方式进行工作。
+
+
+
+
+
+
+
 
 
 
