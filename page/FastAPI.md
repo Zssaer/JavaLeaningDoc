@@ -255,6 +255,8 @@ async def create_item(item_id: int, item: Item):
 
 我们除了定义请求模型之外，通常情况下还需要对每个参数在接口文档中进行说明，否则接口文档中的参数很难被其他人所明白。
 
+##### 声明效验
+
 对请求模型的参数使用 Pydantic 的 `Field` 即可对参数进行声明校验和元数据等。
 
 ```python
@@ -269,7 +271,61 @@ class Item(BaseModel):
 
 使用Fileld就和前面提到的Query一样。
 
-#### GET查询参数拼装
+##### 高级类型定义
+
+在创建请求体时，除了使用常规的基本类型外，还可以使用List类型、Set类型：
+
+```python
+class Item(BaseModel):
+    tags1: List[str] = []
+    tags2: Set[str] = set()
+    tags3: Dict[int, float] = {}
+```
+
+不只是请求体，对于请求函数的单独入参也可以这样声明。
+
+还可以接受另外一个模型，用来嵌套：
+
+```python
+class Image(BaseModel):
+    url: str
+    name: str
+
+
+class Item(BaseModel):
+    name: str
+    image: Union[Image, None] = None
+```
+
+#### 声明示例
+
+对于接口文档，我们可以对请求体的内容声明一个示例，用作在接口文档上示例。
+
+只需要在请求体模型内定义一个`Config`类，在其`schema_extra`中定义“example”：
+
+```python
+class Item(BaseModel):
+    name: str
+    description: Union[str, None] = None
+    price: float
+    tax: Union[float, None] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "Foo",
+                "description": "A very nice Item",
+                "price": 35.4,
+                "tax": 3.2,
+            }
+        }
+```
+
+
+
+
+
+#### GET查询的请求体参数拼装
 
 前面提到了创建BaseModel作为请求体可以大幅减少请求重复使用的问题，以及规范化请求。但是也提到了只能使用到POST相关的请求接口上，GET相关请求无法使用。
 
@@ -301,12 +357,136 @@ class Item(BaseModel):
       age: Union[int, None] = None
   
   
-  @app.get(&quot;/&quot;)
+  @app.get("/")
   def read_root(student: Student = Depends()):
       return {&quot;name&quot;: student.name, &quot;age&quot;: student.age}是
   ```
 
   直接在GET请求入参下输入对应请求类，默认值上使用`Depends()`。这样既可将其请求类以查询参数方式进行工作。
+
+### 数据类型
+
+FastAPI利用Pydantic来实现类型检验。它支持多种数据类型，其中数据有一些常用的数据类型：
+
+* int
+* float
+* str
+* bool
+
+除此之外，还有众多其他数据类型：
+
+* UUID：一种标准的 "通用唯一标识符" ，在许多数据库和系统中用作ID。在请求和响应中将以 `str` 表示。
+* datetime.datetime：在请求和响应中将表示为 ISO 8601 时间格式的 `str` ，比如: `2008-09-15T15:53:00+05:00`。
+  * datetime.date：在请求和响应中将表示为 ISO 8601 格式的 `str` ，比如: `2008-09-15`。
+* Decimal：在请求和相应中被当做 `float` 一样处理。
+
+更多额外的内置数据类型，可查询Pydantic文档https://pydantic-docs.helpmanual.io/usage/types/
+
+### 请求头部
+
+要实现对FastAPI接口的请求头部进行发送相关内容的话，需要导入fastapi包下的Header函数。
+
+在接口参数下，定义需要对头部定义参数即可，如下：
+
+```python
+from typing import Union
+from fastapi import FastAPI, Header
+
+@app.get("/header/")
+async def read_items(admin_token: Union[str, None] = Header(default=None)):
+    return {"admin-token": admin_token}
+```
+
+注意：大多数标准的headers用 "连字符" 分隔，也称为 "减号" (`-`)。
+
+但是像 `user-agent` 这样的变量在Python中是无效的。
+
+因此, 默认情况下, **`Header` 将把参数名称的字符从下划线 (`_`) 转换为连字符 (`-`) 来提取并记录 headers。**
+
+同时，HTTP headers 是大小写不敏感的，因此，因此可以使用标准Python样式(也称为 "snake_case")声明它们。因此，您可以像通常在Python代码中那样使用 `user_agent` ，而不需要将首字母大写为 `User_Agent` 或类似的东西。
+
+
+
+### 响应模型
+
+前面我们创建了请求模型，它是用作封装请求接口的。
+
+而对于有些响应返回的类型我们在项目中通常也会将其封装，称为响应模型。
+
+它的创建方法和请求模型一样，都是继承与BaseModel类。
+
+```python
+class ResultItem(BaseModel):
+    name: str
+    description: Union[str, None] = None
+    price: float
+    tax: float = 10.5
+```
+
+当它直接被用作返回时，也不会被有检验效果。需要在对应请求接口注解上的response_model进行配置：
+
+```python
+@app.post("/items/", response_model=Item)
+async def create_item(xxx:xxx):
+	...
+	# item是一个Item类的实例对象
+    return item
+```
+
+有时，为了简便，通常用一个BaseModel既做 请求模型 又做 响应模型。但出现一个隐私问题，比如某个BaseModel中存在一些隐私数据的话，像用户注册时输入的密码，直接返回整个相同的BaseModel是十分不安全的。
+
+对于隐私数据，可以在接口请求注解上使用`response_model_exclude`来排除某个指定的参数：
+
+```python
+class Item(BaseModel):
+    name: str
+    description: Union[str, None] = None
+    price: float
+    tax: float = 10.5
+
+
+items = {
+    "foo": {"name": "Foo", "price": 50.2},
+    "bar": {"name": "Bar", "description": "The Bar fighters", "price": 62, "tax": 20.2},
+    "baz": {
+        "name": "Baz",
+        "description": "There goes my baz",
+        "price": 50.2,
+        "tax": 10.5,
+    },
+}
+
+@app.get("/items/{item_id}/public", response_model=Item, response_model_exclude={"tax"})
+async def read_item_public_data(item_id: str):
+    return items[item_id]
+```
+
+返回的响应数据不一定需要相同类，FastAPI的响应模型只是输出内部对应的数据：
+
+```python
+class UserIn(BaseModel):
+    username: str
+    password: str
+    full_name: Union[str, None] = None
+
+
+class UserOut(BaseModel):
+    username: str
+    full_name: Union[str, None] = None
+
+
+@app.post("/user/", response_model=UserOut)
+async def create_user(user_in: UserIn):
+    return user_in
+```
+
+上述返回的类型在函数内部是一个 UserIn对象结构，但是返回结果为 UserOut对象结构。
+
+
+
+
+
+
 
 
 
