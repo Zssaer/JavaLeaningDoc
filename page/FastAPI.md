@@ -753,7 +753,540 @@ def update_item(id: str, item: Item):
 
 FastAPI 在 `fastapi.security` 模块中为每个安全方案提供了几种工具，这些工具简化了这些安全机制的使用方法。
 
-为此我们相信学习使用OAuth2方式进行安全认证：
+为此我们学习使用OAuth2方式进行安全认证：
+
+实现要实现启动OAuth2认证前，让我们来看一些小的概念：
+
+#### OAuth2
+
+OAuth2是一个规范，它定义了几种处理身份认证和授权的方法。
+
+它是一个相当广泛的规范，涵盖了一些复杂的使用场景。
+
+它包括了使用「第三方」进行身份认证的方法。
+
+这就是所有带有「使用 Facebook，Google，Twitter，GitHub 登录」的系统背后所使用的机制。
+
+#### 实现OAuth2
+
+使用“表单数据”来发送`username`and `password`，**OAuth2**来判断用户输入的账户和密码是否正确。如果正确就返回Token给请求方，请求方再用这个Token给其它需要认证的接口来进行操作。
+
+由于这里涉及使用到表单数据，所以就项目中需要安装[`python-multipart`](https://andrew-d.github.io/python-multipart/).
+
+在fastapi.security包中导入OAuth2PasswordBearer：
+
+```python
+from fastapi import Depends, FastAPI
+from fastapi.security import OAuth2PasswordBearer
+
+app = FastAPI()
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+@app.get("/items/")
+async def read_items(token: str = Depends(oauth2_scheme)):
+    return {"token": token}
+```
+
+这里的tokenUrl 则是定义其认证头部名，这里定义为token。
+
+这样项目就完成了初步安全加密了，运行后发现：
+
+![](../picture/image01.png)
+
+您的*路径操作*上右上角多了一个小锁，您可以单击它，它有一个小授权表格来输入一个`username`和`password`（和其他可选字段），表示用来授权登录操作。
+
+当然这里由于只设置了 认证要求，但没设置认证方法，所以这里并不能完成认证。
+
+
+
+#### 设置认证方法
+
+上面只是展示了开启OAuth2认证的步骤，但是并没有编写认证方法。这里来进行编写认证方法：
+
+所谓认证方法，就是用户认证登录的操作，在FastAPI的OAuth2认证中，默认以`/token`作为其认证方法路径，也就是说当用户登录时上传的路径其实是这个路径。
+
+OAuth2的认证方法入参参数类型为`OAuth2PasswordRequestForm`，所以首先，导入 `OAuth2PasswordRequestForm`，然后在 `token` 的*路径操作*中通过 `Depends` 将其作为依赖项使用。
+
+```python
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    ...
+```
+
+`OAuth2PasswordRequestForm` 是一个类依赖项，声明了如下的请求表单：
+
+- `username`。
+- `password`。
+- 一个可选的 `scope` 字段，是一个由空格分隔的字符串组成的大字符串。
+- 一个可选的 `grant_type`.
+- 一个可选的 `client_id`
+- 一个可选的 `client_secret`
+
+一般情况下，用户只需要传入`username`和`password`即可。
+
+认证方法中内容则是 对于用户输入的信息进行认证。一般步骤有：
+
+1. 根据用户输入的`username`在数据库中寻找是否存在，如果存在则继续，如果不存在就返回输入错误给用户。
+2. 根据用户输入的`password`来与 数据库查询到的用户进行对比，如果相同则登录成功，返回用户信息。如果不相同，则返回输入错误给用户。
+
+当然这个步骤在实际生产环境下禁止使用，因为里面的信息并不是加密信息，实际环境下数据库中不可能用明文存储密码的。当然这是下部分考虑的，目前先看下简单的操作。
+
+这里我们用dict来创建一个"假的数据库"：
+
+```python
+fake_users_db = {
+    "johndoe": {
+        "username": "johndoe",
+        "full_name": "John Doe",
+        "email": "johndoe@example.com",
+        "hashed_password": "fakehashedsecret",
+        "disabled": False,
+    },
+    "alice": {
+        "username": "alice",
+        "full_name": "Alice Wonderson",
+        "email": "alice@example.com",
+        "hashed_password": "fakehashedsecret2",
+        "disabled": True,
+    },
+}
+```
+
+这里的拥有两个用户，其中`hashed_password`字段存储的是经过加密的密码（当然这里只是在密码前加了fakehashed，实际上不可能这样）。
+
+
+
+随后我们创建一个用户模型：
+
+```python
+class User(BaseModel):
+    username: str
+    email: Union[str, None] = None
+    full_name: Union[str, None] = None
+    disabled: Union[bool, None] = None
+        
+class UserInDB(User):
+    hashed_password: str        
+```
+
+这个User模型这里主要是用来登录成功返回用户信息的，它跟数据库中的字段是有差别的，没有敏感信息（比如密码），因为我们在登录成功后返回用户信息中，不能直接将密码返回给Response中，这是不安全的。
+
+而UserInDB则是在此阶段多个敏感字段（这里指密码）。
+
+创建完模型后，就可以在认证方法中编写从数据库中获取用户的信息步骤：
+
+```python
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user_dict = fake_users_db.get(form_data.username)
+    if not user_dict:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    user = UserInDB(**user_dict)
+    ...
+```
+
+这儿`UserInDB(**user_dict)`将其获取到的user_dict用户信息内容设置到了UserInDB对象中。
+
+
+
+编写加密方式函数，用作对用户输入的密码进行加密操作：
+
+```python
+def fake_hash_password(password: str):
+    return "fakehashed" + password
+```
+
+在认证方法中将其用户输入的密码与数据库中的密码进行对比，最后返回指定信息即完成认证方法的编写。
+
+```python
+@app.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user_dict = fake_users_db.get(form_data.username)
+    if not user_dict:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    user = UserInDB(**user_dict)
+    hashed_password = fake_hash_password(form_data.password)
+    if not hashed_password == user.hashed_password:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+    return {"access_token": user.username, "token_type": "bearer"}
+```
+
+这里返回的响应必须是一个 JSON 对象。它应该有一个 `token_type`。在我们的例子中，由于我们使用的是「Bearer」令牌，因此令牌类型应为「`bearer`」。并且还应该有一个 `access_token` 字段，它是一个包含我们的访问令牌的字符串。这时FastAPI中的OAuth2的定义规范。
+
+当然对于这个简单的示例，我们将极其不安全地返回相同的 `username` 作为令牌。
+
+
+
+#### 设置认证判断
+
+上面我们编写了认证方法，用户在认证中成功认证后，将返回用户的名称作为 认证口令。
+
+但是这只是认证方法，对于需要认证的 接口而言 并不起作用，因为它们不知道怎么判断是否认证。所以我们还需要编写认证判断的代码。
+
+假设，我们编写了一个`read_users_me` 接口，它需要根据当前认证的用户返回认证用户的信息，如果没有认证，则报错：
+
+```python
+@app.get("/users/me")
+async def read_users_me(...):
+    return current_user
+```
+
+对于这个我们需要编写一个获取当前用户的函数作为依赖项：
+
+```python
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    user = fake_decode_token(token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
+```
+
+它接收一个Token字符串（这里指定了oauth2_scheme依赖项，表明是从头部定义的内容获取），其中fake_decode_token函数为从数据库中获取定义用户信息：
+
+```python
+def get_user(db, username: str):
+    if username in db:
+        user_dict = db[username]
+        return UserInDB(**user_dict)
+
+
+def fake_decode_token(token):
+    # This doesn't provide any security at all
+    # Check the next version
+    user = get_user(fake_users_db, token)
+    return user
+```
+
+实际上和认证方法中的 第一步 是一样的效果。
+
+我们在需要认证的接口上的参数中注入get_current_user这个依赖项即可完成认证判断：
+
+```python
+@app.get("/users/me")
+async def read_users_me(current_user: User = Depends(get_current_active_user)):
+    return current_user
+```
+
+
+
+运行项目，点击「Authorize」按钮。在`username`中输入johndoe，`password`中输入`secret`，点击Authorize登录。
+
+![](../picture/image04.png)
+
+在系统中进行身份认证后，你将看到：
+
+![](../picture/image05.png)
+
+执行 `/users/me` 路径的 `GET` 操作，这时就会返回当前登入的用户信息了。
+
+其实在执行 `/users/me` 路径操作时，OpenAPI文档就已经变相将其口令传入到头部中了，实际前后分离中 前端操作中需要手动在头部中传入登录返回的的口令，才能判断认证。比如这里在OAuth2PasswordBearer中设置的是 token，所以请求头部 就应该有一个“token”头部内容。
+
+#### 实现JWT以及Hash加密认证
+
+前面的案例中只是普通固定字符串加密，在实际生成环境中需要对密码信息等用到Hash加密，否则无法保证安全性。
+
+##### Hash加密
+
+对于Python 实现Hash加密，推荐使用PassLib ，它支持多种Hash加密算法，这里推荐的算法是 「Bcrypt」，所以还需要安装Bcrypt。
+
+```shell
+$ pip install passlib
+$ pip install bcrypt
+```
+
+通过使用passlib.context包的`CryptContext` 函数，我们可以实现加密、解密。
+
+```python
+from passlib.context import CryptContext
+...
+# passlib使用bcrypt算法
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# 判断密码正确性
+# pwd_context.verify接受 一个 未加密密码、一个加密密码，若加密相同则返回真
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+# 加密密码
+def get_password_hash(password):
+    return pwd_context.hash(password)
+```
+
+我们只需要在其前面例子中的认证方法中的进行修改即可实现加密密码认证。
+
+```python
+fake_users_db = {
+    "johndoe": {
+        "username": "johndoe",
+        "full_name": "John Doe",
+        "email": "johndoe@example.com",
+        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+        "disabled": False,
+    }
+}
+
+...
+# 融合数据库获取用户信息 和 密码比对两个操作步骤
+def authenticate_user(fake_db, username: str, password: str):
+    user = get_user(fake_db, username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    ...
+```
+
+除了对密码进行Hash加密之外，在安全上 还需要使用JWT口令作为token的传值。
+
+##### 关于 JWT
+
+JWT全程为JSON Web Tokens。它是一个将 JSON 对象进行编码且没有空格的长字符串的标准。字符串看起来像这样：
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQsswc
+```
+
+它虽然是一段字符串，但是它包含了JSON内容以及一些特殊数据，这些将其反编译后就可以取得。
+
+之所以使用JWT作为返回内容，而不是JSON，是因为它更小，并且可以设置有效时间，当有效时间过期则无法使用，所有具有一定安全性。
+
+整个流程中 我们在登录成功后 将其用户的信息 加密为JWT，然后用户在请求时携带上JWT，再将其解码来判断身份。
+
+##### JWT实现
+
+需要安装 `python-jose` 以在 Python 中生成和校验 JWT 令牌：
+
+```shell
+$ pip install python-jose
+```
+
+其中 `python-jose` 需要一个额外的加密后端 依赖，这里我们使用的是推荐的后端：[cryptography](https://cryptography.io/)。
+
+```shell
+$ pip install cryptography
+```
+
+在生成JWT之前需要一个随机的安全密匙，相当于门锁钥匙，它依赖匹配对应的JWT（门锁）。
+
+要生成一个安全的随机密钥，可使用以下命令：
+
+```shell
+$ openssl rand -hex 32
+```
+
+在项目中定义一个变量 「SECRET_KEY」，然后把它用在里面（这里是随机的内容，不要无脑复制）。
+
+还要创建用于设定 JWT 令牌签名算法的变量 「ALGORITHM」，并将其设置为 `"HS256"`。
+
+以及创建一个设置令牌过期时间的变量。
+
+定义一个将在令牌端点中用于响应的 Pydantic 模型，用作认证后的返回模型。
+
+```python
+from jose import JWTError, jwt
+
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+```
+
+创建一个生成新的访问令牌的工具函数。 
+
+```python
+def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+```
+
+将它用用作在认证成功后的操作中，生成的JWT最后返回到`access_token`中：
+
+```python
+@app.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+```
+
+这里设置JWT中JSON内容含有一个`sub`的键，存储着认证的用户名。
+
+在其认证判断中根据这个JWT来进行解码，获取到认证的用户名：
+
+```python
+class TokenData(BaseModel):
+    username: Union[str, None] = None
+        
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        # JWT解码
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # 获取到JWT中的JSON内容的值
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    # 根据数据库查询这个用户信息    
+    user = get_user(fake_users_db, username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+async def get_current_active_user(current_user: User = Depends(get_current_user)):
+    if current_user.disabled:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+```
+
+
+
+在实现了Hash加密和JWT后，运行整个项目。
+
+像以前一样对应用程序进行认证。
+
+使用如下凭证：
+
+用户名: `johndoe` 密码: `secret`
+
+这时，它返回了一个Token对象，其中access_token字段为JWT内容，将其内容用在`/users/me/` 请求头部上，请求头名为“Authenticate”，便成功返回出认证的用户信息，注意 `Authorization` 首部 还需要 以 `Bearer` 开头。
+
+![](../picture/image10.png)
+
+
+
+### 中间件
+
+FastAPI支持向请求中添加中间件，从而使请求执行前先执行中间件内容，类似于过滤器。
+
+#### 创建中间件
+
+要创建中间件你可以在中间件函数的顶部使用装饰器 `@app.middleware("http")`.
+
+中间件函数接受两个函数：
+
+- `request`.
+
+- 一个函数 `call_next`
+
+   它将接收request作为参数.
+
+  - 这个函数将 `request` 传递给相应的 *路径操作*.
+  - 然后它将返回由相应的*路径操作*生成的 `response`.
+
+简而言之 call_next(request) 相当于等待执行 完请求内容。
+
+比如我们创建一个运行时间计算中间件，它将记录请求 的运行速度，并将其返回到响应的头部。
+
+```python
+from fastapi import FastAPI, Request
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+```
+
+由于call_next(request) 相当于等待执行 完请求内容，所以使用它时务必带上 await。
+
+
+
+### 配置CORS
+
+CORS又叫做 跨域资源共享，是当两个或者多个服务器进行相互请求时获取内容产生的过程。
+
+在前后端分离下 ，前端服务器与后端服务器 有时会不在同一个服务器、同一个端口下，这时默认情况下前端浏览器不会允许请求来自另外一个后端服务器下的接口。要解决它，这个问题就是开发常常谈到的跨域设置。
+
+浏览器在进行请求外部（非本服务器）的请求时就会自动在请求头部上进行加入“Origin”字段，这个字段将被认为请求发起方的来源。
+
+FastAPI中是这样配置跨域设置的：
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = ['*']
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+其中allow_origins表示允许的请求服务器地址，allow_methods、allow_headers表示允许的请求方法和请求头部。
+
+其中`allow_credentials` - 表示指示跨域请求是否支持 cookies。默认是 `False`。另外，允许凭证时 `allow_origins` 不能设定为 `['*']`，必须指定源。
+
+如果它们配置为'*'的话，表示所有条件都能被允许。
+
+但是对于allow_origins设置的话，在一些情况下会固定设置地址，放置他人滥用。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
