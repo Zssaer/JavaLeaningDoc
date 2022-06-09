@@ -1264,6 +1264,287 @@ app.add_middleware(
 
 但是对于allow_origins设置的话，在一些情况下会固定设置地址，放置他人滥用。
 
+### 元数据和文档 URL
+
+你可以在创建 **FastAPI**实例时 自定义几个元数据配置。
+
+```python
+description = """
+ChimichangApp API helps you do awesome stuff. 🚀
+
+## Items
+
+You can **read items**.
+
+## Users
+
+You will be able to:
+
+* **Create users** (_not implemented_).
+* **Read users** (_not implemented_).
+"""
+
+app = FastAPI(
+    title="ChimichangApp",
+    description=description,
+    version="0.0.1",
+    terms_of_service="http://example.com/terms/",
+    contact={
+        "name": "Deadpoolio the Amazing",
+        "url": "http://x-force.example.com/contact/",
+        "email": "dp@x-force.example.com",
+    },
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
+)
+```
+
+最终，接口文档就会是这样：
+
+![](../picture/image101.png)
+
+注意你可以在描述内使用 Markdown，例如「login」会显示为粗体（**login**）以及「fancy」会显示为斜体（*fancy*）。
+
+除了对文档主页面的定义修改之外，还可以对单独的标签组进行定义：
+
+在创建FastAPI下传入openapi_tags参数：
+
+```python
+tags_metadata = [
+    {
+        "name": "users",
+        "description": "Operations with users. The **login** logic is also here.",
+    },
+    {
+        "name": "items",
+        "description": "Manage items. So _fancy_ they have their own docs.",
+        "externalDocs": {
+            "description": "Items external docs",
+            "url": "https://fastapi.tiangolo.com/",
+        },
+    },
+]
+
+app = FastAPI(openapi_tags=tags_metadata)
+
+
+@app.get("/users/", tags=["users"])
+async def get_users():
+    return [{"name": "Harry"}, {"name": "Ron"}]
+
+
+@app.get("/items/", tags=["items"])
+async def get_items():
+    return [{"name": "wand"}, {"name": "flying broom"}]
+```
+
+里面的`tags_metadata`是一个列表，其中name对应的是响应的组名（tags）。
+
+如果你现在查看文档，它们会显示附加的元数据：
+
+![](../picture/image102.png)
+
+最开始时，讲到FastAPI将会自动生成两个用户接口文档，分别是SwaggerUI、ReDoc。
+
+它们的默认地址分别是“/docs”和“/redoc”，对于它们的页面地址可以自定义，在创建FastAPI时传入`docs_url`、`redoc_url`参数：
+
+```python
+app = FastAPI(docs_url="/swagger", redoc_url="/redoc")
+```
+
+### 挂载静态资源
+
+FastAPI支持挂载指定位置的静态资源。
+
+虽然这在后端中并不是 非常常用，但是对于项目中指定文件可以通过这种方式直接访问。
+
+导入`StaticFiles`（不管是fastapi包下的还是starlette包下的都可以），然后在FastAPI的实例后使用mount方法：
+
+```python
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
+app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+```
+
+mount方法的第一个接受参数`"/static"`是指目录将被“挂载”到的服务器路径。因此，任何以它开头的路径`"/static"`都将由该目录映射。`directory="static"`指包含您的静态文件的目录的名称。而`name="static"`则是给它一个可以由**FastAPI**内部使用的名称。
+
+### 测试
+
+FastAPI提供了测试的方法。
+
+它基于[Starlette](https://www.starlette.io/testclient/)，而Starlette 的测试由基于[Requests](https://requests.readthedocs.io/)。
+
+FastAPI测试需要将于[pytest](https://docs.pytest.org/)一起使用。
+
+#### 编写测试用例
+
+对于Python测试而言，测试文件名以`test_`开头。
+
+比如我们现在拥有一个简简单单的`main.py`文件为例：
+
+```python
+from typing import Union
+
+from fastapi import FastAPI, Header, HTTPException
+from pydantic import BaseModel
+
+fake_secret_token = "coneofsilence"
+
+fake_db = {
+    "foo": {"id": "foo", "title": "Foo", "description": "There goes my hero"},
+    "bar": {"id": "bar", "title": "Bar", "description": "The bartenders"},
+}
+
+app = FastAPI()
+
+
+class Item(BaseModel):
+    id: str
+    title: str
+    description: Union[str, None] = None
+
+
+@app.get("/items/{item_id}", response_model=Item)
+async def read_main(item_id: str, x_token: str = Header()):
+    if x_token != fake_secret_token:
+        raise HTTPException(status_code=400, detail="Invalid X-Token header")
+    if item_id not in fake_db:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return fake_db[item_id]
+
+
+@app.post("/items/", response_model=Item)
+async def create_item(item: Item, x_token: str = Header()):
+    if x_token != fake_secret_token:
+        raise HTTPException(status_code=400, detail="Invalid X-Token header")
+    if item.id in fake_db:
+        raise HTTPException(status_code=400, detail="Item already exists")
+    fake_db[item.id] = item
+    return item
+
+```
+
+那么我们测试它，创建一个`test_main.py`文件。
+
+导入`TestClient`（Fastapi包和Starlette包中的都可以），`TestClient`通过传递您的**FastAPI**实例创建。
+
+对于测试函数，名称以 开头的函数`test_`（这是标准`pytest`约定）。
+
+使用`TestClient`对象的方式与使用`requests`方法一样。所以里面的内容为：
+
+```python
+from fastapi.testclient import TestClient
+
+from .main import app
+
+client = TestClient(app)
+
+
+def test_read_item():
+    response = client.get("/items/foo", headers={"X-Token": "coneofsilence"})
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": "foo",
+        "title": "Foo",
+        "description": "There goes my hero",
+    }
+
+
+def test_read_item_bad_token():
+    response = client.get("/items/foo", headers={"X-Token": "hailhydra"})
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid X-Token header"}
+
+
+def test_read_inexistent_item():
+    response = client.get("/items/baz", headers={"X-Token": "coneofsilence"})
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Item not found"}
+
+
+def test_create_item():
+    response = client.post(
+        "/items/",
+        headers={"X-Token": "coneofsilence"},
+        json={"id": "foobar", "title": "Foo Bar", "description": "The Foo Barters"},
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "id": "foobar",
+        "title": "Foo Bar",
+        "description": "The Foo Barters",
+    }
+
+
+def test_create_item_bad_token():
+    response = client.post(
+        "/items/",
+        headers={"X-Token": "hailhydra"},
+        json={"id": "bazz", "title": "Bazz", "description": "Drop the bazz"},
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid X-Token header"}
+
+
+def test_create_existing_item():
+    response = client.post(
+        "/items/",
+        headers={"X-Token": "coneofsilence"},
+        json={
+            "id": "foo",
+            "title": "The Foo ID Stealers",
+            "description": "There goes my stealer",
+        },
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Item already exists"}
+```
+
+这里的测试方法主要是 通过使用get、post等请求手段获取到响应对象，再利用`assert`断言进行与 与其进行对比。
+
+> 注意测试功能是正常的`def`，不是`async def`。
+>
+> 并且对客户端的调用也是正常调用，而不是使用`await`.
+>
+> 这使您可以`pytest`直接使用而不会出现并发问题。
+>
+> 当然如果对于需要异步测试的情况下，就需要更深入的手段，具体后面再简绍。
+
+#### 运行测试
+
+要运行测试，就需要安装`pytest`:
+
+```shell
+$ pip install pytest
+```
+
+安装完毕后，在终端中输入：
+
+```shell
+$ pytest
+```
+
+pytest将自动寻找项目中的`test_`开头的py文件，进行测试。
+
+当然对于单个测试文件运行 在后面加上具体文件路径即可。如果要使pytest只输出结果和错误的话，在后面加上`-q`参数，进入安静模式即可。
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
