@@ -747,6 +747,94 @@ def update_item(id: str, item: Item):
 
 它不会直接转换为JSON的字符串，而是转换为list、dict这种兼容JSON的数据类型。
 
+### 自定义响应
+
+对于RestFul的接口，往往会返回一个Result JSON作为请求的响应。
+
+Result的格式一般为请求状态码、响应信息、返回数据这三个内容。
+
+对于FastAPI来说需要定义自定义响应模型，通常在Pydantic模型下文件夹创建一个`resp.py`用作存储自定义响应模型：
+
+```python
+"""
+
+统一响应状态码
+
+"""
+from typing import Union
+
+from fastapi import status as http_status
+from fastapi.responses import JSONResponse, Response
+from fastapi.encoders import jsonable_encoder
+
+class Resp(object):
+    def __init__(self, status: int, msg: str, code: int):
+        self.status = status
+        self.msg = msg
+        self.code = code
+
+    def set_msg(self, msg):
+        self.msg = msg
+        return self
+
+
+InvalidRequest: Resp = Resp(1000, "无效的请求", http_status.HTTP_400_BAD_REQUEST)
+InvalidParams: Resp = Resp(1002, "无效的参数", http_status.HTTP_400_BAD_REQUEST)
+BusinessError: Resp = Resp(1003, "业务错误", http_status.HTTP_400_BAD_REQUEST)
+DataNotFound: Resp = Resp(1004, "查询失败", http_status.HTTP_400_BAD_REQUEST)
+DataStoreFail: Resp = Resp(1005, "新增失败", http_status.HTTP_400_BAD_REQUEST)
+DataUpdateFail: Resp = Resp(1006, "更新失败", http_status.HTTP_400_BAD_REQUEST)
+DataDestroyFail: Resp = Resp(1007, "删除失败", http_status.HTTP_400_BAD_REQUEST)
+PermissionDenied: Resp = Resp(1008, "权限拒绝", http_status.HTTP_403_FORBIDDEN)
+ServerError: Resp = Resp(5000, "服务器繁忙", http_status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+def ok(*, data: Union[list, dict, str] = None, pagination: dict = None,  msg: str = "success") -> Response:
+    return JSONResponse(
+        status_code=http_status.HTTP_200_OK,
+        content=jsonable_encoder({
+            'status': 200,
+            'msg': msg,
+            'data': data,
+            'pagination': pagination
+        })
+    )
+
+def fail(resp: Resp) -> Response:
+    return JSONResponse(
+        status_code=resp.code,
+        content=jsonable_encoder({
+            'status': resp.status,
+            'msg': resp.msg,
+        })
+    )
+```
+
+这里的返回类型为`Response`，`Response` 类接受如下参数：
+
+- `content` - 一个 `str` 或者 `bytes`。
+- `status_code` - 一个 `int` 类型的 HTTP 状态码。
+- `headers` - 一个由字符串组成的 `dict`。
+- `media_type` - 一个给出媒体类型的 `str`，比如 `"text/html"`。
+
+这里由JSONResponse函数生成相应的返回值。
+
+所以这里的响应体中的 `status_code`是指的浏览器响应状态码，而content内的`status`是请求状态码。
+
+在请求接口中 返回使用即可：
+
+```python
+@app.get("/users/",summary="查询所有用户")
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = user_dao.get_all_users(db, skip=skip, limit=limit)
+    userList = []
+    for useronde in users:
+        usersd = user.User.from_orm(useronde)
+        userList.append(usersd)
+    return resp.ok(data=userList)
+```
+
+
+
 ### 安全认证
 
 **FastAPI** 提供了多种工具，可帮助你以标准的方式轻松、快速地处理**安全性**，而无需研究和学习所有的安全规范。
@@ -1192,6 +1280,8 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
 ![](../picture/image10.png)
 
 
+
+这里只是简单的说明下其OAuth2在FastAPI的玩法，具体的还有Scope等权限控制方法，这个后面教程中再慢慢讲述，这里不做描述。
 
 ### 中间件
 
