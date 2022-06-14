@@ -1625,9 +1625,122 @@ pytest将自动寻找项目中的`test_`开头的py文件，进行测试。
 
 
 
+### 环境变量
+
+在许多情况下，您的应用程序可能需要一些外部设置或配置，例如密钥、数据库凭证、电子邮件服务凭证等。
+
+这些设置中的大多数都是可变的（可以更改），例如数据库 URL。许多人可能很敏感，比如秘密。
+
+出于这个原因，通常在应用程序读取的环境变量中提供它们。
+
+在FastAPI中可以将其需要设置为环境变量的数据创建为Pydantic模型，Pydantic 提供了一个BaseSettings类用作环境变量模型类。
+
+```python
+from fastapi import FastAPI
+from pydantic import BaseSettings
+
+
+class Settings(BaseSettings):
+    app_name: str = "Awesome API"
+    admin_email: str
+    items_per_user: int = 50
+        
+settings = Settings()
+app = FastAPI()
+
+@app.get("/info")
+async def info():
+    return {
+        "app_name": settings.app_name,
+        "admin_email": settings.admin_email,
+        "items_per_user": settings.items_per_user,
+    }        
+```
+
+值得注意的是环境变量模型中的属性名不区分大小写，也就是说这里的`settings.app_name`也可以写作`settings.APP_NAME`依然可以识别。
+
+当然正常情况下你一般将配置模型放到一个独立的文件下，比如创建一个`config.py`:
+
+```python
+from pydantic import BaseSettings
+
+
+class Settings(BaseSettings):
+    app_name: str = "Awesome API"
+    admin_email: str
+    items_per_user: int = 50
+
+
+settings = Settings()
+```
+
+在需要使用的地方引用即可。
+
+接下来，您运行应用时 将相关配置数据作为环境变量传入：
+
+```shell
+$ ADMIN_EMAIL="deadpool@example.com" APP_NAME="ChimichangApp" uvicorn main:app
+```
+
+要为设置多个环境变量，只需将它们用空格分隔，并将它们全部放在运行命令之前。
 
 
 
+当然上面这种做法对于几个配置设置是可行的，但是对于中大型项目来说，拥有的配置变量十分多，每次启动都进行单独输入十分不方便，而且容易出现错误。对于这种情况，往往采用使用外置配置文件来进行解决的。
+
+在项目文件夹中创建一个`.env`文件，该文件称为“dotenv”，它是用来存储项目配置内容的文件，当每次项目启动后，读取该文件。
+
+我们在项目根目录创建一个`.env`文件：
+
+```python
+ADMIN_EMAIL="deadpool@example.com"
+APP_NAME="ChimichangApp"
+```
+
+然后修改之前的`config.py`内容：
+
+```python
+from pydantic import BaseSettings
+
+
+class Settings(BaseSettings):
+    app_name: str = "Awesome API"
+    admin_email: str
+    items_per_user: int = 50
+
+    class Config:
+        env_file = ".env"
+```
+
+这里在Settings内部新增一个`Config`子类，在这里配置env文件路径。
+
+并且删除了之前的`settings = Settings()`内容，删除它的原因就是每次使用时再进行实例化，而不是全局使用。
+
+在使用配置数据的地方的代码是这样的：
+
+```python
+from functools import lru_cache
+from . import config
+
+@lru_cache()
+def get_settings():
+    return config.Settings()
+
+
+@app.get("/info")
+async def info(settings: config.Settings = Depends(get_settings)):
+    return {
+        "app_name": settings.app_name,
+        "admin_email": settings.admin_email,
+        "items_per_user": settings.items_per_user,
+    }
+```
+
+这里采用依赖项的方式进行注入到使用的地方上，并且使用了`@lru_cache()`这个注解。
+
+`@lru_cache()`的作用是 使该函数内部对象只实例化创建一次，后续使用全部重新调用。
+
+之所以要使用这个功能，因为从磁盘读取文件通常是一项代价高昂（缓慢）的操作，对于配置文件内容往往只需要读取一次就可以了，减少处理时间。
 
 
 
