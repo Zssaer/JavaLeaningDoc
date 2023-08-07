@@ -123,7 +123,7 @@ RocketMQ 在任何一个环境都是可扩展的，**生产者（Producer）必�
 
 总体来说 整个使用RocketMQ的流程就是： 
 
-***Consumer生成消息 -》 Consumer通过NameServer归类到对应Topic -》Topic存储在Broker中 -》Consumer 通过NameServer调取到对应Topic 所在的Broker -》Consumer 依次消费消息***
+***Producer 生成消息 -》 Producer 通过NameServer归类到对应Topic -》Topic存储在Broker中 -》Consumer 通过NameServer调取到对应Topic 所在的Broker -》Consumer 依次消费消息***
 
 
 

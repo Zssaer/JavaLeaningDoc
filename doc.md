@@ -770,6 +770,10 @@ private static void exchange(int[] a, int i, int j) {
 
 
 
+**注意：双边快速循环只能先进行从右边向左边！否则就会出错！**
+
+
+
 ***优化-切换到插入排序：***
 
 快速排序在Java.Util的DualPivotQuicksort.clss类中定义了推荐使用长度为（47-286）之间：
