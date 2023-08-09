@@ -4083,7 +4083,8 @@ TK.Mybatis的基础类提供了生成插件,可以配合MBG生成,再结合freem
  */
 public class CodeGenerator {
     // 数据库连接内容
-    public static final String JDBC_URL = "jdbc:mysql://localhost:3306/sys";
+    // 在Mysql5.x以上版本，将会默认读取在其他所有数据库中同名表格，只有配置nullCatalogMeansCurrent才能防止读取到其他数据库表格。
+    public static final String JDBC_URL = "jdbc:mysql://localhost:3306/sys?nullCatalogMeansCurrent=true";
     public static final String JDBC_USERNAME = "root";
     private static final String JDBC_PASSWORD = "200428";
     // 数据库连接器

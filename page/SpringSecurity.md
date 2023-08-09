@@ -192,6 +192,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 数据库连接相关配置完后,我们可以启动服务,可以发现当login进行登录时将会执行其`UserDetailsService`中loadUserByUsername方法,进行查询用户以及其权限,然后再通过`passwordEncoder`中设置的算法进行验证密码正确性。
 
+
+
+PS：SpringSecurity的权限Authorites和角色Role都是 在是共用GrantedAuthority接口。所以权限和角色的字符串都可以同加入GrantedAuthority中。对于角色Role 字段，需要在数据库中Role名称中额外设置前缀“ROLE_”字段。而在上面configure(HttpSecurity http)中设置限定Role时,不需要额外添加“ROLE_”。
+
+![](../picture/2023-8-9.PNG)
+
+
+
+
+
 ### 获取登录信息
 
 对于已经登录的用户,我们可以使用SecurityContext来获取其信息
@@ -808,8 +818,13 @@ public class JWTProvider {
         example.createCriteria().andEqualTo("userName",authentication.getName());
         List<SimpleUser> list = simpleUserMapper.selectByExample(example);
         Map<String ,Object> map = new HashMap<>();
+        
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        String authoritiesStr = authorities.stream().map(grantedAuthority ->                                                 grantedAuthority.getAuthority()).collect(Collectors.joining(","));
+        
         map.put("sub",authentication.getName());
         map.put("user",list.get(0));
+        map.put("authorities", authoritiesStr);
         return Jwts.builder()
                 .setClaims(map) // 添加body
                 .signWith(key, SignatureAlgorithm.HS512) // 指定摘要算法
@@ -830,8 +845,8 @@ public class JWTProvider {
                 .build()
                 .parseClaimsJws(token).getBody(); // 根据token获取body
         SimpleUser principal;
-        Collection<? extends GrantedAuthority> authorities;
-
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+		
         Example example = new Example(SimpleUser.class);
         example.createCriteria().andEqualTo("userName",claims.getSubject());
         principal = simpleUserMapper.selectByExample(example).get(0);
@@ -1007,6 +1022,28 @@ public class JWTProvider {
     }
 }
 ```
+
+### 双Token配置
+
+使用单独一个Token作为验证手段的话，当Token过期后，认证便会立即失效，这样十分影响用户体验。
+
+由于Token是无状态无法动态修改有效期时间的，所以这使得Token自动续期变得麻烦起来。
+
+目前比较成熟的方案就是 双Token 方法。
+
+一个是 AccessToken ，即 用来认证的Token。
+
+一个是 RefreshToken，即 用来刷新AccessToken的Token。有效时间一般比AccessToken 更长。
+
+
+
+用户 登录后得到这两个Token后，任何需要验证的时候都需要带上 它们两个Toke。
+
+当访问发现AccessToken未过期时，不需要验证RefreshToken。
+
+当访问发现AccessToken过期后，则前端 立即携带着RefreshToken跳转到对应 后端设置的RefreshAccessToken（刷新访问Token）方法，然后验证RefreshToken是否也过期了，如果没有则生成新的AccessToken。前端再携带着新的AccessToken和旧的RefreshToken 跳转原用户操作Url上。
+
+PS：RefreshAccessToken需要携带上 用户Name，以便后端重新生成用户的AccessToken。
 
 
 
