@@ -1142,7 +1142,48 @@ int main() {
 
 
 
-## 动态数组 - vector
+## 固定大小多类型容器 - tuple
+
+tuple是是 C++11 引入的一个非常有用的模板类，它允许你将多个可能不同类型的值组合成一个单一对象。可以将 `std::tuple` 看作一个固定大小的容器，其中每个元素都可以有不同的类型。
+
+### 创建和初始化
+
+```c++
+#include <tuple>
+
+std::tuple<int, double, std::string> t1(1, 3.14, "Hello");
+std::tuple<int, double, std::string> t2 = std::make_tuple(2, 2.71, "World");  //使用make_tuple函数创建,可以使用auto做返回类型.
+```
+
+### 常用函数
+
+使用 `std::get<index>` 函数零开始的索引来访问 `tuple` 的元素。通过此方法亦能修改指定元素。
+
+使用 `std::tuple_size<>` 来获取 `tuple` 的大小。
+
+`std::tie` 可以用来解包 `tuple` 的内容到单独的变量中。
+
+```c++
+int i = std::get<0>(t1);        // i = 1
+double d = std::get<1>(t1);     // d = 3.14
+std::string s = std::get<2>(t1); // s = "Hello"
+std::get<2>(t1) = "KKKK";
+
+int size = std::tuple_size<decltype(t1)>::value;  // size = 3
+
+int a;
+double b;
+std::string c;
+std::tie(a, b, c) = t1;
+```
+
+
+
+
+
+
+
+## 动态容器 - vector
 
 vector 容器是 STL(标准模板库) 中最常用的容器之一，它和 array 容器非常类似，都可以看做是对C++普通数组的“升级版”。不同之处在于，array 实现的是静态数组（容量固定的数组），而 vector 实现的是一个动态数组，即可以进行元素的插入和删除，在此过程中，vector 会动态调整所占用的内存空间，整个过程无需人工干预。
 
@@ -1156,6 +1197,8 @@ vector 容器以类模板 vector<T>（ T 表示存储元素的类型）的形式
 #include <vector>
 ...
 std::vector<XXX> values;
+...
+XXX a = values[0]; 
 ```
 
 ### 添加对象及问题
@@ -1224,6 +1267,105 @@ std::sort(values.begin(), values.end(),[](int a, int b){
 ```
 
 要求lambda函数 取用两个参数，如果返回true，则第一个参数排在两者前；如果返回false，则第一个参数排在两者后。
+
+
+
+## 固定容器 - array
+
+array是 C++11 引入的一个容器，它表示一个固定大小的数组。与内置数组相比，它提供了更多的功能和类型安全性，但它们在内存中的表示是相同的，因此没有额外的运行时开销。
+
+### 特点
+
+`std::array` 的特点：
+
+1. **固定大小**：`std::array` 的大小在编译时是固定的，不能在运行时更改。
+2. **连续存储**：与内置数组一样，`std::array` 中的元素在内存中是连续存储的。
+3. **类型安全**：提供了范围检查的成员函数 `at()`。
+4. **STL 兼容**：`std::array` 是完全兼容 STL 的，这意味着你可以在 `std::array` 上使用 STL 算法。
+
+### 使用方法
+
+```c++
+#include <array>
+...
+   // 创建一个大小为 3 的 int 类型的 array
+    std::array<int, 3> arr = {1, 2, 3};
+
+    // 访问元素
+    std::cout << arr[0] << std::endl;  // 输出: 1
+    std::cout << arr.at(1) << std::endl;  // 输出: 2
+
+    // 遍历 array
+    for (int num : arr) {
+        std::cout << num << " ";
+    }
+    std::cout << std::endl;  // 输出: 1 2 3 
+
+    // 获取 array 的大小
+    std::cout << "Size: " << arr.size() << std::endl; 
+```
+
+总的来说，`std::array` 是一个非常有用的容器，特别是当你知道数组的大小并且希望在编译时进行检查时。与内置数组相比，它提供了更多的功能和更好的类型安全性。
+
+
+
+## 动态有序键值对容器 - map
+
+`std::map` 是 C++ 标准库中的一个关联容器，用于存储键-值对 (在c++中存在专属于键值对的类型 - pair)。
+
+### 特点
+
+**有序容器**：`std::map` 中的元素按键的顺序自动排序。默认情况下，它使用 `<` 运算符进行排序。所以它是有序容器。
+
+**唯一键**：每个键在 `std::map` 中只能出现一次。
+
+**红黑树实现**：`std::map` 是基于**平衡二叉搜索树（通常是红黑树）**实现的，这确保了插入、删除和查找操作的对数时间复杂度。
+
+### 使用方法
+
+map有很多种方式初始化：
+
+```cpp
+std::map<std::string, int> ages;  //空值初始化
+std::map<std::string, int> ages = {
+    {"Alice", 30},
+    {"Bob", 25},
+    {"Charlie", 35}
+};  //列表初始化
+```
+
+map使用它的insert方法进行向其中容器插入键值对(pair类型)：
+
+```cpp
+std::map<std::string, int> ages;
+ages.insert(std::make_pair("Alice", 30));  // 使用std::make_pair函数创建一个pair对象
+ages.insert({"Charlie", 35});  // 从 C++11 开始，也可以直接使用花括号
+```
+
+可以使用另一个 `map`（或 `std::multimap`）来初始化一个新的 `map`：
+
+```c++
+std::map<std::string, int> ages1 = {{"Alice", 30}, {"Bob", 25}};
+std::map<std::string, int> ages2(ages1);  // 使用 ages1 初始化 ages2
+```
+
+从 C++11 开始，你还可以使用 `emplace` 方法直接在 `map` 中构造元素，而无需先创建键-值对：
+
+```c++
+std::map<std::string, int> ages;
+ages.emplace("Alice", 30);
+ages.emplace("Bob", 25);
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2077,6 +2219,75 @@ T function(T a, N b, O c)
 对于指定了类型的元素，相当起到了替换作用。
 
 C++ 模板还可以与 STL 容器和算法一起使用。标准模板库（STL）提供了许多通用容器，如 `std::vector`、`std::map` 等，可以处理任何数据类型。
+
+
+
+### 可变函数模板
+
+可变模板参数是 C++11 引入的一个功能，允许模板接受任意数量和类型的参数。这为模板编程提供了更大的灵活性，特别是在需要处理不确定数量的类型时。
+
+```c++
+template<typename... Args>
+void myFunction(Args... args);
+```
+
+可变模板参数使用省略号 `...` 来表示。   虽然使用可变模板参数，但是仍然需要在 参数类型定义中和 参数使用时添加"..."。
+
+
+
+递归使用：
+
+和可变函数原因，一般可变函数模板单独出现，至少还有一个参数。**可变函数模板，常用作构建递归函数，并且还要 重载一个函数的模板函数 。**：
+
+```c++
+// 当递归到只有一个参数的时候
+template<typename T>
+void print(T t) {
+    std::cout << t << std::endl;
+}
+
+
+template<typename T, typename... Args>
+void print(T t, Args... args) {
+    std::cout << t << std::endl;
+    print(args...);
+}
+
+int main() {
+    print(1, 2.2, "three", '4');
+}
+```
+
+上面函数模板是一个万用类型打印函数。
+
+通常可变函数模板中，要有一个常规参数，用作处理单独事物。而可变函数是不能用来直接处理的，只能用来递归。递归还需要再重载一个无可变参数的模板，用以最后递归 的调用。
+
+
+
+**结合 `sizeof...` 运算符**使用:
+
+C++11 还引入了 `sizeof...` 运算符，它可以用来直接计算可变模板参数的数量：
+
+```c++
+template<typename... Args>
+void printCount(Args... args) {
+    std::cout << sizeof...(Args) << std::endl;  // 计算类型数量
+    std::cout << sizeof...(args) << std::endl;  // 计算参数数量
+}
+
+int main() {
+    printCount(1, 2.2, "three", '4');  // 输出 4 两次
+    return 0;
+}
+```
+
+
+
+
+
+
+
+
 
 
 
