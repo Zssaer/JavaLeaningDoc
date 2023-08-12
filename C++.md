@@ -910,6 +910,85 @@ int main() {
 
 
 
+### C++中的计时
+
+在 C++ 中，你可能想要测量代码的执行时间，无论是为了性能分析，还是为了其他目的。C++ 提供了几种方法来进行计时：
+
+**C++11 的 `<chrono>` 库**: 这是最现代和推荐的方法来在 C++ 中进行计时。
+
+```c++
+#include <iostream>
+#include <chrono>
+
+int main() {
+    auto start = std::chrono::high_resolution_clock::now();
+	...
+    auto end = std::chrono::high_resolution_clock::now();
+    // 得到代码运行时间
+    std::chrono::duration<double> duration = end - start;
+	//  duration下的count方法可以返回 秒。
+    std::cout << "Elapsed time: " << duration.count() << " seconds" << std::endl;
+}
+```
+
+`<chrono>` 库提供了多种时间单位，如 `std::chrono::milliseconds`、`std::chrono::microseconds` 等，这使得时间测量更加灵活。
+
+
+
+**C 的 `clock()` 函数**: 这是一个传统的方法，使用 C 语言的 `clock()` 函数来测量 CPU 时间。
+
+```c
+#include <iostream>
+#include <ctime>
+
+int main() {
+    clock_t start = clock();
+    ...
+    clock_t end = clock();
+    double duration = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+
+    std::cout << "Elapsed time: " << duration << " seconds" << std::endl;
+}
+```
+
+注意：`clock()` 函数测量的是 CPU 时间，而不是实际的墙钟时间。这意味着它测量的是程序在 CPU 上执行的时间，而不是程序从开始到结束的实际时间。
+
+在大多数情况下，使用 C++11 的 `<chrono>` 库是最好的选择，因为它是标准的、跨平台的，并提供了高精度的计时功能。
+
+
+
+我们可以将其计时操作封装为一个struct ，利用栈内存清理原理 和 析构函数，来方便调用计时操作。
+
+```cpp
+struct Timer
+{
+    std::chrono::timer_point<std::chrono::steady_clock> start, end;
+    std::chrono::duration<float> duration;
+    Timer()
+    {
+        std::cout << "代码计时开始! " << std::endl;
+        start = std::chrono::high_resolution_clock::now();
+    }
+    ~Timer()
+    {
+        end = std::chrono::high_resolution_clock::now();
+        duration =  end - start;
+        std::cout << "代码计时结束! " << std::endl;
+        std::cout << "代码运行花费时间: " << duration.count() * 1000.0f << "毫秒" << std::endl;
+    }
+}
+
+int main()
+{
+    {
+        Timer timer;
+        ...
+    }
+}
+```
+
+
+
 ## 类型
 
 ### 类型转换
@@ -931,29 +1010,6 @@ std::string s1 = "I'm actually char type"; // 右值实际上是char数组，隐
    - `const_cast`：用于添加或去除 `const` 修饰符，从而改变指针或引用的常量性。
    - `reinterpret_cast`：用于不同类型之间的二进制位模式的转换，通常用于低级操作和平台特定的需求。
 
-   
-
-   
-
-`static_cast`:静态转换，可以将子类对象的指针或引用转换为基类对象的指针或引用。将其指定变量静态转换为相应的类型。
-
-   ```cpp
-   struct B {};
-   struct D : B { B b; };
-   
-   D d;
-   B& br1 = d;
-   B& br2 = d.b;
-    
-   static_cast<D&>(br1);
-   ```
-
-`static_cast` 提供了一些类型转换的功能，但在基类 转换为派生类 （向下）转型时，如果没有虚函数的参与，它不会进行运行时类型检查。所以不是很安全。
-
-`dynamic_cast`:动态转换，将基类指针或引用转换为派生类指针或引用。在进行向下转型时，`dynamic_cast` 会进行运行时类型检查，如果类型不匹配，则返回空指针（在指针转换中）或引发 `std::bad_cast` 异常（在引用转换中）。
-
-3. **C 风格类型转换（C-Style Type Casting）**：类似于显式类型转换，但使用 C 风格的强制类型转换操作符，如 `(int)`、`(double)` 等。虽然在 C++ 中也可以使用，但不推荐，因为它们可能引起一些类型不安全的问题。
-4. **运算符重载**：类可以通过运算符重载定义类型转换操作符，使得对象可以在特定的上下文中隐式转换为其他类型。
 
 
 
@@ -1098,6 +1154,70 @@ int main()
 总结：
 
 union大小由最大元素决定。当最大元素为匿名struct时，union的成员值将按照该匿名类中成员按顺序分配。最终剩余空间无争夺的成员将始终不变。
+
+
+
+### 静态转换 - static_cast
+
+在C语言中，类型转换存在 隐式转换和显式转换。
+
+隐式转换顾名思义，就是在用户不进行任何操作下，编译器自动转换某个对象类型为另外一个对象，常见情况有 char数组转换为string等等。
+
+而显式转换，则需要在编码中主动进行类型转换。C中常常在对象中以（cast type）存在。其意思为强制转换类型。
+
+而在C++中，提出了`static_cast` 是一种类型转换运算符，用于在相关类型之间进行转换。它是编译时类型转换，这意味着转换的有效性在编译时进行检查，而不是在运行时。
+
+```c++
+double d = 3.14;
+int i = static_cast<int>(d);  // 将double转换为int
+
+class Base {};
+class Derived : public Base {};
+
+Derived* derived = new Derived();
+Base* base = static_cast<Base*>(derived);  // 派生类指针转换为基类指针 下转上 子转父
+Derived derivedObj;
+Base& baseRef = static_cast<Base&>(derivedObj);  //同上原理, 引用转换
+
+enum Color { RED, GREEN, BLUE };
+int colorValue = static_cast<int>(GREEN);  // 将枚举转换为int
+```
+
+`static_cast` 是C++中最常用的类型转换工具之一。但是它并不具有判断可行性能力，只是一种强制转换。其本身效果和C中的强制类型转换一样。
+
+当用它将类型 转换为不相关的类型时，如从 `void*` 到其他指针类型，或者当基类 转 派生类这种不符合条件的转换时，使用它会编译出现报错。这时就需要使用具有判断能力的`dynamic_cast`动态类型转换函数了。
+
+
+
+### 动态转换 - dynamic_cast
+
+`dynamic_cast` 是 C++ 中的另一种类型转换运算符，主要用于处理基类和派生类之间的转换，特别是在多态情境下。
+
+与 `static_cast` 不同，`dynamic_cast` 是运行时类型转换，这意味着它在运行时检查转换的有效性。
+
+```c++
+class Base { virtual void foo() {} };  // 注意：至少需要一个虚函数
+class Derived : public Base {};
+
+Base* basePtr = new Derived();
+Derived* derivedPtr = dynamic_cast<Derived*>(basePtr);  // 成功的转换
+
+Base anotherBase;
+Base* basePtr2 = &anotherBase;
+Derived* derivedPtr2 = dynamic_cast<Derived*>(basePtr2);  // 返回 nullptr，因为basePtr2不指向Derived对象
+```
+
+使用dynamic_cast能够对类型转换进行判断，对于基类转派生类等不正常的转换，使用dynamic_cast会让其返回空指针，以阻止程序编译错误。
+
+这里有个需要注意的细节：**对于使用dynamic_cast，需要对其基类相应的方法使用virtual以便称为虚函数**，dynamic_cast会对基类的虚函数进行判断，如果派生类拥有基类不拥有的方法的话，就会对其反回null prt以示阻止操作。
+
+虽然`dynamic_cast` 能应付很多类型转换场景，但是由于 `dynamic_cast` 在运行时进行类型检查，它比其他类型的转换（如 `static_cast`）有更大的性能开销。因此，应该谨慎使用它，并只在确实需要运行时类型检查的情况下使用。常规情况下的类型转换还是尽量使用静态转换 - static_cast。
+
+
+
+
+
+
 
 
 
@@ -2417,6 +2537,453 @@ int main() {
 
 
 ## 线程-Thread
+
+在C++ 11之前，C++ 标准库并没有提供线程支持。
+
+但从 C++11 开始，标准库引入了 `<thread>` 头文件，为多线程编程提供了原生支持。这使得在 C++ 中创建和管理线程变得相对简单。
+
+### 创建线程
+
+使用 `std::thread` 类可以创建一个新的线程。你只需提供一个函数或可调用对象，它将在新线程中执行。
+
+```cpp
+#include <iostream>
+#include <thread>
+
+void myFunction() {
+    std::cout << "Hello from thread!" << std::endl;
+}
+
+int main() {
+    std::thread t(myFunction);  // 对象名(线程操作函数 or 可调用对象)
+    t.join();  // 等待线程完成
+    return 0;
+}
+```
+
+thread除了提供已经有的函数以外，可以提供lambda函数。
+
+
+
+### 运行线程 和 结束线程
+
+和Java等语言那种需要手动调用start方法来 启动线程操作 不一样。
+
+C++ 中创建的Thread线程对象是自动启动的，不需要手动调用方法启动。
+
+**在结束方面，也会Java等语言不同。C++中 Thread需要额外声明它的结束，否则运行完毕的Thread将不会被内存清理，就如同在堆内存中创建对象需要 delete一样。**
+
+**通常需要附加上 join（同步结束） 、 detach（异步结束），这取决于对该线程的运行要求。**
+
+
+
+### 等待线程（同步） - join
+
+用于现代CPU都是多核心多线程，所以现代程序 默认情况下不同线程操作是同时运行的，各自不会等待，称之为异步。
+
+当某些场景需要等待某个线程运行完成，才进行接下来的操作，称之为线程同步。这种场景通常用于金融交易、购票等等。
+
+Thread对象可以使用join函数，请求主线程 等待 其线程完成。
+
+```c++
+...
+int main() {
+    std::thread t(myFunction);
+    t.join();  // 主线程堵塞，等待t中线程完成操作。t中线程 后才能继续主线程操作。
+    return 0;
+}
+```
+
+
+
+### 异步线程 - detach
+
+`detach()`: 允许线程独立运行，不需要主线程等待其完成。虽然线程被创建出来默认 就是异步运行的，但你依然需要对其使用它，以示运行完毕后清理该线程。
+
+```c++
+...
+int main() {
+    std::thread t(myFunction);
+    t.detach();  // 异步结束清理线程
+    return 0;
+}
+```
+
+
+
+### 线程标识符
+
+每个线程都有一个唯一的标识符，可以使用 `std::thread::id` 类型和 `std::thread::get_id()` 函数来获取。
+
+
+
+## IO流
+
+### 读取流
+
+#### 字符读取
+
+在 C++ 中，读取字符文件通常使用 `<fstream>` 库，该库提供了 `ifstream` 类来支持文件输入操作。以下是使用 `ifstream` 读取文件的基本步骤：
+
+1. **打开文件**
+
+   创建一个 `ifstream` 对象并使用 `open` 方法打开文件。你也可以在构造函数中直接提供文件名来打开文件。
+
+   ```cPP
+   std::ifstream file("filename.txt");
+   ```
+
+   其中接受的参数是文件存储位置+文件名，如果没有存储位置则表示读取当前CPP文件下指定文件。
+
+2. **检查文件是否成功打开**
+
+   ifstream对象的``is_open``函数可以检测文件是否成功打开，如果返回false则表示文件打开错误。
+
+   ```cpp
+   if (!file.is_open()) {
+       std::cerr << "Failed to open the file." << std::endl;
+       return 1;  // or handle the error appropriately
+   }
+   ```
+
+3. **读取文件**
+
+   读取文件类似于cin，分为行读取，单词读取（以空格分割读取）和字符读取。
+
+   ```cpp
+   // getline读取一行字符
+   std::string line;
+   while (std::getline(file, line)) {
+       std::cout << line << std::endl;
+   }
+   // >>读取单词
+   std::string word;
+   while (file >> word) {
+       std::cout << word << std::endl;
+   }
+   
+   char ch;
+   // get函数读取字符
+   while (file.get(ch)) {
+       std::cout << ch;
+   }
+   ```
+
+4. **关闭文件**
+
+   和其他语言一样，使用IO流操作后都需要进行关闭操作。
+
+   ```c++
+   file.close();
+   ```
+
+   当然如果是在块中使用，当你完成文件操作后，文件会在 `ifstream` 对象的析构函数中自动关闭。
+
+完整示例：
+
+```c++
+#include <iostream>
+#include <fstream>
+#include <string>
+
+int main() {
+    std::ifstream file("filename.txt");
+    if (!file.is_open()) {
+        std::cerr << "Failed to open the file." << std::endl;
+        return 1;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::cout << line << std::endl;
+    }
+
+    file.close();
+    return 0;
+}
+```
+
+
+
+#### 字符读取
+
+在 C++ 中，如果想按字节（或二进制模式）读取文件，可以使用 `<fstream>` 库的 `ifstream` 类，并在打开文件时指定 `std::ios::binary` 标志。按字节读取文件通常用于处理二进制文件，如图像、音频或其他非文本文件。
+
+1. **以二进制模式打开文件**
+
+   ```c++
+   std::ifstream file("filename.bin", std::ios::binary);
+   ```
+
+2. **检查文件是否成功打开**
+
+   检查操作和字符读取一样，使用`is_open()`方法
+
+3. **按字节读取文件**
+
+   读取字节操作主要分为：**读取单个字节**、**读取多个字节**：
+   
+   ```cpp
+   char byte;
+   while (file.read(&byte, sizeof(byte))) {
+       // Process the byte
+       std::cout << byte;
+   }
+   
+   // 定义一个可以存储1024字节的数组,作为读取缓冲区
+   const size_t bufferSize = 1024;  
+   char buffer[bufferSize];
+   
+   // 一次读取多个字节到一个缓冲区中
+   while (file.read(buffer, sizeof(buffer))) {
+       for (size_t i = 0; i < file.gcount(); ++i) {
+           // 处理缓冲区中的每个字节
+           std::cout << buffer[i];
+       }
+   }
+   ```
+   
+   两者都是使用的 `read`方法，接受两个参数。第一个为 读取存放字符or字符串，第二个为 需要读取的大小。此外该函数还具有判断读取是否为空的效果。
+   
+   
+   
+   当你从文件中一次读取多个字节，你通常使用一个缓冲区。缓冲区是一个数组或容器，用于临时存储从文件中读取的数据。使用缓冲区的好处是，与一次读取一个字节相比，它可以更高效地读取大量数据，因为文件操作（特别是磁盘访问）通常比内存操作要慢得多。
+   
+   注意：`read` 方法可能不会填满整个缓冲区，特别是当文件的末尾接近时。你可以使用 `gcount` 方法来确定实际已经读取了多少字节。一旦数据被读入缓冲区，你可以遍历缓冲区并处理每个字节。例如，打印每个字节：
+   
+   ```cpp
+   for (size_t i = 0; i < file.gcount(); ++i) {
+       std::cout << buffer[i];
+   }
+   ```
+   
+   
+   
+### 输出流
+
+#### 文件输出
+
+C++中主要使用`std::ofstream`做文本字符输出。`std::ofstream` 是 C++ 标准库中的一个类，用于写入文件。它是 `std::ostream` 的一个特化，专门用于文件输出。以下是关于 `std::ofstream` 的详细介绍：
+
+1. 打开已有文件、创建文件
+
+   使用 `std::ofstream`，你可以创建一个新文件或写入现有文件。
+
+   ```cpp
+   #include <fstream>
+   
+   int main() {
+       std::ofstream file("output.txt");
+       file << "Hello, File!" << std::endl;
+       file.close();
+   }
+   ```
+
+ofstream接受第二个参数，用来指定模式，它拥有多种模式：
+
+- `std::ios::out`: 输出模式，默认模式。
+- `std::ios::app`: 追加模式，写操作从文件末尾开始。
+- `std::ios::ate`: 打开文件并移动到文件末尾。
+- `std::ios::trunc`: 如果文件已存在，则先截断文件。
+- `std::ios::binary`: 二进制模式。
+
+```cpp
+// 以追加模式打开文件
+std::ofstream file("output.txt", std::ios::app);
+```
+2. 写入操作
+
+   使用插入操作符 `<<` 将数据写入文件，就像使用 `std::cout` 一样。
+
+   ```cpp
+   int age = 25;
+   file << "Age: " << age << std::endl;
+   ```
+
+   对于二进制文件的输出，使用write方法。它允许你直接写入原始字节，而不进行任何格式化或转换。
+
+   ```c++
+   ostream& write(const char* buffer, std::streamsize count);
+   ```
+
+   参数：
+
+   - `buffer`: 一个指向要写入数据的字符数组的指针。
+   - `count`: 要写入的字节数。
+
+   假设你有一个简单的数据结构，并且你想将其写入一个二进制文件:
+
+   ```c++
+   struct Data {
+       int id;
+       double value;
+   };
+   
+   int main() {
+       Data data = {123, 456.789};
+   
+       std::ofstream file("data.bin", std::ios::binary);
+       file.write(reinterpret_cast<const char*>(&data), sizeof(data));
+       file.close();
+   
+       return 0;
+   }
+   ```
+
+   注意：使用 `reinterpret_cast` 将 需要保存的数据结构的指针转换为 `const char*`，以满足 `write()` 方法的参数要求。
+
+   将程序的数据外置保存为文件，这种操作叫做序列化操作。
+
+
+
+2. **其他有用的方法**:
+
+   - `tellp()`: 返回当前的写位置。
+
+   - `seekp(pos)`: 将写位置移动到指定的位置。
+
+   - `flush()`: 刷新缓冲区，确保所有数据都被写入文件。
+
+     通常写入文件只有在文件对象被关闭后才会被保存。但当希望确保数据立即被写入磁盘时，可以使用 `flush()`。但在不需要立即写入数据的情况下，过度使用它可能会导致性能问题，因为刷新操作可能相对较慢。
+
+     ```c++
+     #include <fstream>
+     
+     int main() {
+         std::ofstream file("output.txt");
+         file << "Writing some data...";
+         file.flush();  // 确保文件写入立即完成
+         // ... more code ...
+         file.close();
+         return 0;
+     }
+     ```
+
+     当然其实常用的`std::endl`换行操作，不仅仅是一个换行符。当你将 `std::endl` 写入一个输出流时，它也会调用 `flush()`。
+
+     但要注意，频繁地使用 `std::endl` 可能会导致性能下降，因为每次都会触发缓冲区的刷新。如果不需要立即刷新缓冲区，只需要简单的换行操作，在输出文本使用 `'\n'` 通常是更好的选择。
+
+     
+
+3. **错误处理**
+
+   文件写出不一定总是顺利，使用 `fail()`, `bad()`, 和 `good()` 方法可以检查流的状态。例如，如果写操作失败，`fail()` 会返回 `true`。
+
+   ```cpp
+   if (file.fail()) {
+       // Handle write error
+   }
+   ```
+
+
+
+### 复制操作
+
+复制操作，简而言之，就是 打开旧文件，读取数据，关闭旧文件，创建新文件，写入数据，关闭新文件。
+
+以下是使用 C++ 复制文件的简单代码：
+
+```cpp
+#include <iostream>
+#include <fstream>
+
+bool copyFile(const std::string& sourcePath, const std::string& destPath) {
+    // 通过二进制模式打开 旧文件
+    std::ifstream source(sourcePath, std::ios::binary);
+    // 通过二进制模式创建 新文件
+    std::ofstream dest(destPath, std::ios::binary);
+
+    if (!source.is_open() || !dest.is_open()) {
+        return false;  // 文件打开失败
+    }
+
+    // 使用缓冲区按块复制文件
+    const size_t bufferSize = 1024;  // 例如，1024字节 , 1KB
+    char buffer[bufferSize];
+
+    while (source.read(buffer, bufferSize)) {
+        dest.write(buffer, source.gcount());
+    }
+
+    // 处理最后一个不完整的块（如果有的话）
+    dest.write(buffer, source.gcount());
+
+    source.close();
+    dest.close();
+    return true;
+}
+
+int main() {
+    if (copyFile("source.txt", "destination.txt")) {
+        std::cout << "File copied successfully!" << std::endl;
+    } else {
+        std::cerr << "Error copying file." << std::endl;
+    }
+    return 0;
+}
+```
+
+**说明**:
+
+- **二进制模式**: 在打开文件时，我们使用了 `std::ios::binary` 标志。这确保文件以二进制模式进行读写，这对于非文本文件（如图像或可执行文件）尤为重要。即使是文本文件，使用二进制模式也是一个好主意，因为它可以确保文件的内容不会被修改（例如，换行符的转换）。
+- **按块复制**: 使用缓冲区按块读取和写入文件比逐字节复制更高效。这是因为文件操作（特别是磁盘访问）通常比内存操作要慢得多。
+- **错误处理**: 在实际应用中，你可能需要更详细的错误处理，例如检查文件是否存在、是否有足够的磁盘空间等。上述示例提供了基本的错误处理，但在生产环境中可能需要更多的细节。
+
+
+
+
+
+### 序列化操作
+
+序列化是一个过程，其中数据结构或对象的状态被转换为一个可以存储或传输的格式。序列化后的数据可以随后被重新构建（或反序列化）为原始数据结构或对象。序列化常用于以下场景：
+
+- 数据持久性：将对象保存到文件或数据库中。
+- 远程过程调用：例如，在网络上发送对象。
+- 分布式计算：将数据发送到另一个进程或机器进行处理。
+- 深拷贝：创建对象的完整副本。
+
+
+
+在 C++ 中，没有内置的序列化机制，但有多种方法可以实现序列化：
+
+1. **手动序列化**: 你可以为每个类或数据结构编写自己的序列化和反序列化函数。这通常涉及利用IO流将每个成员变量转换为字节流，并在反序列化时执行相反的操作。
+
+```c++
+struct Data {
+    int id;
+    std::string name;
+
+    // 序列化操作,将数据输出为外置文件.
+    void serialize(std::ofstream& os) const {
+        os.write(reinterpret_cast<const char*>(&id), sizeof(id));
+        size_t length = name.size();
+        os.write(reinterpret_cast<const char*>(&length), sizeof(length));
+        os.write(name.c_str(), length);
+    }
+
+    // 反序列化操作,读取外置文件数据为数据.
+    void deserialize(std::ifstream& is) {
+        is.read(reinterpret_cast<char*>(&id), sizeof(id));
+        size_t length;
+        is.read(reinterpret_cast<char*>(&length), sizeof(length));
+        char* buffer = new char[length];
+        is.read(buffer, length);
+        name.assign(buffer, length);
+        delete[] buffer;
+    }
+};
+```
+2. **使用库**: 相比于手动序列化操作，使用 第三方C++ 库提供序列化功能，这些库通常更灵活、更安全，并处理许多边缘情况。
+   - **Boost.Serialization**: 这是一个非常强大的库，支持多种数据格式（如二进制、XML 和文本）和复杂的数据结构。
+   - **Cereal**: 这是一个现代、轻量级的 C++11 序列化库。
+   - **protobuf (Google Protocol Buffers)**: 这是一个高效的序列化库，特别适用于网络通信和数据存储。
+3. **注意事项**:
+   - **版本控制**: 如果数据结构在不同的软件版本之间发生变化，你需要确保旧版本的数据可以在新版本的软件中被正确反序列化。
+   - **安全性**: 当反序列化来自不受信任的源的数据时，需要特别小心，因为恶意的或损坏的数据可能导致未定义的行为或安全漏洞。
+   - **性能**: 序列化和反序列化可能是计算密集型的，特别是对于大型或复杂的数据结构。
+
+
+
 
 
 
