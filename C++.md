@@ -1297,9 +1297,26 @@ std::string c;
 std::tie(a, b, c) = t1;
 ```
 
+### 结构化绑定
 
+在C++17标准下，Tuple支持结构化绑定。类似于ES6那种，在返回类型中可以使用`auto [参数1,参数2...]`这种方式进行快速解析，将其tuple内的参数直接分配并创建新的参数上去。这样对于一些只需要 用几次的那种 返回多参数的情况，不再需要再去额外创建一个struct or class。
 
+```cpp
+std::tuple<std::string, int> analyzeData(const std::string& a, int b)
+{
+	std::tuple<std::string, int> f(a, b);
+	return f;
+}
 
+int main()
+{
+	auto [a,b] = analyzeData("fefe", 222);  // 使用结构化绑定，直接将其返回的tuple内的元素分配到新的对象上。
+	std::cout << a << "   " << b << std::endl;
+	return 0;
+}
+```
+
+Visual Studio 默认使用的是C++11标准。如果需要使用结构化标准则必须将其项目解决方案 C++标准修改到C++17才行。
 
 
 
@@ -2120,8 +2137,8 @@ C++的字符串创建通常有下面几种:
    std::string str3("Hello, World!"); // 从 C 风格字符串创建
    std::string str4(10, 'A'); // 重复字符 'A' 10 次
    ```
-```
-   
+
+
 4. 使用字符串连接运算符 `+`：
    你可以通过连接两个字符串来创建一个新的字符串，使用 `+` 运算符来实现：
 
@@ -2129,18 +2146,17 @@ C++的字符串创建通常有下面几种:
    std::string str5 = "Hello, ";
    std::string str6 = "World!";
    std::string result = str5 + str6;
-```
+   ```
+
 
 5. 使用字符串字面量：
    在 C++11 及以上版本中，你可以使用原始字符串字面量来创建字符串，它以 `R` 开头，并使用括号括起来，方便处理包含多行和转义字符的字符串：
    
    ```cpp
    std::string str7 = R"(This is a raw string literal \n Hello)";
-   ```
+	```
 
 无论你选择哪种方式，实际上字符串都会在字符串尾部加上结束符 `\0` ，这是 C 风格字符串的要求。
-
-
 
 ```c++
 const char* str = "XXX";
@@ -2617,6 +2633,66 @@ int main() {
 
 
 
+### async异步
+
+`std::async` 是 C++11 标准库中的一个功能，它位于future库，下它允许你异步地执行函数，并可能在另一个线程上运行它。这为并发编程提供了一个简单而强大的工具，特别是当你想并行执行某些任务并获取结果时。
+
+使用 `std::async` 启动一个异步任务非常简单。你只需传递要执行的函数和其参数：
+
+```c++
+#include <iostream>
+#include <future>
+
+int compute() {
+    return 42;  // Some computation
+}
+
+int main() {
+    std::future<int> result = std::async(compute);
+    int value = result.get();  // Blocks until the result is ready
+    std::cout << "Computed value: " << value << std::endl;
+}
+```
+
+**返回值**:`std::async` 返回一个 `std::future` 对象，`std::future` 是 C++11 标准库中的一个模板类，它表示一个异步操作的未来结果。
+
+调用 `std::future::get()` 会阻塞，直到结果准备好。
+
+**启动策略**: `std::async` 可以接受一个可选的启动策略参数，该参数决定任务是立即启动还是延迟启动：
+
+- `std::launch::async`: 任务在一个新线程上异步启动。
+- `std::launch::deferred`: 任务被延迟，直到你调用 `std::future::get()` 或 `std::future::wait()` 时才执行，并在当前线程上执行。
+
+如果你不主动提供启动策略，那么 `std::async` 可以自由选择策略。但多半会选择`std::launch::deferred`策略，所以相当于不会执行异步操作。
+
+```c++
+std::future<int> result = std::async(std::launch::async, compute);
+```
+
+**异常处理**: 如果异步任务抛出一个异常，该异常会被存储并在调用 `std::future::get()` 时重新抛出。所以使用get必要的时候,使用try - catch.
+
+```c++
+int compute() {
+    throw std::runtime_error("An error occurred!");
+    return 42;
+}
+
+int main() {
+    std::future<int> result = std::async(compute);
+    try {
+        int value = result.get();
+    } catch (const std::exception& e) {
+        std::cerr << "Exception: " << e.what() << std::endl;
+    }
+}
+```
+
+
+
+
+
+
+
 ## IO流
 
 ### 读取流
@@ -2705,7 +2781,7 @@ int main() {
 
 
 
-#### 字符读取
+#### 字节读取
 
 在 C++ 中，如果想按字节（或二进制模式）读取文件，可以使用 `<fstream>` 库的 `ifstream` 类，并在打开文件时指定 `std::ios::binary` 标志。按字节读取文件通常用于处理二进制文件，如图像、音频或其他非文本文件。
 
