@@ -1789,6 +1789,49 @@ public:
 
 
 
+### 单例模式
+
+C++中的单例模式设计如下:
+
+```c++
+class Singleton
+{
+private:
+    // 阻止直接创建
+	Singleton()
+	{
+	}
+	float IFloat()
+	{
+		return m_Xxx;
+	}
+	float m_Xxx = 0.5f;
+
+public:
+	static Singleton& getInstance()
+	{
+		static Singleton instance;  //将单例实体放置在获取方法中，而不是常规的private中，并没有实际影响。
+		return instance;
+	}
+	// 移除赋值修饰符
+	Singleton(const Singleton&) = delete;
+    // 单例方式静态直接调用内部方法
+	static float Float() { return getInstance().IFloat(); }
+};
+
+int main()
+{
+    Singleton& singleton = Singleton::getInstance();  //单例方式获取的是引用
+    float s = Singleton::Float();
+}
+```
+
+
+
+
+
+
+
 ## 接口-interface
 
 **C++中没有像JAVA这种语言内置有Interface类型。在 C++ 中，你可以使用抽象类和纯虚函数来定义接口**。接口是一种规范，它定义了一组方法（成员函数）的名称和参数列表，但没有实际的实现。具体的类可以通过继承接口并实现其中的**纯虚函数**来实现接口的功能。所以纯虚函数构成的类即接口类。
@@ -2075,6 +2118,94 @@ int main() {
 
 
 
+### 重载new操作符
+
+`new`是一个关键字，和`sizeof`一样，我们无法修改其具体功能。`new`主要做三件事：分配空间、初始化对象、返回指针。调用`operator new`分配空间。
+
+但其实new在堆内存中分配内存，实际上是调用的C语言中的 malloc函数。在很多情况下，我们可以重载new操作符，并加上分配堆内存大小Log操作，方便为某些操作做对应的优化。
+
+```c++
+void* operator new(size_t size)
+{
+    std::cout << "堆内存中分配了内存，大小为：" << size << "个字节\n";
+    return malloc(size);
+}
+```
+
+每当有操作调用new，在堆内存中分配内存时，它都会打印出分配的大小。当然使用智能指针也同样会触发new操作。
+
+### 重载delete重载符
+
+delete的本质也是调用了free函数。和重载new操作符一样。我们也可以重载delete操作符。
+
+```c++
+void operator delete(void* memory, size_t size)
+{
+    std::cout << "堆内存中释放了内存，大小为：" << size << "个字节\n";
+    free(memory);
+}
+```
+
+### 统计堆内存中的使用量
+
+利用上重载new重载符和delete操作符后，可以编写一个struct or class，并利用静态static全局创建，来动态统计当前堆内存中的使用量：
+
+```c++
+struct AllocationMetrics
+{
+    uint32_t TotalAllocated = 0;
+    uint32_t TotalFreed = 0;
+    
+    uint32_t CurrentUsage() { return TotalAllocated - TotalFreed; }
+}
+static AllocationMetrics s_AllocationMetrics;  // 创建AllocationMetrics全局对象
+
+void* operator new(size_t size)
+{
+   s_AllocationMetrics.TotalAllocated += size;  //每次分配在堆内存中分配内存大小统计
+    return malloc(size);
+}
+void* operator new[](std::size_t size) {
+    s_AllocationMetrics.TotalAllocated += size;  
+    return std::malloc(size);
+}
+void operator delete(void* memory, size_t size)
+{
+    s_AllocationMetrics.TotalFreed += size;  //每次清除堆内存大小统计
+    free(memory);
+}
+void operator delete[](void* memory, std::size_t size) noexcept {
+    s_AllocationMetrics.TotalFreed += size;
+    std::free(memory);
+}
+static void printMemoryUsage()
+{
+    std::cout << "堆内存使用情况：" << s_AllocationMetrics.CurrentUsage() << "个字节\n";
+}
+```
+
+创建了一个AllocationMetrics struct ，当每次调用 new 和delete 进行堆内存操作时都进行统计。调用printMemoryUsage函数即可打印当前堆内存情况。
+
+```cpp
+int main()
+{
+    printMemoryUsage();
+    std::string string = "ZSSAER";
+    printMemoryUsage();
+    {
+        std::unique_ptr<XXX> xxx = std::make_unique<XXX>();
+        printMemoryUsage();
+    }
+    printMemoryUsage();
+}
+```
+
+
+
+
+
+
+
 ## 字符串
 
 C的字符串其实是由单个字符构成，实现字符串的原理就是创建字符的数值。
@@ -2168,6 +2299,12 @@ char* str1 = "xxx";
 顾名思义，str这个字符串常量定义后肯定不能被后续修改。但是对于str1这个字符串呢？
 
 其实str1看起来并未被标记为常量，是能被后续修改的，但记住 使用指针创建的字符串只是指向一段字符串的，**你依然不能后续修改它**。由于缺少const标记，一些IDE不会显示后续修改操作错误。但是某些C++编译器则会出现异常。所以通常情况下都是使用的const char*创建方式。
+
+
+
+**所有的字符串，都是通过在堆内存中进行分配内存大小实现的，而左值的对象是通过 对其的指针。**所以创建字符串都相当于调用new操作，在堆内存中分配了内存空间。所以字符串使用都会造成程序运行效率变低。
+
+但在C++11中，使用`std::string`创建小于等于15字符的字符串，在Release编译模式下，会自动开启一种叫SSO小字符串优化操作，会将小字符串直接在栈缓存中直接创建，而不再在堆内存中创建。所以对于16以下字符大小的字符串不需要特别在意其对程序的运行效率影响。
 
 
 
