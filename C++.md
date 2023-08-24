@@ -1525,11 +1525,151 @@ ages.emplace("Bob", 25);
 
 
 
+### vector的简单实现
 
+vector的实现主要内部拥有 3个成员。
 
+size （用于记录成员数量），capacity（用于记录拥有的内存空间大小），Data（用于存储类型的数组）。
 
+因为要实现其vector的动态扩容的功能。主要是利用 堆指针进行动态存储。
 
+```cpp
+template <typename T>
+class Vector
+{
+private:
+    T* m_Data;
+    size_t m_Size;
+    size_t m_Capacity;
+private:
+    /**
+	 * \brief Reset m_Capacity
+	 * \param newCapacity New capacity
+	 */
+    void ReAlloc(size_t newCapacity)
+	{
+		// T* newBlock = new T[newCapacity];
+		T* newBlock = (T*)::operator new(newCapacity * sizeof(T));
+		if (newCapacity < m_Size)
+		{
+			m_Size = newCapacity;
+		}
+		for (size_t i = 0; i < m_Size; ++i)
+		{
+			// newBlock[i] = std::move(m_Data[i]);
+			new(&newBlock[i]) T(std::move(m_Data[i]));
+		}
+		for (size_t i = 0; i < m_Size; ++i)
+		{
+			m_Data[i].~T();
+		}
+		// delete[] m_Data;
+		::operator delete(m_Data, m_Capacity * sizeof(T));
+		m_Data = newBlock;
+		m_Capacity = newCapacity;
+	}
+public:
+    Vector()
+    {
+        ReAlloc(2);  // 默认设置容量为2
+    }
+    ~Vector()
+    {
+        Clear();
+        //  清除m_Data
+        ::operator delete(m_Data,m_Capacity * sizeof(T))
+    }
+    void PushBack(const T& value)
+	{
+		if (m_Capacity <= m_Size)
+		{
+			ReAlloc(m_Capacity + m_Capacity / 2);
+		}
+		m_Data[m_Size] = value;
+		m_Size++;
+	}
+    void PushBack(T&& value)
+	{
+		if (m_Capacity <= m_Size)
+		{
+			ReAlloc(m_Capacity + m_Capacity / 2);
+		}
+		m_Data[m_Size] = std::move(value);
+		m_Size++;
+	}
+    
+    /**
+	 * \brief Use element constructor push data
+	 * \tparam Args constructor args
+	 * \param args constructor args
+	 * \return pushed data
+	 */
+    template <typename... Args>
+	T& EmplaceBack(Args&&... args)
+	{
+		if (m_Capacity <= m_Size)
+		{
+			ReAlloc(m_Capacity + m_Capacity / 2);
+		}
+		// m_Data[m_Size] = T(std::forward<Args>(args)...);
+		new(&m_Data[m_Size]) T(std::forward<Args>(args)...);
+		return m_Data[m_Size++];
+	}
+    
+    void PopBack()
+	{
+		if (m_Size > 0)
+		{
+			m_Data[m_Size].~T();
+			m_Size--;
+		}
+	}
 
+	void Clear()
+	{
+		for (size_t i = 0; i < m_Size; ++i)
+		{
+			m_Data[i].~T();
+		}
+		m_Size = 0;
+	}
+
+	size_t Size() const
+	{
+		return m_Size;
+	}
+    
+    /**
+	 * \brief Read Data by index
+	 * \param index Data
+	 * \return T&
+	 */
+	const T& operator[](size_t index) const
+	{
+		if (index > m_Size)
+		{
+			// assert
+		}
+		return m_Data[index];
+	}
+
+	/**
+	 * \brief Change Data by index
+	 * \param index 
+	 * \return T&
+	 */
+	T& operator[](size_t index)
+	{
+		if (index > m_Size)
+		{
+			// assert
+		}
+		return m_Data[index];
+	}  
+};
+```
+
+其中拥有PushBack 函数，对于右值使用移动方式添加。EmplaceBack函数，使用对象的构造器进行直接添加。
 
 
 
