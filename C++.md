@@ -2095,12 +2095,6 @@ int main()
 
 
 
-### 
-
-
-
-
-
 
 
 ## 接口-interface
@@ -3703,6 +3697,26 @@ EntityB(EntityA&& a)
 
 上方初始化中，一定要将其a强行转换（**也可以使用std::move 将其转换为右值引用**）为 右值引用类型，不然依旧会以左值的方式调用拷贝构造函数。因为右值引用在函数体内定义后，就默认变为了左值引用了，在初始化中依然需要再次定义为右值引用，这样才能调用EntityA的移动构造函数。
 
+除此之外，还可以使用std::forward函数模板:
+
+> `std::forward` 是C++标准库中的一个函数模板，通常用于在泛型编程中完美转发（perfect forwarding）参数。完美转发是一种技术，用于将参数以原样传递给另一个函数，包括参数的值类别（lvalue 或 rvalue）。它在C++11引入的右值引用（rvalue reference）和移动语义的背景下变得特别重要。
+>
+> 在C++中，有两种主要的值类别：左值（lvalue）和右值（rvalue）。
+>
+> - 左值（lvalue）通常是可以取地址的表达式，如变量名或具有名称的表达式。
+> - 右值（rvalue）通常是临时值或不具有名称的表达式。
+>
+> `std::forward` 的主要目的是确保将参数以正确的值类别传递给其他函数，以避免不必要的拷贝或移动操作。它通常在函数模板中与引用折叠和转发引用一起使用，以保持参数的原始值类别。
+
+```cpp
+EntityB(EntityA&& a)
+		: m_a(std::forward<EntityA>(a))  //: m_a(std::move(a))
+{
+}
+```
+
+
+
 这样便将其临时创建的EntityA对象直接以Move的方式，而不是Copy方式，定义到了EntityB中的m_a中了。
 
 
@@ -3720,6 +3734,47 @@ EntityB(EntityA&& a)
 在 C++11 及以后，这个规则扩展到五个，包括移动构造函数（move ctor）和移动赋值运算符（move operator=），称为**"Rule of Five/五法则"**。
 
 如果在没有特殊需求情况下，往往直接delete掉其他like “copy ctor”、“operator=”操作。这时良好的且优秀的C++代码的体现。
+
+
+
+## 优雅地处理函数返回错误
+
+C++中使用异常处理非常繁琐，在项目中通常以返回错误码来提示错误。
+
+下面是优雅地返回错误解决方法：
+
+``` cpp
+#include <utility>
+
+template <class Policy, class I, class Fn, class...Args> // requires...
+constexpr I exec_on(Policy const &p, I code, Fn &&f, Args&&...args) // noexcept(...)
+{
+    if (p(code))
+        return std::forward<Fn>(f)(std::forward<Args>(args)...);
+    else
+        return code;
+}
+
+int f() noexcept { return 0; } // to be impl
+int g() noexcept { return 0; } // to be impl
+int h() noexcept { return 0; } // to be impl
+
+void error_report(int) noexcept {} // 错误码处理函数
+
+int main()
+{
+    constexpr auto cond_nonminus = [](auto const &v) { return v >= 0; };
+    int ret1 = exec_on(cond_nonminus, 0, f);
+    int ret2 = exec_on(cond_nonminus, ret1, g);
+    int ret3 = exec_on(cond_nonminus, ret2, h);
+    if (ret3 < 0)
+        error_report(ret3);
+}
+```
+
+
+
+
 
 
 
